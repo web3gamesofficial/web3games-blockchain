@@ -5,10 +5,14 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+// use codec::{Encode, Decode};
+// #[cfg(feature = "std")]
+// use serde::{Deserialize, Serialize};
+
 use sp_std::prelude::*;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
-    ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
+    ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature, /* RuntimeDebug,*/
     transaction_validity::{TransactionValidity, TransactionSource},
 };
 use sp_runtime::traits::{
@@ -21,6 +25,7 @@ use pallet_grandpa::fg_primitives;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
+// use orml_currencies::BasicCurrencyAdapter;
 
 // A few exports that help ease life for downstream crates.
 #[cfg(any(feature = "std", test))]
@@ -329,22 +334,40 @@ impl pallet_poe::Config for Runtime {
     type Event = Event;
 }
 
-// impl pallet_token::Config for Runtime {
+// pub type Amount = i128;
+
+// #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, Ord, PartialOrd)]
+// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+// pub enum CurrencyId {
+//     Native,
+//     DOT,
+//     KSM,
+//     BTC,
+//     SGC,
+// }
+//
+// impl orml_tokens::Config for Runtime {
 //     type Event = Event;
-//     type TokenBalance = u128;
-//     type TokenId = [u8; 32];
+//     type Balance = Balance;
+//     type Amount = Amount;
+//     type CurrencyId = CurrencyId;
+//     type WeightInfo = ();
+//     type ExistentialDeposits = ();
+//     type OnDust = ();
 // }
 
-// impl pallet_assets::Config for Runtime {
+// parameter_types! {
+//     pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Native;
+// }
+//
+// impl orml_currencies::Config for Runtime {
 //     type Event = Event;
-//     type Randomness = RandomnessCollectiveFlip;
-//     type CollectionId = u32;
-//     type AssetId = u32;
+//     type MultiCurrency = Tokens;
+//     type NativeCurrency = BasicCurrencyAdapter<Runtime, Balance, Amount, BlockNumber> ;
+//     type GetNativeCurrencyId = GetNativeCurrencyId;
+//     type WeightInfo = ();
 // }
 
-// impl chain_extension::Config for Runtime {}
-
-// Create the runtime by composing the FRAME pallets that were previously configured.
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -378,12 +401,14 @@ construct_runtime!(
         TransactionPayment: pallet_transaction_payment::{Module, Storage},
         Contracts: pallet_contracts::{Module, Call, Config<T>, Storage, Event<T>},
         Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+        Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
+
+        // Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
+        // Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
+        //
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
         PoeModule: pallet_poe::{Module, Call, Storage, Event<T>},
-        // TokenModule: pallet_token::{Module, Call, Storage, Event<T>},
-        // AssetsModule: pallet_assets::{Module, Call, Storage, Event<T>},
-        Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
     }
 );
 
