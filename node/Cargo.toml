@@ -54,7 +54,7 @@ pallet-contracts-rpc = { version = "0.8.0", git = "https://github.com.cnpmjs.org
 frame-benchmarking = { version = "3.0.0", git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
 frame-benchmarking-cli = { version = "3.0.0", git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
 
-node-template-runtime = { version = "0.0.1", path = "../runtime" }
+sgc-runtime = { version = "0.0.1", path = "../runtime" }
 #pallet-primitives = { path = "../pallets/primitives" }
 
 [build-dependencies]
@@ -63,5 +63,5 @@ substrate-build-script-utils = { version = "3.0.0" }
 [features]
 default = []
 runtime-benchmarks = [
-	"node-template-runtime/runtime-benchmarks",
+	"sgc-runtime/runtime-benchmarks",
 ]

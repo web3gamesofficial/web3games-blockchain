@@ -1,5 +1,5 @@
 [package]
-name = "node-template-runtime"
+name = "sgc-runtime"
 version = "0.0.1"
 authors = ["Anonymous"]
 edition = "2018"

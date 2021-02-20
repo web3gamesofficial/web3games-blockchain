@@ -1,5 +1,5 @@
 use sp_core::{Pair, Public, sr25519};
-use node_template_runtime::{
+use sgc_runtime::{
     AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
     ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature
 };
