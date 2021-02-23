@@ -1,7 +1,7 @@
 use sp_core::{U256, Pair, Public, H160, sr25519};
 use sgc_runtime::{
     AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-    ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature
+    ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature, Balance
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -11,6 +11,8 @@ use serde_json::json;
 // use serde_json::map::Map;
 use std::collections::BTreeMap;
 use std::str::FromStr;
+
+pub const DOLLARS: Balance = 1_000_000_000_000_000_000;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -150,7 +152,7 @@ fn testnet_genesis(
         built_in_evm_account,
         pallet_evm::GenesisAccount {
             nonce: U256::from(0),
-            balance: U256::MAX,
+            balance: U256::from(100_000_000 * DOLLARS),
             storage: Default::default(),
             code: wasm_binary.to_vec(),
         },
