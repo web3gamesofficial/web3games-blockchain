@@ -5,7 +5,7 @@ name = "pallet-template"
 version = "0.1.0"
 license = "Unlicense"
 homepage = "https://substrate.dev"
-repository = "https://github.com.cnpmjs.org/paritytech/substrate/"
+repository = "https://github.com/paritytech/substrate/"
 description = "FRAME pallet template for defining custom runtime logic."
 readme = "README.md"
 
@@ -15,14 +15,14 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 
-frame-support = { version = "3.0.0", default-features = false, git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
-frame-system = { version = "3.0.0", default-features = false, git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
-sp-io = { version = "3.0.0", default-features = false, git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
-sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
+frame-support = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+frame-system = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-io = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 [dev-dependencies]
 serde = { version = "1.0.101" }
-sp-core = { version = "3.0.0", default-features = false, git = "https://github.com.cnpmjs.org/paritytech/substrate.git", rev = "49a4103" }
+sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 [features]
 default = ["std"]

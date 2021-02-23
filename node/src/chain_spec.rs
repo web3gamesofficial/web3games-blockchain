@@ -1,13 +1,16 @@
-use sp_core::{Pair, Public, sr25519};
+use sp_core::{U256, Pair, Public, H160, sr25519};
 use sgc_runtime::{
-    AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
+    AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
     ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{Verify, IdentifyAccount};
 use sc_service::ChainType;
-use serde_json::map::Map;
+use serde_json::json;
+// use serde_json::map::Map;
+use std::collections::BTreeMap;
+use std::str::FromStr;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -40,10 +43,6 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-    let mut properties = Map::new();
-    properties.insert("tokenSymbol".into(),"SGC".into());
-    properties.insert("tokenDecimals".into(), 15.into());
-
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
     Ok(ChainSpec::from_genesis(
@@ -76,7 +75,10 @@ pub fn development_config() -> Result<ChainSpec, String> {
         // Protocol ID
         None,
         // Properties
-        Some(properties),
+        Some(json!({
+            "tokenDecimals": 12,
+            "tokenSymbol": "SGC"
+          }).as_object().expect("Provided valid json map").clone()),
         // Extensions
         None,
     ))
@@ -124,7 +126,10 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         // Protocol ID
         None,
         // Properties
-        None,
+        Some(json!({
+            "tokenDecimals": 12,
+            "tokenSymbol": "SGC"
+          }).as_object().expect("Provided valid json map").clone()),
         // Extensions
         None,
     ))
@@ -138,6 +143,19 @@ fn testnet_genesis(
     endowed_accounts: Vec<AccountId>,
     enable_println: bool,
 ) -> GenesisConfig {
+    let built_in_evm_account =
+        H160::from_str("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b").unwrap();
+    let mut evm_accounts = BTreeMap::new();
+    evm_accounts.insert(
+        built_in_evm_account,
+        pallet_evm::GenesisAccount {
+            nonce: U256::from(0),
+            balance: U256::MAX,
+            storage: Default::default(),
+            code: wasm_binary.to_vec(),
+        },
+    );
+
     GenesisConfig {
         frame_system: Some(SystemConfig {
             // Add Wasm runtime to storage.
@@ -164,6 +182,9 @@ fn testnet_genesis(
             // Assign network admin rights.
             key: root_key,
         }),
-        // orml_tokens: Default::default(),
+        pallet_evm: Some(EVMConfig {
+            accounts: evm_accounts,
+        }),
+        pallet_ethereum: Some(EthereumConfig {}),
     }
 }
