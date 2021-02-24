@@ -5,7 +5,7 @@ authors = ["Anonymous"]
 edition = "2018"
 license = "Unlicense"
 homepage = "https://substrate.dev"
-repository = "https://github.com.cnpmjs.org/paritytech/substrate/"
+#repository = "https://github.com/paritytech/substrate.git"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
@@ -26,10 +26,10 @@ pallet-transaction-payment = { version = "3.0.0", default-features = false, git 
 frame-executive = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
 sp-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
-sp-block-builder = {  default-features = false, version = "3.0.0", git = "https://github.com/paritytech/substrate.git", rev = "49a4103"}
+sp-block-builder = {   version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103"}
 sp-consensus-aura = { version = "0.9.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
 sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
-sp-inherents = {  default-features = false, version = "3.0.0",git = "https://github.com/paritytech/substrate.git", rev = "49a4103"}
+sp-inherents = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103"}
 sp-offchain = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
 sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
 sp-session = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
@@ -40,8 +40,8 @@ sp-version = { version = "3.0.0", default-features = false, git = "https://githu
 pallet-scheduler = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
 
 #orml module 多币种支持
-orml-currencies = { default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", rev = "fb405b1"}
-orml-tokens = {default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", rev = "fb405b1"}
+orml-currencies = { default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library.git", branch = "master" }
+orml-tokens = { default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library.git", branch = "master"}
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103" }
@@ -51,7 +51,7 @@ pallet-contracts-rpc-runtime-api = { version = "0.8.0", default-features = false
 # Used for runtime benchmarking
 frame-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
 frame-system-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
-hex-literal = { version = "0.3.1", optional = true , default-features = false}
+hex-literal = { version = "0.3.1",default-features = false, optional = true }
 
 #local pallet
 pallet-template = { default-features = false, path = "../pallets/template" }
