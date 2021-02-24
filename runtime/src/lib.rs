@@ -5,9 +5,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-// use codec::{Encode, Decode};
-// #[cfg(feature = "std")]
-// use serde::{Deserialize, Serialize};
+use codec::{Encode, Decode};
+#[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
 use sp_std::prelude::*;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
@@ -334,39 +334,39 @@ impl pallet_poe::Config for Runtime {
     type Event = Event;
 }
 
-// pub type Amount = i128;
+pub type Amount = i128;
 
-// #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, Ord, PartialOrd)]
-// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-// pub enum CurrencyId {
-//     Native,
-//     DOT,
-//     KSM,
-//     BTC,
-//     SGC,
-// }
-//
-// impl orml_tokens::Config for Runtime {
-//     type Event = Event;
-//     type Balance = Balance;
-//     type Amount = Amount;
-//     type CurrencyId = CurrencyId;
-//     type WeightInfo = ();
-//     type ExistentialDeposits = ();
-//     type OnDust = ();
-// }
+#[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, Ord, PartialOrd)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub enum CurrencyId {
+    Native,
+    DOT,
+    KSM,
+    BTC,
+    SGC,
+}
 
-// parameter_types! {
-//     pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Native;
-// }
-//
-// impl orml_currencies::Config for Runtime {
-//     type Event = Event;
-//     type MultiCurrency = Tokens;
-//     type NativeCurrency = BasicCurrencyAdapter<Runtime, Balance, Amount, BlockNumber> ;
-//     type GetNativeCurrencyId = GetNativeCurrencyId;
-//     type WeightInfo = ();
-// }
+impl orml_tokens::Config for Runtime {
+    type Event = Event;
+    type Balance = Balance;
+    type Amount = Amount;
+    type CurrencyId = CurrencyId;
+    type WeightInfo = ();
+    type ExistentialDeposits = ();
+    type OnDust = ();
+}
+
+parameter_types! {
+    pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Native;
+}
+
+impl orml_currencies::Config for Runtime {
+    type Event = Event;
+    type MultiCurrency = Tokens;
+    type NativeCurrency = BasicCurrencyAdapter<Runtime, Balance, Amount, BlockNumber> ;
+    type GetNativeCurrencyId = GetNativeCurrencyId;
+    type WeightInfo = ();
+}
 
 
 parameter_types! {
@@ -403,8 +403,8 @@ construct_runtime!(
         Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
         Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
 
-        // Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
-        // Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
+        Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
+        Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
         //
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
