@@ -156,7 +156,7 @@ fn testnet_genesis(
         },
     );
 
-    const ENDOWMENT: Balance = 10_000_000 * DOLLARS;
+    const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
 
     GenesisConfig {
         frame_system: Some(SystemConfig {
