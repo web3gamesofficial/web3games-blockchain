@@ -333,12 +333,14 @@ impl pallet_evm::Config for Runtime {
     type Currency = Balances;
     type Event = Event;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
-    type Precompiles = (
-        pallet_evm_precompile_simple::ECRecover,
-        pallet_evm_precompile_simple::Sha256,
-        pallet_evm_precompile_simple::Ripemd160,
-        pallet_evm_precompile_simple::Identity,
-    );
+    // type Precompiles = (
+    //     precompiles::ECRecover,
+    //     precompiles::Sha256,
+    //     precompiles::Ripemd160,
+    //     precompiles::Identity,
+    //     precompiles::Erc1155<Erc1155>,
+    // );
+    type Precompiles = precompile::SgcPrecompiles<Self>;
     type ChainId = ChainId;
 }
 
@@ -427,6 +429,12 @@ impl pallet_poe::Config for Runtime {
     type Event = Event;
 }
 
+impl pallet_erc1155::Config for Runtime {
+    type Event = Event;
+    type TokenBalance = u128;
+    type TokenId = u32;
+}
+
 construct_runtime!(
     pub enum Runtime where
         Block = Block,
@@ -451,6 +459,7 @@ construct_runtime!(
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
         PoeModule: pallet_poe::{Module, Call, Storage, Event<T>},
+        Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
     }
 );
 
