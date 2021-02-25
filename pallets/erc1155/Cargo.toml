@@ -1,7 +1,7 @@
 [package]
 authors = ['Anonymous']
 edition = '2018'
-name = 'pallet-token'
+name = 'pallet-erc1155'
 version = '0.1.0'
 
 [dependencies]

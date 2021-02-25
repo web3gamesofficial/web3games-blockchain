@@ -3749,6 +3749,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-erc1155"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-ethereum"
 version = "0.1.0"
 source = "git+https://github.com/Web3-Substrate-Game-World/frontier?branch=sgc_v0.1#379dcdcf3adb68a8b40981d97ce3b6a444a4c46b"
@@ -3934,20 +3948,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-timestamp",
-]
-
-[[package]]
-name = "pallet-token"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]
