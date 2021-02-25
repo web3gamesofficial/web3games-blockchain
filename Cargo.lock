@@ -6121,6 +6121,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sgc-primitives"
+version = "0.1.0"
+dependencies = [
+ "frame-system",
+ "parity-scale-codec",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-runtime",
+]
+
+[[package]]
 name = "sgc-runtime"
 version = "0.0.1"
 dependencies = [
@@ -6148,6 +6159,7 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
  "serde",
+ "sgc-primitives",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
