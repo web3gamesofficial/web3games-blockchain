@@ -4,15 +4,12 @@ use sp_std::{fmt::Debug, prelude::*};
 use sp_runtime::{
 	RuntimeDebug,
 	traits::{
-		AtLeast32Bit, MaybeSerializeDeserialize, Bounded, Member,
-		One, AtLeast32BitUnsigned, CheckedAdd, CheckedSub,
+		AtLeast32BitUnsigned, CheckedAdd, CheckedSub,
 	},
 };
-// use sp_io::hashing::blake2_128;
 use codec::{Encode, Decode, HasCompact};
 use frame_support::{
 	ensure,
-	// traits::Randomness,
 	dispatch::{DispatchResult, DispatchError},
 };
 
@@ -33,10 +30,7 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		// type TokenBalance: Parameter + Member + AtLeast32BitUnsigned + Codec + Default +
-		// Copy + MaybeSerializeDeserialize + From<u32> + From<u128> + Into<u128>;
-		// type TokenId: Parameter + Member + Default + Codec + MaybeSerializeDeserialize +
-		// Copy + From<[u8;32]> + Into<[u8;32]>;
+
 		type TokenBalance: Member + Parameter + AtLeast32BitUnsigned + Default + Copy;
 
 		type TokenId: Member + Parameter + Default + Copy + HasCompact;
@@ -66,6 +60,18 @@ pub mod pallet {
 		ValueQuery
 	>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn operator_approvals)]
+	pub(super) type OperatorApprovals<T: Config> = StorageDoubleMap<
+		_,
+		Blake2_128Concat,
+		T::AccountId,
+		Blake2_128Concat,
+		T::AccountId,
+		bool,
+		ValueQuery
+	>;
+
 	#[pallet::event]
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -77,6 +83,7 @@ pub mod pallet {
 		BatchBurn(T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>),
 		Transferred(T::AccountId, T::AccountId, T::TokenId, T::TokenBalance),
 		BatchTransferred(T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>),
+		ApprovalForAll(T::AccountId, T::AccountId, bool),
 	}
 
 	#[pallet::error]
@@ -113,10 +120,41 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn set_approval_for_all(origin: OriginFor<T>, operator: T::AccountId, approved: bool) -> DispatchResultWithPostInfo {
+			let who = ensure_signed(origin)?;
+
+			if operator == who {
+				return Ok(().into())
+			}
+
+			Self::do_set_approval_for_all(&who, &operator, approved)?;
+
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn transfer_from(origin: OriginFor<T>, from: T::AccountId, to: T::AccountId, id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
+			let _who = ensure_signed(origin)?;
+
+			Self::do_transfer_from(&from, &to, &id, amount)?;
+			
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn mint(origin: OriginFor<T>, to: T::AccountId, id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_mint(&to, &id, amount)?;
+			
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn burn(origin: OriginFor<T>, from: T::AccountId, id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
+			let _who = ensure_signed(origin)?;
+
+			Self::do_burn(&from, &id, amount)?;
 			
 			Ok(().into())
 		}
@@ -133,6 +171,21 @@ pub struct Token<
 }
 
 impl<T: Config> Pallet<T> {
+	pub fn do_set_approval_for_all(
+		owner: &T::AccountId,
+		operator: &T::AccountId,
+		approved: bool,
+	) -> DispatchResult {
+		OperatorApprovals::<T>::try_mutate(owner, operator, |status| -> DispatchResult {
+			*status = approved;
+			Ok(())
+		})?;
+
+		Self::deposit_event(Event::ApprovalForAll(owner.clone(), operator.clone(), approved));
+
+		Ok(())
+	}
+
 	pub fn do_mint(
 		to: &T::AccountId,
 		id: &T::TokenId,
@@ -150,7 +203,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn batch_mint(
+	pub fn do_batch_mint(
 		to: &T::AccountId,
 		ids: &Vec<T::TokenId>,
 		amounts: Vec<T::TokenBalance>
@@ -175,7 +228,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn burn(
+	pub fn do_burn(
 		from: &T::AccountId,
 		id: &T::TokenId,
 		amount: T::TokenBalance
@@ -192,7 +245,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn batch_burn(
+	pub fn do_batch_burn(
 		from: &T::AccountId,
 		ids: &Vec<T::TokenId>,
 		amounts: Vec<T::TokenBalance>
@@ -217,7 +270,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn transfer_from(
+	pub fn do_transfer_from(
 		from: &T::AccountId,
 		to: &T::AccountId,
 		id: &T::TokenId,
@@ -246,7 +299,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn batch_transfer_from(
+	pub fn do_batch_transfer_from(
 		from: &T::AccountId,
 		to: &T::AccountId,
 		ids: &Vec<T::TokenId>,
@@ -281,6 +334,20 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::BatchTransferred(from.clone(), to.clone(), ids.to_vec(), amounts));
 
 		Ok(())
+	}
+
+	pub fn approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool {
+		*account != T::AccountId::default()
+			&& (*who == *account || Self::operator_approvals(who, account))
+	}
+
+	pub fn is_nf(id: &T::TokenId) -> Result<bool, DispatchError> {
+		let token = Tokens::<T>::get(id).ok_or(Error::<T>::InvalidTokenId)?;
+		Ok(token.is_nf)
+	}
+
+	pub fn is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool {
+		Self::operator_approvals(owner, operator)
 	}
 
 	pub fn balance_of(owner: &T::AccountId, id: &T::TokenId) -> T::TokenBalance {
