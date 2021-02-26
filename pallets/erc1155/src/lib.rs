@@ -12,6 +12,7 @@ use frame_support::{
 	ensure,
 	dispatch::{DispatchResult, DispatchError},
 };
+use frame_support::debug;
 
 pub use pallet::*;
 
@@ -33,7 +34,7 @@ pub mod pallet {
 
 		type TokenBalance: Member + Parameter + AtLeast32BitUnsigned + Default + Copy;
 
-		type TokenId: Member + Parameter + Default + Copy + HasCompact;
+		type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u32>;
 	}
 
 	#[pallet::pallet]
@@ -351,6 +352,9 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn balance_of(owner: &T::AccountId, id: &T::TokenId) -> T::TokenBalance {
+		debug::info!("run erc1155: balance_of");
+		debug::info!("owner: {:?}", owner);
+		debug::info!("id: {:?}", id);
 		Self::balances(id, owner)
 	}
 

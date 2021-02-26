@@ -333,13 +333,6 @@ impl pallet_evm::Config for Runtime {
     type Currency = Balances;
     type Event = Event;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
-    // type Precompiles = (
-    //     precompiles::ECRecover,
-    //     precompiles::Sha256,
-    //     precompiles::Ripemd160,
-    //     precompiles::Identity,
-    //     precompiles::Erc1155<Erc1155>,
-    // );
     type Precompiles = precompile::SgcPrecompiles<Self>;
     type ChainId = ChainId;
 }
@@ -434,6 +427,8 @@ impl pallet_erc1155::Config for Runtime {
     type TokenBalance = u128;
     type TokenId = u32;
 }
+
+impl precompile::Config for Runtime {}
 
 construct_runtime!(
     pub enum Runtime where
