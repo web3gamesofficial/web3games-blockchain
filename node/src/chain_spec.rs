@@ -1,7 +1,7 @@
 use sp_core::{U256, Pair, Public, H160, sr25519};
 use sgc_runtime::{
     AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-    ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature, Balance
+    ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature, Balance, DOLLARS
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -11,8 +11,6 @@ use serde_json::json;
 // use serde_json::map::Map;
 use std::collections::BTreeMap;
 use std::str::FromStr;
-
-pub const DOLLARS: Balance = 1_000_000_000_000_000_000;
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -78,7 +76,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         None,
         // Properties
         Some(json!({
-            "tokenDecimals": 12,
+            "tokenDecimals": 18,
             "tokenSymbol": "SGC"
           }).as_object().expect("Provided valid json map").clone()),
         // Extensions
@@ -129,7 +127,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         None,
         // Properties
         Some(json!({
-            "tokenDecimals": 12,
+            "tokenDecimals": 18,
             "tokenSymbol": "SGC"
           }).as_object().expect("Provided valid json map").clone()),
         // Extensions
@@ -158,6 +156,8 @@ fn testnet_genesis(
         },
     );
 
+    const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
+
     GenesisConfig {
         frame_system: Some(SystemConfig {
             // Add Wasm runtime to storage.
@@ -166,7 +166,9 @@ fn testnet_genesis(
         }),
         pallet_balances: Some(BalancesConfig {
             // Configure endowed accounts with initial balance of 1 << 60.
-            balances: endowed_accounts.iter().cloned().map(|k|(k, 1 << 60)).collect(),
+            balances: endowed_accounts.iter().cloned()
+            .map(|k| (k, ENDOWMENT))
+            .collect(),
         }),
         pallet_aura: Some(AuraConfig {
             authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
