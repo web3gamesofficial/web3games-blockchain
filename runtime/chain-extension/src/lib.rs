@@ -7,21 +7,15 @@ use frame_support::traits::Randomness;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
-use sp_runtime::{DispatchError, AccountId32, RuntimeDebug};
-use sp_std::{prelude::*, convert::TryFrom};
+use sp_runtime::{DispatchError, RuntimeDebug};
+use sp_std::prelude::*;
 
-// use super::Runtime;
-// pub trait Config: frame_system::Config + pallet_contracts::Config + pallet_poe::Config {}
 pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
 	type Randomness: Randomness<Self::Hash>;
 }
 
 /// Result that returns a [`DispatchError`] on error.
 pub type Result<T> = sp_std::result::Result<T, DispatchError>;
-
-pub fn to_account_id(account: &[u8]) -> AccountId32 {
-	AccountId32::try_from(account).unwrap()
-}
 
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
 pub struct BalanceOf<AccountId, TokenId> {

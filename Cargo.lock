@@ -3860,20 +3860,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-poe"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-randomness-collective-flip"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#904495bc14eff5171fca5912247e772948439411"
@@ -6180,7 +6166,6 @@ dependencies = [
  "pallet-evm",
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
- "pallet-poe",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
