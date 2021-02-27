@@ -722,6 +722,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "chain-extension"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "hex",
+ "pallet-contracts",
+ "pallet-erc1155",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6151,6 +6164,7 @@ dependencies = [
 name = "sgc-runtime"
 version = "0.0.1"
 dependencies = [
+ "chain-extension",
  "fp-rpc",
  "frame-executive",
  "frame-support",

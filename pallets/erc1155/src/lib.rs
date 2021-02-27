@@ -32,9 +32,9 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type TokenBalance: Member + Parameter + AtLeast32BitUnsigned + Default + Copy;
+		type TokenBalance: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + From<u128> + Into<u128>;
 
-		type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u32>;
+		type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u32> + Into<u32>;
 	}
 
 	#[pallet::pallet]
@@ -277,6 +277,9 @@ impl<T: Config> Pallet<T> {
 		id: &T::TokenId,
 		amount: T::TokenBalance
 	) -> DispatchResult {
+		debug::info!("run erc1155: do_transfer_from");
+		debug::info!("from: {:?}, to: {:?}, id: {:?}, amount: {:?}", from, to, id, amount);
+
 		if from == to {
 			return Ok(());
 		}
@@ -353,8 +356,8 @@ impl<T: Config> Pallet<T> {
 
 	pub fn balance_of(owner: &T::AccountId, id: &T::TokenId) -> T::TokenBalance {
 		debug::info!("run erc1155: balance_of");
-		debug::info!("owner: {:?}", owner);
-		debug::info!("id: {:?}", id);
+		debug::info!("owner: {:?}, id: {:?}", owner, id);
+
 		Self::balances(id, owner)
 	}
 

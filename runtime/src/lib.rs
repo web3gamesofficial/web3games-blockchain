@@ -299,7 +299,7 @@ impl pallet_contracts::Config for Runtime {
     type MaxValueSize = MaxValueSize;
     type WeightPrice = pallet_transaction_payment::Module<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-    type ChainExtension = ();
+    type ChainExtension = chain_extension::SgcChainExtension;
     type DeletionQueueDepth = DeletionQueueDepth;
     type DeletionWeightLimit = DeletionWeightLimit;
     type MaxCodeSize = MaxCodeSize;
@@ -429,6 +429,10 @@ impl pallet_erc1155::Config for Runtime {
 }
 
 impl precompile::Config for Runtime {}
+
+impl chain_extension::Config for Runtime {
+    type Randomness = RandomnessCollectiveFlip;
+}
 
 construct_runtime!(
     pub enum Runtime where
