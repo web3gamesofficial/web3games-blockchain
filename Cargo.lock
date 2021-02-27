@@ -722,19 +722,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chain-extension"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "hex",
- "pallet-contracts",
- "pallet-erc1155",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3689,6 +3676,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-chain-extension"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "hex",
+ "pallet-contracts",
+ "pallet-erc1155",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-contracts"
 version = "2.0.1"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#904495bc14eff5171fca5912247e772948439411"
@@ -6150,7 +6150,6 @@ dependencies = [
 name = "sgc-runtime"
 version = "0.0.1"
 dependencies = [
- "chain-extension",
  "fp-rpc",
  "frame-executive",
  "frame-support",
@@ -6158,6 +6157,7 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "pallet-aura",
  "pallet-balances",
+ "pallet-chain-extension",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
