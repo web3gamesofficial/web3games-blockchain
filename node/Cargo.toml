@@ -50,6 +50,7 @@ sc-client-api = { git = "https://github.com/paritytech/substrate.git", branch = 
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-basic-authorship = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sc-keystore = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-telemetry = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 pallet-contracts = { git = "https://github.com/paritytech/substrate.git",  branch = "master" }

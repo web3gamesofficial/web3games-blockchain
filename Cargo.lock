@@ -6118,6 +6118,7 @@ dependencies = [
  "sc-consensus-manual-seal",
  "sc-executor",
  "sc-finality-grandpa",
+ "sc-keystore",
  "sc-network",
  "sc-rpc",
  "sc-rpc-api",
