@@ -11,7 +11,7 @@ hex = { version = "0.4.2", optional = true }
 sp-runtime = { version = "3.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
 sp-std = { version = "3.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
 frame-support = { version = "3.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
-pallet-contracts = { version = "2.0.0", git = "https://github.com/paritytech/substrate.git",  branch = "master", default-features = false }
+pallet-contracts = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git",  branch = "master", default-features = false }
 
 pallet-erc1155 = { default-features = false, path = "../../pallets/erc1155" }
 

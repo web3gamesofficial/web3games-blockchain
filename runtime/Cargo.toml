@@ -44,9 +44,9 @@ sp-version = { version = "3.0.0", default-features = false, git = "https://githu
 pallet-scheduler = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 # Contract
-pallet-contracts-primitives = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
-pallet-contracts = { version = "2.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
-pallet-contracts-rpc-runtime-api = { version = "0.8.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
+pallet-contracts-primitives = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
+pallet-contracts = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
+pallet-contracts-rpc-runtime-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
 
 # EVM
 pallet-ethereum = { version = "0.1.0", default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
