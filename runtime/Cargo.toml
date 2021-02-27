@@ -66,7 +66,6 @@ chain-extension = { default-features = false, path = "./chain-extension" }
 
 #local pallet
 pallet-template = { default-features = false, path = "../pallets/template" }
-pallet-poe = { default-features = false, path = "../pallets/poe" }
 pallet-erc1155 = { default-features = false, path = "../pallets/erc1155" }
 
 [build-dependencies]
@@ -115,7 +114,6 @@ std = [
 	"chain-extension/std",
 
 	"pallet-template/std",
-	"pallet-poe/std",
 	"pallet-erc1155/std",
 ]
 # runtime-benchmarks = [

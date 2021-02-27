@@ -418,10 +418,6 @@ impl pallet_template::Config for Runtime {
     type Event = Event;
 }
 
-impl pallet_poe::Config for Runtime {
-    type Event = Event;
-}
-
 impl pallet_erc1155::Config for Runtime {
     type Event = Event;
     type TokenBalance = u128;
@@ -457,7 +453,6 @@ construct_runtime!(
         //
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
-        PoeModule: pallet_poe::{Module, Call, Storage, Event<T>},
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
     }
 );
