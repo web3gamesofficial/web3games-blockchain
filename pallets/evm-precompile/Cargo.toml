@@ -1,5 +1,5 @@
 [package]
-name = "precompile"
+name = "pallet-evm-precompile"
 version = "0.1.0"
 authors = ["Anonymous"]
 edition = "2018"

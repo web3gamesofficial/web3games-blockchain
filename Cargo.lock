@@ -3827,6 +3827,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-evm-precompile"
+version = "0.1.0"
+dependencies = [
+ "evm",
+ "fp-evm",
+ "frame-support",
+ "log",
+ "pallet-erc1155",
+ "pallet-evm",
+ "pallet-evm-precompile-simple",
+ "rustc-hex",
+ "sp-core",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-evm-precompile-simple"
 version = "3.0.0"
 source = "git+https://github.com/Web3-Substrate-Game-World/frontier?branch=sgc_v0.1#379dcdcf3adb68a8b40981d97ce3b6a444a4c46b"
@@ -4414,22 +4430,6 @@ name = "ppv-lite86"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
-
-[[package]]
-name = "precompile"
-version = "0.1.0"
-dependencies = [
- "evm",
- "fp-evm",
- "frame-support",
- "log",
- "pallet-erc1155",
- "pallet-evm",
- "pallet-evm-precompile-simple",
- "rustc-hex",
- "sp-core",
- "sp-std",
-]
 
 [[package]]
 name = "primitive-types"
@@ -6164,6 +6164,7 @@ dependencies = [
  "pallet-erc1155",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-evm-precompile",
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-randomness-collective-flip",
@@ -6174,7 +6175,6 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
- "precompile",
  "serde",
  "sgc-primitives",
  "sp-api",

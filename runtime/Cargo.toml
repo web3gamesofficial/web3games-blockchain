@@ -61,7 +61,7 @@ fp-rpc = { default-features = false, git = "https://github.com/Web3-Substrate-Ga
 # hex-literal = { version = "0.3.1", optional = true }
 
 primitives = { package = "sgc-primitives", path = "../primitives", default-features = false }
-precompile = { default-features = false, path = "./precompile" }
+precompile = { package = "pallet-evm-precompile", default-features = false, path = "../pallets/evm-precompile" }
 chain-extension = { default-features = false, path = "./chain-extension" }
 
 #local pallet
