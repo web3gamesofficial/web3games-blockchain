@@ -2,8 +2,6 @@ use crate::{chain_spec, service};
 use crate::cli::{Cli, Subcommand};
 use sc_cli::{SubstrateCli, RuntimeVersion, Role, ChainSpec};
 use sc_service::PartialComponents;
-// use sgc_runtime::Block;
-// use crate::service::new_partial;
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {

@@ -1,5 +1,4 @@
 use structopt::StructOpt;
-// use sc_cli::RunCmd;
 
 #[allow(missing_docs)]
 #[derive(Debug, StructOpt)]
