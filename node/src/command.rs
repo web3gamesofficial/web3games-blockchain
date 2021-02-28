@@ -34,7 +34,7 @@ impl SubstrateCli for Cli {
         Ok(match id {
             "dev" => Box::new(chain_spec::development_config()?),
             "" | "local" => Box::new(chain_spec::local_testnet_config()?),
-            "ice-staging" => Box::new(chain_spec::ice_staging_testnet_config()?),
+            "plum" => Box::new(chain_spec::plum_staging_testnet_config()?),
             path => Box::new(chain_spec::ChainSpec::from_json_file(
                 std::path::PathBuf::from(path),
             )?),

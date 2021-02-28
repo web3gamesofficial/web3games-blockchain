@@ -8,13 +8,14 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{Verify, IdentifyAccount};
 use sp_core::crypto::UncheckedInto;
 use sc_service::ChainType;
+use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use hex_literal::hex;
 
 // The URL for the telemetry server.
-// const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
+const TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
 /// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -136,15 +137,15 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
     ))
 }
 
-pub fn ice_staging_testnet_config() -> Result<ChainSpec, String> {
+pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
     let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
 
     Ok(ChainSpec::from_genesis(
         // Name
-        "Local Testnet",
+        "SGC Plum",
         // ID
-        "local_testnet",
-        ChainType::Local,
+        "sgc_plum",
+        ChainType::Live,
         move || testnet_genesis(
             wasm_binary,
             // Initial PoA authorities
@@ -174,9 +175,9 @@ pub fn ice_staging_testnet_config() -> Result<ChainSpec, String> {
         // Bootnodes
         vec![],
         // Telemetry
-        None,
+        TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
         // Protocol ID
-        None,
+        Some("plum"),
         // Properties
         Some(json!({
             "tokenDecimals": 18,
