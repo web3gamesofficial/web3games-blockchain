@@ -40,7 +40,6 @@ sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git", bra
 sc-network = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-consensus-aura = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sc-consensus-manual-seal = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
