@@ -11,7 +11,8 @@ use frame_support::{
 	ensure,
 	dispatch::{DispatchResult, DispatchError},
 };
-use sp_std::{fmt::Debug, prelude::*};
+use sp_core::U256;
+use sp_std::{fmt::Debug, convert::TryInto, prelude::*};
 use primitives::{CurrencyId, Balance};
 use frame_support::debug;
 
@@ -370,7 +371,9 @@ impl<T: Config> Pallet<T> {
 				let currency_reserve = Self::currency_reserves(id);
 				let token_reserve = token_reserves[i];
 
-				let (currency_amount, rounded) = Self::div_round(amount * currency_reserve, token_reserve - amount);
+				let (currency_amount, rounded) = Self::div_round(
+					U256::from(amount).saturating_mul(U256::from(currency_reserve)),
+					U256::from(token_reserve).saturating_sub(U256::from(amount)));
 				ensure!(max_currencys[i] >= currency_amount, Error::<T>::MaxCurrencyAmountExceeded);
 
 				total_currency = total_currency + currency_amount;
@@ -473,8 +476,8 @@ impl<T: Config> Pallet<T> {
 		ensure!(amount_out > Zero::zero() , Error::<T>::InsufficientOutputAmount);
 		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
 
-		let numerator = reserve_in * amount_out * 1000u128;
-		let denominator = (reserve_out - amount_out) * 995u128;
+		let numerator: U256 = U256::from(reserve_in).saturating_mul(U256::from(amount_out)).saturating_mul(U256::from(1000u128));
+		let denominator: U256 = (U256::from(reserve_out).saturating_sub(U256::from(amount_out))).saturating_mul(U256::from(995u128));
 		let (amount_in, _) = Self::div_round(numerator, denominator);
 
 		Ok(amount_in)
@@ -488,10 +491,14 @@ impl<T: Config> Pallet<T> {
 		ensure!(amount_in > Zero::zero() , Error::<T>::InsufficientInputAmount);
 		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
 
-		let amount_in_with_fee = amount_in * 995u128;
-		let numerator = amount_in_with_fee * reserve_out;
-		let denominator = (reserve_in * 1000u128) + amount_in_with_fee;
-		let amount_out = numerator / denominator;
+		let amount_in_with_fee: U256 = U256::from(amount_in).saturating_mul(U256::from(995u128));
+		let numerator: U256 = U256::from(amount_in_with_fee).saturating_mul(U256::from(reserve_out));
+		let denominator: U256 = (U256::from(reserve_in).saturating_mul(U256::from(1000u128))).saturating_add(amount_in_with_fee);
+
+		let amount_out = numerator
+			.checked_div(denominator)
+			.and_then(|n| TryInto::<Balance>::try_into(n).ok())
+			.unwrap_or_else(Zero::zero);
 
 		Ok(amount_out)
 	}
@@ -510,12 +517,22 @@ impl<T: Config> Pallet<T> {
 		}
 	}
 
-	fn div_round(a: Balance, b: Balance) -> (Balance, bool) {
-		if a % b > Zero::zero() {
-			(a / b, false)
+	/// Divides two numbers and add 1 if there is a rounding error
+	fn div_round(numerator: U256, denominator: U256) -> (Balance, bool) {
+		let remainder = numerator.checked_rem(denominator).unwrap();
+		if remainder.is_zero() {
+			(numerator
+				.checked_div(denominator)
+				.and_then(|n| TryInto::<Balance>::try_into(n).ok())
+				.unwrap_or_else(Zero::zero)
+			, false)
 		} else {
-			((a / b) + 1u128, true)
+			(numerator
+				.checked_div(denominator)
+				.and_then(|r| r.checked_add(U256::one()))
+				.and_then(|n| TryInto::<Balance>::try_into(n).ok())
+				.unwrap_or_else(Zero::zero)
+			, true)
 		}
 	}
-
 }
