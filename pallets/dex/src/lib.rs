@@ -14,7 +14,6 @@ use frame_support::{
 use sp_core::U256;
 use sp_std::{fmt::Debug, convert::TryInto, prelude::*};
 use primitives::{CurrencyId, Balance};
-use frame_support::debug;
 
 pub use pallet::*;
 
@@ -230,7 +229,7 @@ pub struct Exchange<
 	pub currency_tao: TaoId,
 	/// The token of the currency tao
 	pub currency_token: TokenId,
-	/// The tao of exchange liquidity pool 
+	/// The tao of exchange liquidity pool
 	pub liquidity_tao: TaoId,
 	/// The fund account of exchange
 	pub vault: AccountId,
@@ -339,10 +338,6 @@ impl<T: Config> Pallet<T> {
 		max_currencys: Vec<Balance>,
 	) -> DispatchResult {
 		let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
-
-		debug::info!("do_add_liquidity");
-		debug::info!("amount0: {:?}, amount1: {:?}", token_amounts[0], token_amounts[1]);
-		debug::info!("currency0: {:?}, currency1: {:?}", max_currencys[0], max_currencys[1]);
 
 		// Transfer the tokens to add to the exchange liquidity pools
 		token::Module::<T>::do_batch_transfer_from(who, &exchange.vault, exchange.token_tao, token_ids.clone(), token_amounts.clone())?;
