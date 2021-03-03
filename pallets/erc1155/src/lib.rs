@@ -161,7 +161,13 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn create_token(origin: OriginFor<T>, tao_id: T::TaoId, token_id: T::TokenId, is_nf: bool, uri: Vec<u8>) -> DispatchResultWithPostInfo {
+		pub fn create_token(
+			origin: OriginFor<T>,
+			tao_id: T::TaoId,
+			token_id: T::TokenId,
+			is_nf: bool,
+			uri: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
 			Self::do_create_token(&who, tao_id, token_id, is_nf, uri)?;
@@ -169,7 +175,11 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn set_approval_for_all(origin: OriginFor<T>, operator: T::AccountId, approved: bool) -> DispatchResultWithPostInfo {
+		pub fn set_approval_for_all(
+			origin: OriginFor<T>,
+			operator: T::AccountId,
+			approved: bool,
+		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
 			if operator == who {
@@ -182,7 +192,14 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn transfer_from(origin: OriginFor<T>, from: T::AccountId, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
+		pub fn transfer_from(
+			origin: OriginFor<T>,
+			from: T::AccountId,
+			to: T::AccountId,
+			tao_id: T::TaoId,
+			token_id: T::TokenId,
+			amount: Balance,
+		) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_transfer_from(&from, &to, tao_id, token_id, amount)?;
@@ -191,7 +208,13 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn mint(origin: OriginFor<T>, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
+		pub fn mint(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			tao_id: T::TaoId,
+			token_id: T::TokenId,
+			amount: Balance,
+		) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_mint(&to, tao_id, token_id, amount)?;
@@ -215,7 +238,13 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn burn(origin: OriginFor<T>, from: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
+		pub fn burn(
+			origin: OriginFor<T>,
+			from: T::AccountId,
+			tao_id: T::TaoId,
+			token_id: T::TokenId,
+			amount: Balance,
+		) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_burn(&from, tao_id, token_id, amount)?;
