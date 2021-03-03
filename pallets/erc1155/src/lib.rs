@@ -200,10 +200,40 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn batch_mint(
+			origin: OriginFor<T>,
+			to: T::AccountId,
+			tao_id: T::TaoId,
+			token_ids: Vec<T::TokenId>,
+			amounts: Vec<Balance>
+		) -> DispatchResultWithPostInfo {
+			let _who = ensure_signed(origin)?;
+
+			Self::do_batch_mint(&to, tao_id, token_ids, amounts)?;
+			
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn burn(origin: OriginFor<T>, from: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_burn(&from, tao_id, token_id, amount)?;
+			
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn batch_burn(
+			origin: OriginFor<T>,
+			from: T::AccountId,
+			tao_id: T::TaoId,
+			token_ids: Vec<T::TokenId>,
+			amounts: Vec<Balance>
+		) -> DispatchResultWithPostInfo {
+			let _who = ensure_signed(origin)?;
+
+			Self::do_batch_burn(&from, tao_id, token_ids, amounts)?;
 			
 			Ok(().into())
 		}
