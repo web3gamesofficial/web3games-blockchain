@@ -91,7 +91,6 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
-		Unknown,
 		Overflow,
 		InvalidExchangeId,
 		NoAvailableExchangeId,
@@ -102,8 +101,9 @@ pub mod pallet {
 		MaxCurrencyAmountExceeded,
 		InvalidCurrencyAmount,
 		InsufficientLiquidity,
-		InsufficientOutputAmount,
-		InsufficientInputAmount,
+		NullTokensBought,
+		NullTokensSold,
+		EmptyReserve,
 	}
 
 	#[pallet::hooks]
@@ -261,6 +261,8 @@ impl<T: Config> Pallet<T> {
 			let amount_out = token_amounts_out[i];
 			let token_reserve = token_reserves[i];
 
+			ensure!(amount_out > Zero::zero() , Error::<T>::NullTokensBought);
+
 			let currency_reserve = Self::currency_reserves(id);
 			let currency_amount = Self::get_amount_in(amount_out, currency_reserve, token_reserve)?;
 
@@ -313,6 +315,8 @@ impl<T: Config> Pallet<T> {
 			let id = token_ids[i];
 			let amount_in = token_amounts_in[i];
 			let token_reserve = token_reserves[i];
+
+			ensure!(amount_in > Zero::zero() , Error::<T>::NullTokensSold);
 
 			let currency_reserve = Self::currency_reserves(id);
 			let currency_amount = Self::get_amount_out(amount_in, token_reserve.saturating_sub(amount_in), currency_reserve)?;
@@ -500,8 +504,7 @@ impl<T: Config> Pallet<T> {
 		reserve_in: Balance,
 		reserve_out: Balance,
 	) -> Result<Balance, DispatchError> {
-		ensure!(amount_out > Zero::zero() , Error::<T>::InsufficientOutputAmount);
-		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
+		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::EmptyReserve);
 
 		let numerator: U256 = U256::from(reserve_in).saturating_mul(U256::from(amount_out)).saturating_mul(U256::from(1000u128));
 		let denominator: U256 = (U256::from(reserve_out).saturating_sub(U256::from(amount_out))).saturating_mul(U256::from(995u128));
@@ -515,8 +518,7 @@ impl<T: Config> Pallet<T> {
 		reserve_in: Balance,
 		reserve_out: Balance,
 	) -> Result<Balance, DispatchError> {
-		ensure!(amount_in > Zero::zero() , Error::<T>::InsufficientInputAmount);
-		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
+		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::EmptyReserve);
 
 		let amount_in_with_fee: U256 = U256::from(amount_in).saturating_mul(U256::from(995u128));
 		let numerator: U256 = U256::from(amount_in_with_fee).saturating_mul(U256::from(reserve_out));
