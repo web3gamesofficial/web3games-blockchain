@@ -430,6 +430,21 @@ impl pallet_erc1155::Config for Runtime {
     type TaoId = u64;
 }
 
+parameter_types! {
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
+	pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+}
+
+impl pallet_currency_token::Config for Runtime {
+    type Event = Event;
+    type ModuleId = CurrencyTokenModuleId;
+}
+
+impl pallet_dex::Config for Runtime {
+    type Event = Event;
+    type ModuleId = DexModuleId;
+}
+
 construct_runtime!(
     pub enum Runtime where
         Block = Block,
@@ -454,6 +469,8 @@ construct_runtime!(
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
+        CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
+        Dex: pallet_dex::{Module, Call, Storage, Event<T>},
     }
 );
 

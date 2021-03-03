@@ -3734,6 +3734,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-currency-token"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-erc1155",
+ "parity-scale-codec",
+ "sgc-primitives",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-dex"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "integer-sqrt",
+ "pallet-balances",
+ "pallet-currency-token",
+ "pallet-erc1155",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "sgc-primitives",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-erc1155"
 version = "0.1.0"
 dependencies = [
@@ -6087,6 +6121,8 @@ dependencies = [
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
+ "pallet-currency-token",
+ "pallet-dex",
  "pallet-erc1155",
  "pallet-ethereum",
  "pallet-evm",
