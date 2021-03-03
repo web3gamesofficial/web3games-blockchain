@@ -208,6 +208,22 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn batch_transfer_from(
+			origin: OriginFor<T>,
+			from: T::AccountId,
+			to: T::AccountId,
+			tao_id: T::TaoId,
+			token_ids: Vec<T::TokenId>,
+			amounts: Vec<Balance>
+		) -> DispatchResultWithPostInfo {
+			let _who = ensure_signed(origin)?;
+
+			Self::do_batch_transfer_from(&from, &to, tao_id, token_ids, amounts)?;
+			
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn mint(
 			origin: OriginFor<T>,
 			to: T::AccountId,
