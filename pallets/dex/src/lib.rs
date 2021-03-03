@@ -264,11 +264,16 @@ impl<T: Config> Pallet<T> {
 			let currency_reserve = Self::currency_reserves(id);
 			let currency_amount = Self::get_amount_in(amount_out, currency_reserve, token_reserve)?;
 
-			total_refund_currency -= currency_amount;
+			total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
 
 			amounts_in[i] = currency_amount;
 
-			CurrencyReserves::<T>::mutate(id, |currency_reserve| *currency_reserve += currency_amount);
+			CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+				*currency_reserve = currency_reserve
+					.checked_add(currency_amount)
+					.ok_or(Error::<T>::Overflow)?;
+				Ok(())
+			})?;
 		}
 
 		// Refund currency token if any
@@ -310,12 +315,17 @@ impl<T: Config> Pallet<T> {
 			let token_reserve = token_reserves[i];
 
 			let currency_reserve = Self::currency_reserves(id);
-			let currency_amount = Self::get_amount_out(amount_in, token_reserve - amount_in, currency_reserve)?;
+			let currency_amount = Self::get_amount_out(amount_in, token_reserve.saturating_sub(amount_in), currency_reserve)?;
 
-			total_currency += currency_amount;
+			total_currency = total_currency.saturating_add(currency_amount);
 			amounts_out[i] = currency_amount;
 
-			CurrencyReserves::<T>::mutate(id, |currency_reserve| *currency_reserve -= currency_amount);
+			CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+				*currency_reserve = currency_reserve
+					.checked_sub(currency_amount)
+					.ok_or(Error::<T>::Overflow)?;
+				Ok(())
+			})?;
 		}
 
 		ensure!(total_currency >= min_currency, Error::<T>::InsufficientCurrencyAmount);
@@ -371,21 +381,32 @@ impl<T: Config> Pallet<T> {
 					U256::from(token_reserve).saturating_sub(U256::from(amount)));
 				ensure!(max_currencys[i] >= currency_amount, Error::<T>::MaxCurrencyAmountExceeded);
 
-				total_currency = total_currency + currency_amount;
+				total_currency = total_currency.saturating_add(currency_amount);
 
-				let fixed_currency_amount = if rounded { currency_amount - 1u128 } else { currency_amount };
-				liquidities_to_mint[i] = (fixed_currency_amount * total_liquidity) / currency_reserve;
+				let fixed_currency_amount = if rounded { currency_amount.saturating_sub(1u128) } else { currency_amount };
+				liquidities_to_mint[i] = (fixed_currency_amount.saturating_mul(total_liquidity)) / currency_reserve;
 				currency_amounts[i] = currency_amount;
 
-				CurrencyReserves::<T>::mutate(id, |currency_reserve| *currency_reserve += currency_amount);
-				TotalSupplies::<T>::mutate(id, |total_supply| *total_supply = total_liquidity + liquidities_to_mint[i]);
+				CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+					*currency_reserve = currency_reserve
+						.checked_add(currency_amount)
+						.ok_or(Error::<T>::Overflow)?;
+					Ok(())
+				})?;
+
+				TotalSupplies::<T>::try_mutate(id, |total_supply| -> DispatchResult {
+					*total_supply = total_liquidity
+						.checked_add(liquidities_to_mint[i])
+						.ok_or(Error::<T>::Overflow)?;
+					Ok(())
+				})?;
 			} else {
 				let max_currency = max_currencys[i];
 
 				// Otherwise rounding error could end up being significant on second deposit
-				ensure!(max_currency >= 1000000000u128.into(), Error::<T>::InvalidCurrencyAmount);
+				ensure!(max_currency >= Balance::from(1000000000u128), Error::<T>::InvalidCurrencyAmount);
 
-				total_currency = total_currency + max_currency;
+				total_currency = total_currency.saturating_add(max_currency);
 				liquidities_to_mint[i] = max_currency;
 				currency_amounts[i] = max_currency;
 
@@ -437,18 +458,29 @@ impl<T: Config> Pallet<T> {
 
 			let currency_reserve = Self::currency_reserves(id);
 
-			let currency_amount = liquidity * currency_reserve / total_liquidity;
-			let token_amount = liquidity * token_reserve / total_liquidity;
+			let currency_amount = liquidity.saturating_mul(currency_reserve) / total_liquidity;
+			let token_amount = liquidity.saturating_mul(token_reserve) / total_liquidity;
 
 			ensure!(currency_amount >= min_currencys[i], Error::<T>::InsufficientCurrencyAmount);
 			ensure!(token_amount >= min_tokens[i], Error::<T>::InsufficientTokenAmount);
 
-			total_currency += currency_amount;
+			total_currency = total_currency.saturating_add(currency_amount);
 			token_amounts[i] = token_amount;
 			currency_amounts[i] = currency_amount;
 
-			CurrencyReserves::<T>::mutate(id, |currency_reserve| *currency_reserve -= currency_amount);
-			TotalSupplies::<T>::mutate(id, |total_supply| *total_supply = total_liquidity - liquidity);
+			CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+				*currency_reserve = currency_reserve
+					.checked_sub(currency_amount)
+					.ok_or(Error::<T>::Overflow)?;
+				Ok(())
+			})?;
+
+			TotalSupplies::<T>::try_mutate(id, |total_supply| -> DispatchResult {
+				*total_supply = total_liquidity
+					.checked_sub(liquidity)
+					.ok_or(Error::<T>::Overflow)?;
+				Ok(())
+			})?;
 		}
 
 		// Burn liquidity pool tokens for offchain supplies
