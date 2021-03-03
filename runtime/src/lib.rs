@@ -12,7 +12,7 @@ use sp_std::{prelude::*, marker::PhantomData};
 use codec::{Encode, Decode};
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata, U256, H160, H256};
 use sp_runtime::{
-    ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys,
+    ApplyExtrinsicResult, ModuleId, generic, create_runtime_str, impl_opaque_keys,
     transaction_validity::{TransactionValidity, TransactionSource},
 };
 use sp_runtime::traits::{
@@ -60,7 +60,7 @@ use pallet_contracts::weights::WeightInfo;
 mod constants;
 pub use constants::{time::*, currency::*};
 pub use primitives::{
-	AccountId, AccountIndex, Balance, BlockNumber, Hash, Index, Moment, Signature,
+    AccountId, AccountIndex, Balance, BlockNumber, Hash, Index, Moment, Signature,
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -413,7 +413,12 @@ impl pallet_scheduler::Config for Runtime {
 //     type WeightInfo = ();
 // }
 
-/// Configure the pallet template in pallets/template.
+impl precompile::Config for Runtime {}
+
+impl chain_extension::Config for Runtime {
+    type Randomness = RandomnessCollectiveFlip;
+}
+
 impl pallet_template::Config for Runtime {
     type Event = Event;
 }
@@ -421,13 +426,8 @@ impl pallet_template::Config for Runtime {
 impl pallet_erc1155::Config for Runtime {
     type Event = Event;
     type TokenBalance = u128;
-    type TokenId = u32;
-}
-
-impl precompile::Config for Runtime {}
-
-impl chain_extension::Config for Runtime {
-    type Randomness = RandomnessCollectiveFlip;
+    type TokenId = u64;
+    type TaoId = u64;
 }
 
 construct_runtime!(

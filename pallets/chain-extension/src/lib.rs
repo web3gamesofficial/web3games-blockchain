@@ -18,16 +18,18 @@ pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
 pub type Result<T> = sp_std::result::Result<T, DispatchError>;
 
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BalanceOf<AccountId, TokenId> {
+pub struct BalanceOf<AccountId, TaoId, TokenId> {
 	owner: AccountId,
-	id: TokenId,
+	tao_id: TaoId,
+	token_id: TokenId,
 }
 
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct TransferFromInput<AccountId, TokenId, TokenBalance> {
+pub struct TransferFromInput<AccountId, TaoId, TokenId, TokenBalance> {
 	from: AccountId,
 	to: AccountId,
-	id: TokenId,
+	tao_id: TaoId,
+	token_id: TokenId,
 	amount: TokenBalance,
 }
 
@@ -62,10 +64,11 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
 				let input: BalanceOf<
 					<E::T as SysConfig>::AccountId,
+					<E::T as pallet_erc1155::Config>::TaoId,
 					<E::T as pallet_erc1155::Config>::TokenId,
 				 > = env.read_as()?;
 
-				let balance: u128 = pallet_erc1155::Module::<E::T>::balance_of(&input.owner, &input.id).into();
+				let balance: u128 = pallet_erc1155::Module::<E::T>::balance_of(&input.owner, input.tao_id, input.token_id).into();
 				debug::info!("balance: {:?}", balance);
 
 				let balance_slice = balance.to_be_bytes();
@@ -96,6 +99,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
 				let input: TransferFromInput<
 					<E::T as SysConfig>::AccountId,
+					<E::T as pallet_erc1155::Config>::TaoId,
 					<E::T as pallet_erc1155::Config>::TokenId,
 					<E::T as pallet_erc1155::Config>::TokenBalance,
 				> = env.read_as()?;
@@ -104,7 +108,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 				let weight = 100_000;
 				env.charge_weight(weight)?;
 
-				pallet_erc1155::Module::<E::T>::do_transfer_from(&input.from, &input.to, &input.id, input.amount)?;
+				pallet_erc1155::Module::<E::T>::do_transfer_from(&input.from, &input.to, input.tao_id, input.token_id, input.amount)?;
 			}
 
 			_ => {
