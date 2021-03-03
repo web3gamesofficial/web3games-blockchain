@@ -9,6 +9,7 @@ use pallet_contracts::chain_extension::{
 };
 use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::prelude::*;
+use primitives::Balance;
 
 pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
 	type Randomness: Randomness<Self::Hash>;
@@ -25,12 +26,12 @@ pub struct BalanceOf<AccountId, TaoId, TokenId> {
 }
 
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct TransferFromInput<AccountId, TaoId, TokenId, TokenBalance> {
+pub struct TransferFromInput<AccountId, TaoId, TokenId> {
 	from: AccountId,
 	to: AccountId,
 	tao_id: TaoId,
 	token_id: TokenId,
-	amount: TokenBalance,
+	amount: Balance,
 }
 
 /// chain extension of contract
@@ -101,7 +102,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 					<E::T as SysConfig>::AccountId,
 					<E::T as pallet_erc1155::Config>::TaoId,
 					<E::T as pallet_erc1155::Config>::TokenId,
-					<E::T as pallet_erc1155::Config>::TokenBalance,
 				> = env.read_as()?;
 				debug::info!("input: {:?}", input);
 

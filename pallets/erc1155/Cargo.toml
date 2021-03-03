@@ -13,6 +13,8 @@ sp-runtime = { version = "3.0.0", default-features = false, git = "https://githu
 sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
+primitives = { package = "sgc-primitives", path = "../../primitives", default-features = false }
+
 [dev-dependencies]
 serde = { version = "1.0.101" }
 
@@ -25,5 +27,6 @@ std = [
     'sp-std/std',
     'sp-io/std',
     'sp-runtime/std',
+    'primitives/std',
     'sp-core/std',
 ]

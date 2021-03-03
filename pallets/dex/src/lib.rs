@@ -12,7 +12,7 @@ use frame_support::{
 	dispatch::{DispatchResult, DispatchError},
 };
 use sp_std::{fmt::Debug, prelude::*};
-use primitives::CurrencyId;
+use primitives::{CurrencyId, Balance};
 use frame_support::debug;
 
 pub use pallet::*;
@@ -64,7 +64,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		T::TokenId,
-		T::TokenBalance,
+		Balance,
 		ValueQuery
 	>;
 
@@ -74,7 +74,7 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		T::TokenId,
-		T::TokenBalance,
+		Balance,
 		ValueQuery
 	>;
 
@@ -83,10 +83,10 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		ExchangeCreated(ExchangeId, T::AccountId),
-		CurrencyToToken(ExchangeId, T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>, Vec<T::TokenBalance>),
-		TokenToCurrency(ExchangeId, T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>, Vec<T::TokenBalance>),
-		LiquidityAdded(T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>, Vec<T::TokenBalance>),
-		LiquidityRemoved(T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<T::TokenBalance>, Vec<T::TokenBalance>),
+		CurrencyToToken(ExchangeId, T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<Balance>, Vec<Balance>),
+		TokenToCurrency(ExchangeId, T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<Balance>, Vec<Balance>),
+		LiquidityAdded(T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<Balance>, Vec<Balance>),
+		LiquidityRemoved(T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<Balance>, Vec<Balance>),
 	}
 
 	#[pallet::error]
@@ -151,8 +151,8 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			exchange_id: ExchangeId,
 			token_ids: Vec<T::TokenId>,
-			token_amounts_out: Vec<T::TokenBalance>,
-			max_currency: T::TokenBalance,
+			token_amounts_out: Vec<Balance>,
+			max_currency: Balance,
 			to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
@@ -167,8 +167,8 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			exchange_id: ExchangeId,
 			token_ids: Vec<T::TokenId>,
-			token_amounts_in: Vec<T::TokenBalance>,
-			min_currency: T::TokenBalance,
+			token_amounts_in: Vec<Balance>,
+			min_currency: Balance,
 			to: T::AccountId,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
@@ -184,8 +184,8 @@ pub mod pallet {
 			exchange_id: ExchangeId,
 			to: T::AccountId,
 			token_ids: Vec<T::TokenId>,
-			token_amounts: Vec<T::TokenBalance>,
-			max_currencys: Vec<T::TokenBalance>,
+			token_amounts: Vec<Balance>,
+			max_currencys: Vec<Balance>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
@@ -200,9 +200,9 @@ pub mod pallet {
 			exchange_id: ExchangeId,
 			to: T::AccountId,
 			token_ids: Vec<T::TokenId>,
-			liquidities: Vec<T::TokenBalance>,
-			min_currencys: Vec<T::TokenBalance>,
-			min_tokens: Vec<T::TokenBalance>,
+			liquidities: Vec<Balance>,
+			min_currencys: Vec<Balance>,
+			min_tokens: Vec<Balance>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
@@ -241,8 +241,8 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		exchange_id: ExchangeId,
 		token_ids: Vec<T::TokenId>,
-		token_amounts_out: Vec<T::TokenBalance>,
-		max_currency: T::TokenBalance,
+		token_amounts_out: Vec<Balance>,
+		max_currency: Balance,
 		to: &T::AccountId,
 	) -> DispatchResult {
 		let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
@@ -251,8 +251,8 @@ impl<T: Config> Pallet<T> {
 		token::Module::<T>::do_transfer_from(who, &exchange.vault, exchange.currency_tao, exchange.currency_token, max_currency)?;
 
 		let n = token_ids.len();
-		let mut total_refund_currency: T::TokenBalance = max_currency;
-		let mut amounts_in = vec![T::TokenBalance::from(0u128); n];
+		let mut total_refund_currency: Balance = max_currency;
+		let mut amounts_in = vec![Balance::from(0u128); n];
 
 		let token_reserves = Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
 
@@ -289,8 +289,8 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		exchange_id: ExchangeId,
 		token_ids: Vec<T::TokenId>,
-		token_amounts_in: Vec<T::TokenBalance>,
-		min_currency: T::TokenBalance,
+		token_amounts_in: Vec<Balance>,
+		min_currency: Balance,
 		to: &T::AccountId,
 	) -> DispatchResult {
 		let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
@@ -299,8 +299,8 @@ impl<T: Config> Pallet<T> {
 		token::Module::<T>::do_batch_transfer_from(who, &exchange.vault, exchange.token_tao, token_ids.clone(), token_amounts_in.clone())?;
 
 		let n = token_ids.len();
-		let mut total_currency = T::TokenBalance::from(0u128);
-		let mut amounts_out = vec![T::TokenBalance::from(0u128); n];
+		let mut total_currency = Balance::from(0u128);
+		let mut amounts_out = vec![Balance::from(0u128); n];
 
 		let token_reserves = Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
 
@@ -334,8 +334,8 @@ impl<T: Config> Pallet<T> {
 		exchange_id: ExchangeId,
 		to: &T::AccountId,
 		token_ids: Vec<T::TokenId>,
-		token_amounts: Vec<T::TokenBalance>,
-		max_currencys: Vec<T::TokenBalance>,
+		token_amounts: Vec<Balance>,
+		max_currencys: Vec<Balance>,
 	) -> DispatchResult {
 		let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
 
@@ -347,9 +347,9 @@ impl<T: Config> Pallet<T> {
 		token::Module::<T>::do_batch_transfer_from(who, &exchange.vault, exchange.token_tao, token_ids.clone(), token_amounts.clone())?;
 
 		let n = token_ids.len();
-		let mut total_currency = T::TokenBalance::from(0u128);
-		let mut liquidities_to_mint = vec![T::TokenBalance::from(0u128); n];
-		let mut currency_amounts = vec![T::TokenBalance::from(0u128); n];
+		let mut total_currency = Balance::from(0u128);
+		let mut liquidities_to_mint = vec![Balance::from(0u128); n];
+		let mut currency_amounts = vec![Balance::from(0u128); n];
 
 		let token_reserves = Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
 
@@ -375,7 +375,7 @@ impl<T: Config> Pallet<T> {
 
 				total_currency = total_currency + currency_amount;
 
-				let fixed_currency_amount = if rounded { currency_amount - 1u128.into() } else { currency_amount };
+				let fixed_currency_amount = if rounded { currency_amount - 1u128 } else { currency_amount };
 				liquidities_to_mint[i] = (fixed_currency_amount * total_liquidity) / currency_reserve;
 				currency_amounts[i] = currency_amount;
 
@@ -413,9 +413,9 @@ impl<T: Config> Pallet<T> {
 		exchange_id: ExchangeId,
 		to: &T::AccountId,
 		token_ids: Vec<T::TokenId>,
-		liquidities: Vec<T::TokenBalance>,
-		min_currencys: Vec<T::TokenBalance>,
-		min_tokens: Vec<T::TokenBalance>,
+		liquidities: Vec<Balance>,
+		min_currencys: Vec<Balance>,
+		min_tokens: Vec<Balance>,
 	) -> DispatchResult {
 		let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
 
@@ -423,9 +423,9 @@ impl<T: Config> Pallet<T> {
 		token::Module::<T>::do_batch_transfer_from(who, &exchange.vault, exchange.liquidity_tao, token_ids.clone(), liquidities.clone())?;
 
 		let n = token_ids.len();
-		let mut total_currency = T::TokenBalance::from(0u128);
-		let mut token_amounts = vec![T::TokenBalance::from(0u128); n];
-		let mut currency_amounts = vec![T::TokenBalance::from(0u128); n];
+		let mut total_currency = Balance::from(0u128);
+		let mut token_amounts = vec![Balance::from(0u128); n];
+		let mut currency_amounts = vec![Balance::from(0u128); n];
 
 		let token_reserves = Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
 
@@ -466,41 +466,41 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn get_amount_in(
-		amount_out: T::TokenBalance,
-		reserve_in: T::TokenBalance,
-		reserve_out: T::TokenBalance,
-	) -> Result<T::TokenBalance, DispatchError> {
+		amount_out: Balance,
+		reserve_in: Balance,
+		reserve_out: Balance,
+	) -> Result<Balance, DispatchError> {
 		ensure!(amount_out > Zero::zero() , Error::<T>::InsufficientOutputAmount);
 		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
 
-		let numerator = reserve_in * amount_out * 1000u128.into();
-		let denominator = (reserve_out - amount_out) * 995u128.into();
+		let numerator = reserve_in * amount_out * 1000u128;
+		let denominator = (reserve_out - amount_out) * 995u128;
 		let (amount_in, _) = Self::div_round(numerator, denominator);
 
 		Ok(amount_in)
 	}
 
 	fn get_amount_out(
-		amount_in: T::TokenBalance,
-		reserve_in: T::TokenBalance,
-		reserve_out: T::TokenBalance,
-	) -> Result<T::TokenBalance, DispatchError> {
+		amount_in: Balance,
+		reserve_in: Balance,
+		reserve_out: Balance,
+	) -> Result<Balance, DispatchError> {
 		ensure!(amount_in > Zero::zero() , Error::<T>::InsufficientInputAmount);
 		ensure!(reserve_in > Zero::zero()  && reserve_out > Zero::zero() , Error::<T>::InsufficientLiquidity);
 
-		let amount_in_with_fee = amount_in * 995u128.into();
+		let amount_in_with_fee = amount_in * 995u128;
 		let numerator = amount_in_with_fee * reserve_out;
-		let denominator = (reserve_in * 1000u128.into()) + amount_in_with_fee;
+		let denominator = (reserve_in * 1000u128) + amount_in_with_fee;
 		let amount_out = numerator / denominator;
 
 		Ok(amount_out)
 	}
 
-	fn get_token_reserves(vault: &T::AccountId, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Vec<T::TokenBalance> {
+	fn get_token_reserves(vault: &T::AccountId, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Vec<Balance> {
 		let n = token_ids.len();
 
 		if n == 1 {
-			let mut token_reserves = vec![T::TokenBalance::from(0u128); n];
+			let mut token_reserves = vec![Balance::from(0u128); n];
 			token_reserves[0] = token::Module::<T>::balance_of(vault, tao_id, token_ids[0]);
 			token_reserves
 		} else {
@@ -510,11 +510,11 @@ impl<T: Config> Pallet<T> {
 		}
 	}
 
-	fn div_round(a: T::TokenBalance, b: T::TokenBalance) -> (T::TokenBalance, bool) {
+	fn div_round(a: Balance, b: Balance) -> (Balance, bool) {
 		if a % b > Zero::zero() {
 			(a / b, false)
 		} else {
-			((a / b) + 1u128.into(), true)
+			((a / b) + 1u128, true)
 		}
 	}
 

@@ -425,7 +425,7 @@ impl pallet_template::Config for Runtime {
 
 impl pallet_erc1155::Config for Runtime {
     type Event = Event;
-    type TokenBalance = u128;
+    // type TokenBalance = u128;
     type TokenId = u64;
     type TaoId = u64;
 }

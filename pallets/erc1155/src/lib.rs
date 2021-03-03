@@ -4,7 +4,7 @@ use sp_std::{fmt::Debug, prelude::*};
 use sp_runtime::{
 	RuntimeDebug,
 	traits::{
-		AtLeast32BitUnsigned, CheckedAdd, CheckedSub, One,
+		AtLeast32BitUnsigned, CheckedAdd, One,
 	},
 };
 use codec::{Encode, Decode, HasCompact};
@@ -12,6 +12,7 @@ use frame_support::{
 	ensure,
 	dispatch::{DispatchResult, DispatchError},
 };
+use primitives::Balance;
 use frame_support::debug;
 
 pub use pallet::*;
@@ -31,8 +32,6 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
-		type TokenBalance: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + From<u128> + Into<u128>;
 
 		type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u64> + Into<u64>;
 
@@ -104,7 +103,7 @@ pub mod pallet {
 		T::AccountId,
 		Blake2_128Concat,
 		(T::TaoId, T::TokenId),
-		T::TokenBalance,
+		Balance,
 		ValueQuery
 	>;
 
@@ -126,12 +125,12 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		TaoCreated(T::TaoId, T::AccountId),
 		TokenCreated(T::TaoId, T::TokenId, T::AccountId),
-		Mint(T::AccountId, T::TaoId, T::TokenId, T::TokenBalance),
-		BatchMint(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<T::TokenBalance>),
-		Burn(T::AccountId, T::TaoId, T::TokenId, T::TokenBalance),
-		BatchBurn(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<T::TokenBalance>),
-		Transferred(T::AccountId, T::AccountId, T::TaoId, T::TokenId, T::TokenBalance),
-		BatchTransferred(T::AccountId, T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<T::TokenBalance>),
+		Mint(T::AccountId, T::TaoId, T::TokenId, Balance),
+		BatchMint(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<Balance>),
+		Burn(T::AccountId, T::TaoId, T::TokenId, Balance),
+		BatchBurn(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<Balance>),
+		Transferred(T::AccountId, T::AccountId, T::TaoId, T::TokenId, Balance),
+		BatchTransferred(T::AccountId, T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<Balance>),
 		ApprovalForAll(T::AccountId, T::AccountId, bool),
 	}
 
@@ -183,7 +182,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn transfer_from(origin: OriginFor<T>, from: T::AccountId, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
+		pub fn transfer_from(origin: OriginFor<T>, from: T::AccountId, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_transfer_from(&from, &to, tao_id, token_id, amount)?;
@@ -192,7 +191,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn mint(origin: OriginFor<T>, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
+		pub fn mint(origin: OriginFor<T>, to: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_mint(&to, tao_id, token_id, amount)?;
@@ -201,7 +200,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn burn(origin: OriginFor<T>, from: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: T::TokenBalance) -> DispatchResultWithPostInfo {
+		pub fn burn(origin: OriginFor<T>, from: T::AccountId, tao_id: T::TaoId, token_id: T::TokenId, amount: Balance) -> DispatchResultWithPostInfo {
 			let _who = ensure_signed(origin)?;
 
 			Self::do_burn(&from, tao_id, token_id, amount)?;
@@ -293,11 +292,11 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		tao_id: T::TaoId,
 		token_id: T::TokenId,
-		amount: T::TokenBalance
+		amount: Balance
 	) -> DispatchResult {
 		Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
 			*balance = balance
-				.checked_add(&amount)
+				.checked_add(amount)
 				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
@@ -311,7 +310,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		tao_id: T::TaoId,
 		token_ids: Vec<T::TokenId>,
-		amounts: Vec<T::TokenBalance>
+		amounts: Vec<Balance>
 	) -> DispatchResult {
 		ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
@@ -322,7 +321,7 @@ impl<T: Config> Pallet<T> {
 
 			Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
 				*balance = balance
-					.checked_add(&amount)
+					.checked_add(amount)
 					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
@@ -337,11 +336,11 @@ impl<T: Config> Pallet<T> {
 		from: &T::AccountId,
 		tao_id: T::TaoId,
 		token_id: T::TokenId,
-		amount: T::TokenBalance
+		amount: Balance
 	) -> DispatchResult {
 		Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
 			*balance = balance
-				.checked_sub(&amount)
+				.checked_sub(amount)
 				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
@@ -355,7 +354,7 @@ impl<T: Config> Pallet<T> {
 		from: &T::AccountId,
 		tao_id: T::TaoId,
 		token_ids: Vec<T::TokenId>,
-		amounts: Vec<T::TokenBalance>
+		amounts: Vec<Balance>
 	) -> DispatchResult {
 		ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
@@ -366,7 +365,7 @@ impl<T: Config> Pallet<T> {
 
 			Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
 				*balance = balance
-					.checked_sub(&amount)
+					.checked_sub(amount)
 					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
@@ -382,7 +381,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		tao_id: T::TaoId,
 		token_id: T::TokenId,
-		amount: T::TokenBalance
+		amount: Balance
 	) -> DispatchResult {
 		debug::info!("run erc1155: do_transfer_from");
 
@@ -392,14 +391,14 @@ impl<T: Config> Pallet<T> {
 
 		Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
 			*balance = balance
-				.checked_sub(&amount)
+				.checked_sub(amount)
 				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
 
 		Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
 			*balance = balance
-				.checked_add(&amount)
+				.checked_add(amount)
 				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
@@ -414,7 +413,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		tao_id: T::TaoId,
 		token_ids: Vec<T::TokenId>,
-		amounts: Vec<T::TokenBalance>
+		amounts: Vec<Balance>
 	) -> DispatchResult {
 		if from == to {
 			return Ok(());
@@ -429,14 +428,14 @@ impl<T: Config> Pallet<T> {
 
 			Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
 				*balance = balance
-					.checked_sub(&amount)
+					.checked_sub(amount)
 					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
 			Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
 				*balance = balance
-					.checked_add(&amount)
+					.checked_add(amount)
 					.ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
@@ -456,16 +455,16 @@ impl<T: Config> Pallet<T> {
 		Self::operator_approvals(owner, operator)
 	}
 
-	pub fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> T::TokenBalance {
+	pub fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance {
 		debug::info!("run erc1155: balance_of");
 
 		Self::balances(owner, (tao_id, token_id))
 	}
 
-	pub fn balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<T::TokenBalance>, DispatchError> {
+	pub fn balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError> {
 		ensure!(owners.len() == token_ids.len(), Error::<T>::InvalidArrayLength);
 
-		let mut batch_balances = vec![T::TokenBalance::from(0u32); owners.len()];
+		let mut batch_balances = vec![Balance::from(0u32); owners.len()];
 
 		let n = owners.len();
 		for i in 0..n {

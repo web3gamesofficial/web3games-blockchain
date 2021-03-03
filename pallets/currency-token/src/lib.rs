@@ -122,8 +122,8 @@ pub mod pallet {
             
             let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
 
-            let token_amount = Self::convert_amount(amount);
-            token::Module::<T>::do_mint(&who, tao_id, token_info.token_id, token_amount)?;
+            // let token_amount = Self::convert_amount(amount);
+            token::Module::<T>::do_mint(&who, tao_id, token_info.token_id, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
@@ -160,7 +160,7 @@ impl<T: Config> Pallet<T> {
         Ok((token_info.tao_id, token_info.token_id))
     }
 
-    pub fn convert_amount(amount: Balance) -> T::TokenBalance {
+    pub fn convert_amount(amount: Balance) -> Balance {
         let value: u128 = amount.into();
         value.into()
     }
