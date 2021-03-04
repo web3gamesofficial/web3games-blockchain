@@ -97,7 +97,7 @@ pub mod pallet {
             ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotFound);
             let tao_id = CurrencyTao::<T>::get();
     
-            let token_id = T::TokenId::from(1u64);
+			let token_id = Self::convert_to_token_id(currency_id);
 			token::Module::<T>::do_create_token(&who, tao_id, token_id, false, [].to_vec())?;
 	
 			let token_info = TokenInfo {
@@ -188,8 +188,8 @@ impl<T: Config> Pallet<T> {
         Ok((token_info.tao_id, token_info.token_id))
     }
 
-    pub fn convert_amount(amount: Balance) -> Balance {
-        let value: u128 = amount.into();
-        value.into()
+    pub fn convert_to_token_id(id: CurrencyId) -> T::TokenId {
+        let n: u64 = id.into();
+        n.into()
     }
 }

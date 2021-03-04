@@ -139,3 +139,13 @@ impl Into<[u8; 32]> for CurrencyId {
         bytes
     }
 }
+
+impl Into<u64> for CurrencyId {
+	fn into(self) -> u64 {
+		match self {
+			CurrencyId::Token(token) => {
+				token as u64
+			}
+		}
+	}
+}
