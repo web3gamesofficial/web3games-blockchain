@@ -1,11 +1,9 @@
 [package]
 name = "sgc-runtime"
 version = "0.0.1"
-authors = ["Anonymous"]
+authors = ["Web3Games Developers"]
 edition = "2018"
-license = "Unlicense"
-homepage = "https://substrate.dev"
-repository = "https://github.com/paritytech/substrate/"
+license = 'GPL-3.0'
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

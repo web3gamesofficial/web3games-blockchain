@@ -1,13 +1,9 @@
 [package]
-authors = ["Anonymous"]
-edition = "2018"
 name = "sgc-primitives"
 version = "0.1.0"
-license = "Unlicense"
-homepage = "https://substrate.dev"
-repository = "https://github.com/paritytech/substrate/"
-description = "FRAME pallet template for defining custom runtime logic."
-readme = "README.md"
+authors = ["Web3Games Developers"]
+edition = "2018"
+license = 'GPL-3.0'
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

@@ -1,8 +1,9 @@
 [package]
 name = "pallet-evm-precompile"
 version = "0.1.0"
-authors = ["Anonymous"]
+authors = ["Web3Games Developers"]
 edition = "2018"
+license = 'GPL-3.0'
 
 [dependencies]
 log = "0.4.8"

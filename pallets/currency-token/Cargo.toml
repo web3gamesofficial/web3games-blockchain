@@ -1,13 +1,8 @@
 [package]
-authors = ["Anonymous"]
-edition = "2018"
 name = "pallet-currency-token"
 version = "0.1.0"
-license = "Unlicense"
-homepage = "https://substrate.dev"
-repository = "https://github.com/paritytech/substrate/"
-description = "FRAME pallet template for defining custom runtime logic."
-readme = "README.md"
+authors = ["Web3Games Developers"]
+edition = "2018"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
