@@ -415,10 +415,6 @@ impl chain_extension::Config for Runtime {
     type Randomness = RandomnessCollectiveFlip;
 }
 
-impl pallet_template::Config for Runtime {
-    type Event = Event;
-}
-
 impl pallet_erc1155::Config for Runtime {
     type Event = Event;
     // type TokenBalance = u128;
@@ -462,8 +458,8 @@ construct_runtime!(
         EVM: pallet_evm::{Module, Config, Call, Storage, Event<T>},
         Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
         Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
-        // Include the custom logic from the template pallet in the runtime.
-        TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
+        
+        // SGC pallets
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
         CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
         Dex: pallet_dex::{Module, Call, Storage, Event<T>},

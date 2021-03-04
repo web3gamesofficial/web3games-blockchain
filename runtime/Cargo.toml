@@ -70,7 +70,6 @@ precompile = { package = "pallet-evm-precompile", default-features = false, path
 chain-extension = { package = "pallet-chain-extension", default-features = false, path = "../pallets/chain-extension" }
 
 #local pallet
-pallet-template = { default-features = false, path = "../pallets/template" }
 pallet-erc1155 = { default-features = false, path = "../pallets/erc1155" }
 pallet-currency-token = { default-features = false, path = "../pallets/currency-token" }
 pallet-dex = { default-features = false, path = "../pallets/dex" }
@@ -120,7 +119,6 @@ std = [
 	"precompile/std",
 	"chain-extension/std",
 
-	"pallet-template/std",
 	"pallet-erc1155/std",
 	"pallet-currency-token/std",
 	"pallet-dex/std",
