@@ -66,12 +66,10 @@ pub mod pallet {
     // Errors inform users that something went wrong.
     #[pallet::error]
     pub enum Error<T> {
-        NoneValue,
-        InvalidCurrencyId,
-        CurrencyTokenNotFound,
         NumOverflow,
         AlreadyTaoCreated,
-        CurrencyTaoNotExists,
+        CurrencyTaoNotFound,
+        CurrencyTokenNotFound,
     }
 
     #[pallet::hooks]
@@ -96,7 +94,7 @@ pub mod pallet {
         pub fn create_token(origin: OriginFor<T>, currency_id: CurrencyId) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotExists);
+            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotFound);
             let tao_id = CurrencyTao::<T>::get();
     
             let token_id = T::TokenId::from(1u64);
@@ -119,24 +117,23 @@ pub mod pallet {
         pub fn mint(origin: OriginFor<T>, currency_id: CurrencyId, amount: Balance) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotExists);
+            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotFound);
             let tao_id = CurrencyTao::<T>::get();
 
             T::Currency::deposit(currency_id, &who, amount)?;
-            
-            let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
-
-            token::Module::<T>::do_mint(&who, tao_id, token_info.token_id, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
-					.as_mut()
-					.ok_or(Error::<T>::CurrencyTokenNotFound)?;
-				info.total_supply = info
-					.total_supply
-					.checked_add(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
-				Ok(())
+                    .as_mut()
+                    .ok_or(Error::<T>::CurrencyTokenNotFound)?;
+
+                token::Module::<T>::do_mint(&who, tao_id, info.token_id, amount)?;
+
+                info.total_supply = info
+                    .total_supply
+                    .checked_add(amount)
+                    .ok_or(Error::<T>::NumOverflow)?;
+                Ok(())
             })?;
 
 			Self::deposit_event(Event::TokenMint(currency_id, amount, who));
@@ -148,19 +145,18 @@ pub mod pallet {
         pub fn burn(origin: OriginFor<T>, currency_id: CurrencyId, amount: Balance) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotExists);
+            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotFound);
             let tao_id = CurrencyTao::<T>::get();
 
             T::Currency::withdraw(currency_id, &who, amount)?;
-            
-            let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
-
-            token::Module::<T>::do_burn(&who, tao_id, token_info.token_id, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
 					.as_mut()
-					.ok_or(Error::<T>::CurrencyTokenNotFound)?;
+                    .ok_or(Error::<T>::CurrencyTokenNotFound)?;
+                
+                token::Module::<T>::do_burn(&who, tao_id, info.token_id, amount)?;
+
 				info.total_supply = info
 					.total_supply
 					.checked_sub(amount)
@@ -188,7 +184,7 @@ pub struct TokenInfo<
 
 impl<T: Config> Pallet<T> {
     pub fn get_currency_token(currency_id: CurrencyId) -> Result<(T::TaoId, T::TokenId), DispatchError> {
-        let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
+        let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::CurrencyTokenNotFound)?;
         Ok((token_info.tao_id, token_info.token_id))
     }
 
