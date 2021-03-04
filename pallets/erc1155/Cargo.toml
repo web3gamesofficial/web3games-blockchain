@@ -13,6 +13,7 @@ sp-io = { version = "3.0.0", default-features = false, git = "https://github.com
 sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+log = { version = "0.4.14", default-features = false }
 
 primitives = { package = "sgc-primitives", path = "../../primitives", default-features = false }
 
@@ -28,6 +29,7 @@ std = [
     'sp-std/std',
     'sp-io/std',
     'sp-runtime/std',
+    'log/std',
     'primitives/std',
     'sp-core/std',
 ]

@@ -13,7 +13,6 @@ use frame_support::{
 	dispatch::{DispatchResult, DispatchError},
 };
 use primitives::Balance;
-use frame_support::debug;
 
 pub use pallet::*;
 
@@ -512,7 +511,7 @@ impl<T: Config> Pallet<T> {
 		token_id: T::TokenId,
 		amount: Balance
 	) -> DispatchResult {
-		debug::info!("run erc1155: do_transfer_from");
+		log::info!("run erc1155: do_transfer_from");
 
 		if from == to {
 			return Ok(());
@@ -596,7 +595,7 @@ impl<T: Config> Pallet<T> {
 
 	// func_id 1013 fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance
 	pub fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance {
-		debug::info!("run erc1155: balance_of");
+		log::info!("run erc1155: balance_of");
 
 		Self::balances(owner, (tao_id, token_id))
 	}

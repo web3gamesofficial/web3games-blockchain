@@ -1,4 +1,3 @@
-use frame_support::debug;
 use fp_evm::Precompile;
 use evm::{ExitSucceed, ExitError, Context};
 // use pallet_evm::{AddressMapping, GasWeightMapping};
@@ -20,15 +19,15 @@ where
         _context: &Context,
     ) -> result::Result<(ExitSucceed, Vec<u8>, u64), ExitError> {
 
-        debug::debug!(target: "evm", "input: {:?}", input);
+        log::debug!(target: "evm", "input: {:?}", input);
         
-        debug::info!("input: {:?}", input);
+        log::info!("input: {:?}", input);
 
         let owner = T::AccountId::default();
         let tao_id = T::TaoId::from(2u64);
         let token_id = T::TokenId::from(1u64);
         let balance = pallet_erc1155::Module::<T>::balance_of(&owner, tao_id, token_id);
-        debug::info!("balance: {:?}", balance);
+        log::info!("balance: {:?}", balance);
 
         Ok((ExitSucceed::Returned, [].to_vec(), 0))
 
@@ -38,11 +37,11 @@ where
 
         // match action {
         // 	Action::QueryBalance => {
-        //         debug::debug!(target: "evm", "into QueryBalance");
+        //         log::debug!(target: "evm", "into QueryBalance");
         // 		Ok((ExitSucceed::Returned, [].to_vec(), 0))
         // 	}
         // 	Action::TransferFrom => {
-        //         debug::debug!(target: "evm", "into TransferFrom");
+        //         log::debug!(target: "evm", "into TransferFrom");
         //         Ok((ExitSucceed::Returned, [].to_vec(), 0))
         // 	}
         // }
