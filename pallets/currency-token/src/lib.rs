@@ -59,7 +59,8 @@ pub mod pallet {
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
         TokenCreated(CurrencyId, T::AccountId),
-		TokenMint(CurrencyId, Balance),
+        TokenMint(CurrencyId, Balance, T::AccountId),
+        TokenBurn(CurrencyId, Balance, T::AccountId),
     }
     
     // Errors inform users that something went wrong.
@@ -138,7 +139,36 @@ pub mod pallet {
 				Ok(())
             })?;
 
-			Self::deposit_event(Event::TokenMint(currency_id, amount));
+			Self::deposit_event(Event::TokenMint(currency_id, amount, who));
+
+			Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn burn(origin: OriginFor<T>, currency_id: CurrencyId, amount: Balance) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotExists);
+            let tao_id = CurrencyTao::<T>::get();
+
+            T::Currency::withdraw(currency_id, &who, amount)?;
+            
+            let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
+
+            token::Module::<T>::do_burn(&who, tao_id, token_info.token_id, amount)?;
+
+            CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
+                let info = token_info
+					.as_mut()
+					.ok_or(Error::<T>::CurrencyTokenNotFound)?;
+				info.total_supply = info
+					.total_supply
+					.checked_sub(amount)
+					.ok_or(Error::<T>::NumOverflow)?;
+				Ok(())
+            })?;
+
+			Self::deposit_event(Event::TokenBurn(currency_id, amount, who));
 
 			Ok(().into())
         }
