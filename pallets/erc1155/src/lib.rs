@@ -71,7 +71,7 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(super) type Taos<T: Config> = StorageMap<
 		_,
-		Blake2_128,
+		Blake2_128Concat,
 		T::TaoId,
 		Tao<T::AccountId>
 	>;
@@ -87,7 +87,7 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(super) type Tokens<T: Config> = StorageDoubleMap<
 		_,
-		Blake2_128,
+		Blake2_128Concat,
 		T::TaoId,
 		Blake2_128,
 		T::TokenId,
