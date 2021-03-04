@@ -55,6 +55,11 @@ pallet-evm-precompile-simple = { version = "3.0.0", default-features = false, gi
 
 fp-rpc = { default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
 
+# Orml packages
+orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+
 # Used for runtime benchmarking
 # frame-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
 # frame-system-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }

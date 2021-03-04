@@ -16,7 +16,7 @@ use sp_runtime::{
     transaction_validity::{TransactionValidity, TransactionSource},
 };
 use sp_runtime::traits::{
-    BlakeTwo256, Block as BlockT, NumberFor, AccountIdLookup,
+    BlakeTwo256, Block as BlockT, NumberFor, AccountIdLookup, Zero,
 };
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -54,13 +54,15 @@ use pallet_evm::{
 use fp_rpc::TransactionStatus;
 use pallet_transaction_payment::CurrencyAdapter;
 use pallet_contracts::weights::WeightInfo;
-// use orml_currencies::BasicCurrencyAdapter;
+use orml_currencies::BasicCurrencyAdapter;
+use orml_traits::parameter_type_with_key;
 
 /// Constant values used within the runtime.
 mod constants;
 pub use constants::{time::*, currency::*};
 pub use primitives::{
-    AccountId, AccountIndex, Balance, BlockNumber, Hash, Index, Moment, Signature,
+    AccountId, AccountIndex, Balance, BlockNumber, Hash, Index, Moment, Signature, Amount,
+    TokenSymbol, CurrencyId,
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -379,39 +381,33 @@ impl pallet_scheduler::Config for Runtime {
     type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
 }
 
-// pub type Amount = i128;
+parameter_type_with_key! {
+    pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+        Zero::zero()
+    };
+}
 
-// #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, Ord, PartialOrd)]
-// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-// pub enum CurrencyId {
-//     Native,
-//     DOT,
-//     KSM,
-//     BTC,
-//     SGC,
-// }
-//
-// impl orml_tokens::Config for Runtime {
-//     type Event = Event;
-//     type Balance = Balance;
-//     type Amount = Amount;
-//     type CurrencyId = CurrencyId;
-//     type WeightInfo = ();
-//     type ExistentialDeposits = ();
-//     type OnDust = ();
-// }
+impl orml_tokens::Config for Runtime {
+    type Event = Event;
+    type Balance = Balance;
+    type Amount = Amount;
+    type CurrencyId = CurrencyId;
+    type WeightInfo = ();
+    type ExistentialDeposits = ExistentialDeposits;
+    type OnDust = ();
+}
 
-// parameter_types! {
-//     pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Native;
-// }
-//
-// impl orml_currencies::Config for Runtime {
-//     type Event = Event;
-//     type MultiCurrency = Tokens;
-//     type NativeCurrency = BasicCurrencyAdapter<Runtime, Balance, Amount, BlockNumber> ;
-//     type GetNativeCurrencyId = GetNativeCurrencyId;
-//     type WeightInfo = ();
-// }
+parameter_types! {
+    pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::SGC);
+}
+
+impl orml_currencies::Config for Runtime {
+    type Event = Event;
+    type MultiCurrency = Tokens;
+    type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+    type GetNativeCurrencyId = GetNativeCurrencyId;
+    type WeightInfo = ();
+}
 
 impl precompile::Config for Runtime {}
 
@@ -438,6 +434,7 @@ parameter_types! {
 impl pallet_currency_token::Config for Runtime {
     type Event = Event;
     type ModuleId = CurrencyTokenModuleId;
+    type Currency = Currencies;
 }
 
 impl pallet_dex::Config for Runtime {
@@ -463,9 +460,8 @@ construct_runtime!(
         Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
         Ethereum: pallet_ethereum::{Module, Call, Storage, Event, Config, ValidateUnsigned},
         EVM: pallet_evm::{Module, Config, Call, Storage, Event<T>},
-        // Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
-        // Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
-        //
+        Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
+        Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
         // Include the custom logic from the template pallet in the runtime.
         TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},

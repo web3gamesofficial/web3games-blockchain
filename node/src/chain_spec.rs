@@ -1,7 +1,8 @@
 use sp_core::{U256, Pair, Public, H160, sr25519};
 use sgc_runtime::{
     AccountId, AuraConfig, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig, GrandpaConfig,
-    ContractsConfig, SudoConfig, SystemConfig, WASM_BINARY, Signature, Balance, DOLLARS
+    ContractsConfig, SudoConfig, SystemConfig, TokensConfig, WASM_BINARY, Signature, Balance, DOLLARS,
+    TokenSymbol, CurrencyId,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -243,5 +244,17 @@ fn testnet_genesis(
             accounts: evm_accounts,
         }),
         pallet_ethereum: Some(EthereumConfig {}),
+        orml_tokens: Some(TokensConfig {
+            endowed_accounts: endowed_accounts
+              .iter()
+              .flat_map(|x| {
+                vec![
+                  (x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
+                  (x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
+                  (x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
+                ]
+              })
+              .collect(),
+          }),
     }
 }

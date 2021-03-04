@@ -8,6 +8,9 @@ use frame_support::{
 	dispatch::{DispatchResult, DispatchError},
 };
 use sp_std::{fmt::Debug, prelude::*};
+use orml_traits::{
+    MultiCurrency, MultiCurrencyExtended,
+};
 use primitives::{CurrencyId, Balance};
 
 pub use pallet::*;
@@ -27,8 +30,8 @@ pub mod pallet {
     #[pallet::config]
     pub trait Config: frame_system::Config + token::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
         type ModuleId: Get<ModuleId>;
+        type Currency: MultiCurrencyExtended<Self::AccountId, CurrencyId = CurrencyId, Balance = Balance>;
     }
 
     #[pallet::pallet]
@@ -118,11 +121,10 @@ pub mod pallet {
             ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotExists);
             let tao_id = CurrencyTao::<T>::get();
 
-            // T::Currency::deposit(currency_id, &who, total_supply)?;
+            T::Currency::deposit(currency_id, &who, amount)?;
             
             let token_info = CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::InvalidCurrencyId)?;
 
-            // let token_amount = Self::convert_amount(amount);
             token::Module::<T>::do_mint(&who, tao_id, token_info.token_id, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {

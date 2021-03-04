@@ -13,18 +13,22 @@ readme = "README.md"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
+serde = { version = "1.0.101", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 frame-system = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-application-crypto = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 [features]
 default = ["std"]
 std = [
+    "serde",
     "codec/std",
     "frame-system/std",
     "sp-application-crypto/std",
     "sp-core/std",
     "sp-runtime/std",
+    "sp-std/std",
 ]

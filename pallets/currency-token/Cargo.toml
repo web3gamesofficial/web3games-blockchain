@@ -19,6 +19,11 @@ sp-core = { version = "3.0.0", default-features = false, git = "https://github.c
 sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
 
+# Orml packages
+orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+
 primitives = { package = "sgc-primitives", path = "../../primitives", default-features = false }
 token = { package = "pallet-erc1155", path = "../erc1155", default-features = false }
 
@@ -32,6 +37,9 @@ std = [
 	"sp-core/std",
 	"sp-runtime/std",
 	"sp-std/std",
+	"orml-currencies/std",
+    "orml-tokens/std",
+    "orml-traits/std",
 	"primitives/std",
 	"token/std",
 ]
