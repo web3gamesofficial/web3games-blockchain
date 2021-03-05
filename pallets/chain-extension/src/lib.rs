@@ -600,36 +600,38 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 				env.write(&balance_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call create collection"))?;
 			}
-			// 1014 => {
-			// 	// balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
-			// 	log::info!("run 1011");
-			// 	let mut env = env.buf_in_buf_out();
-			// 	let caller = env.ext().caller().clone();
-			// 	log::info!("caller: {:?}", caller);
-			//
-			// 	let input: ApprovedOrOwnerInputParam<
-			// 		<E::T as SysConfig>::AccountId
-			// 	> = env.read_as()?;
-			//
-			// 	let ret: bool = pallet_erc1155::Module::<E::T>::approved_or_owner(&input.who, input.account);
-			// 	let ret = ret as u8;
-			// 	log::info!("balance: {:?}", ret);
-			//
-			// 	let weight = 100_000;
-			// 	env.charge_weight(weight)?;
-			//
-			// 	let ret_slice = ret.to_be_bytes();
-			// 	log::info!("balance_slice: {:?}", ret_slice);
-			//
-			// 	log::trace!(
-			// 		target: "runtime",
-			// 		"[ChainExtension]|call|func_id:{:}",
-			// 		func_id
-			// 	);
-			//
-			// 	env.write(&ret_slice, false, None)
-			// 		.map_err(|_| DispatchError::Other("ChainExtension failed to call create collection"))?;
-			// }
+			1014 => {
+				// balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
+				log::info!("run 1011");
+				let mut env = env.buf_in_buf_out();
+				let caller = env.ext().caller().clone();
+				log::info!("caller: {:?}", caller);
+
+				let input: BalanceOfBatchInputParam<
+					<E::T as SysConfig>::AccountId,
+					<E::T as pallet_erc1155::Config>::TaoId,
+					<E::T as pallet_erc1155::Config>::TokenId,
+				> = env.read_as()?;
+
+				let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_batch(&input.owners, input.tao_id, input.token_ids)?;
+				let ret_slice = ret.encode();
+				log::info!("ret: {:?}", ret);
+
+				let weight = 100_000;
+				env.charge_weight(weight)?;
+
+				// let ret_slice = ret.to_be_bytes();
+				log::info!("ret_slice: {:?}", ret_slice);
+
+				log::trace!(
+					target: "runtime",
+					"[ChainExtension]|call|func_id:{:}",
+					func_id
+				);
+
+				env.write(&ret_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call create collection"))?;
+			}
 
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
