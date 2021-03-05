@@ -3969,6 +3969,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-nft"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-randomness-collective-flip"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate.git?branch=master#e2d74ac74f3511d10b963cddc8bccc1d5af0bf38"
@@ -6224,6 +6238,7 @@ dependencies = [
  "pallet-evm-precompile",
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
+ "pallet-nft",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
