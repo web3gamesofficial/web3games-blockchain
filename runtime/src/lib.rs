@@ -435,6 +435,16 @@ impl pallet_dex::Config for Runtime {
     type ModuleId = DexModuleId;
 }
 
+parameter_types! {
+	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
+}
+
+impl pallet_nft::Config for Runtime {
+    type Event = Event;
+    type CreateCollectionDeposit = CreateCollectionDeposit;
+    type Currency = Balances;
+}
+
 construct_runtime!(
     pub enum Runtime where
         Block = Block,
@@ -460,6 +470,7 @@ construct_runtime!(
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
         CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
         Dex: pallet_dex::{Module, Call, Storage, Event<T>},
+        NFT: pallet_nft::{Module, Call, Storage, Event<T>},
     }
 );
 

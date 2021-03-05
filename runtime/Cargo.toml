@@ -71,6 +71,7 @@ chain-extension = { package = "pallet-chain-extension", default-features = false
 pallet-erc1155 = { default-features = false, path = "../pallets/erc1155" }
 pallet-currency-token = { default-features = false, path = "../pallets/currency-token" }
 pallet-dex = { default-features = false, path = "../pallets/dex" }
+pallet-nft = { default-features = false, path = "../pallets/nft" }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
@@ -120,6 +121,7 @@ std = [
 	"pallet-erc1155/std",
 	"pallet-currency-token/std",
 	"pallet-dex/std",
+	"pallet-nft/std",
 ]
 # runtime-benchmarks = [
 # 	"sp-runtime/runtime-benchmarks",
