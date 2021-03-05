@@ -436,7 +436,7 @@ impl pallet_dex::Config for Runtime {
 }
 
 parameter_types! {
-	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
+    pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
 }
 
 impl pallet_nft::Config for Runtime {
