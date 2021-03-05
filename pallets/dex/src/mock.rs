@@ -1,11 +1,16 @@
 use crate::{Module, Trait};
 
-use sp_core::H256;
-use frame_support::{impl_outer_origin, impl_outer_event ,parameter_types, weights::Weight, traits::OnFinalize, traits::OnInitialize};
-use sp_runtime::{
-    traits::{BlakeTwo256, IdentityLookup}, testing::Header, Perbill, ModuleId,
+use frame_support::{
+    impl_outer_event, impl_outer_origin, parameter_types, traits::OnFinalize, traits::OnInitialize,
+    weights::Weight,
 };
 use frame_system as system;
+use sp_core::H256;
+use sp_runtime::{
+    testing::Header,
+    traits::{BlakeTwo256, IdentityLookup},
+    ModuleId, Perbill,
+};
 
 pub const MILLISECS_PER_BLOCK: u64 = 4000;
 
@@ -79,7 +84,7 @@ impl pallet_balances::Trait for Test {
 }
 
 parameter_types! {
-	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
+    pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
 impl pallet_timestamp::Trait for Test {
@@ -125,8 +130,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     pallet_balances::GenesisConfig::<Test> {
         balances: vec![(1, 10000), (2, 11000), (3, 12000), (4, 13000), (5, 14000)],
     }
-        .assimilate_storage(&mut t)
-        .unwrap();
+    .assimilate_storage(&mut t)
+    .unwrap();
     let mut ext: sp_io::TestExternalities = t.into();
     ext.execute_with(|| System::set_block_number(1));
     ext

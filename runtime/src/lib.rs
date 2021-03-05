@@ -8,61 +8,58 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use sp_std::{prelude::*, marker::PhantomData};
-use codec::{Encode, Decode};
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata, U256, H160, H256};
-use sp_runtime::{
-    ApplyExtrinsicResult, ModuleId, generic, create_runtime_str, impl_opaque_keys,
-    transaction_validity::{TransactionValidity, TransactionSource},
-};
-use sp_runtime::traits::{
-    BlakeTwo256, Block as BlockT, NumberFor, AccountIdLookup, Zero,
-};
+use codec::{Decode, Encode};
+use pallet_grandpa::fg_primitives;
+use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
-use pallet_grandpa::fg_primitives;
-use sp_version::RuntimeVersion;
+use sp_core::crypto::Public;
+use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
+use sp_runtime::traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor, Zero};
+use sp_runtime::{
+    create_runtime_str, generic, impl_opaque_keys,
+    transaction_validity::{TransactionSource, TransactionValidity},
+    ApplyExtrinsicResult, ModuleId,
+};
+use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
-use sp_core::crypto::Public;
+use sp_version::RuntimeVersion;
 
 // A few exports that help ease life for downstream crates.
-#[cfg(any(feature = "std", test))]
-pub use sp_runtime::BuildStorage;
-pub use pallet_timestamp::Call as TimestampCall;
-pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{Permill, Perbill};
+use fp_rpc::TransactionStatus;
 pub use frame_support::{
-    construct_runtime, parameter_types, StorageValue,
-    traits::{KeyOwnerProofSystem, Randomness, FindAuthor},
+    construct_runtime, parameter_types,
+    traits::{FindAuthor, KeyOwnerProofSystem, Randomness},
     weights::{
-        Weight, IdentityFee,
         constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-        DispatchClass,
+        DispatchClass, IdentityFee, Weight,
     },
-    ConsensusEngineId,
+    ConsensusEngineId, StorageValue,
 };
 use frame_system::{
+    limits::{BlockLength, BlockWeights},
     EnsureRoot,
-    limits::{BlockWeights, BlockLength}
 };
-use pallet_evm::{
-    Account as EVMAccount, FeeCalculator, HashedAddressMapping,
-    EnsureAddressTruncated, Runner,
-};
-use fp_rpc::TransactionStatus;
-use pallet_transaction_payment::CurrencyAdapter;
-use pallet_contracts::weights::WeightInfo;
 use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::parameter_type_with_key;
+pub use pallet_balances::Call as BalancesCall;
+use pallet_contracts::weights::WeightInfo;
+use pallet_evm::{
+    Account as EVMAccount, EnsureAddressTruncated, FeeCalculator, HashedAddressMapping, Runner,
+};
+pub use pallet_timestamp::Call as TimestampCall;
+use pallet_transaction_payment::CurrencyAdapter;
+#[cfg(any(feature = "std", test))]
+pub use sp_runtime::BuildStorage;
+pub use sp_runtime::{Perbill, Permill};
 
 /// Constant values used within the runtime.
 mod constants;
-pub use constants::{time::*, currency::*};
+pub use constants::{currency::*, time::*};
 pub use primitives::{
-    AccountId, AccountIndex, Balance, BlockNumber, Hash, Index, Moment, Signature, Amount,
-    TokenSymbol, CurrencyId,
+    AccountId, AccountIndex, Amount, Balance, BlockNumber, CurrencyId, Hash, Index, Moment,
+    Signature, TokenSymbol,
 };
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
@@ -340,10 +337,10 @@ impl pallet_evm::Config for Runtime {
 }
 
 pub struct EthereumFindAuthor<F>(PhantomData<F>);
-impl<F: FindAuthor<u32>> FindAuthor<H160> for EthereumFindAuthor<F>
-{
-    fn find_author<'a, I>(digests: I) -> Option<H160> where
-        I: 'a + IntoIterator<Item=(ConsensusEngineId, &'a [u8])>
+impl<F: FindAuthor<u32>> FindAuthor<H160> for EthereumFindAuthor<F> {
+    fn find_author<'a, I>(digests: I) -> Option<H160>
+    where
+        I: 'a + IntoIterator<Item = (ConsensusEngineId, &'a [u8])>,
     {
         if let Some(author_index) = F::find_author(digests) {
             let authority_id = Aura::authorities()[author_index as usize].clone();
@@ -424,7 +421,7 @@ impl pallet_erc1155::Config for Runtime {
 
 parameter_types! {
     pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
-	pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
 }
 
 impl pallet_currency_token::Config for Runtime {
@@ -458,7 +455,7 @@ construct_runtime!(
         EVM: pallet_evm::{Module, Config, Call, Storage, Event<T>},
         Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
         Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
-        
+
         // SGC pallets
         Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
         CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
@@ -470,15 +467,23 @@ pub struct TransactionConverter;
 
 impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
     fn convert_transaction(&self, transaction: pallet_ethereum::Transaction) -> UncheckedExtrinsic {
-        UncheckedExtrinsic::new_unsigned(pallet_ethereum::Call::<Runtime>::transact(transaction).into())
+        UncheckedExtrinsic::new_unsigned(
+            pallet_ethereum::Call::<Runtime>::transact(transaction).into(),
+        )
     }
 }
 
 impl fp_rpc::ConvertTransaction<opaque::UncheckedExtrinsic> for TransactionConverter {
-    fn convert_transaction(&self, transaction: pallet_ethereum::Transaction) -> opaque::UncheckedExtrinsic {
-        let extrinsic = UncheckedExtrinsic::new_unsigned(pallet_ethereum::Call::<Runtime>::transact(transaction).into());
+    fn convert_transaction(
+        &self,
+        transaction: pallet_ethereum::Transaction,
+    ) -> opaque::UncheckedExtrinsic {
+        let extrinsic = UncheckedExtrinsic::new_unsigned(
+            pallet_ethereum::Call::<Runtime>::transact(transaction).into(),
+        );
         let encoded = extrinsic.encode();
-        opaque::UncheckedExtrinsic::decode(&mut &encoded[..]).expect("Encoded extrinsic is always valid")
+        opaque::UncheckedExtrinsic::decode(&mut &encoded[..])
+            .expect("Encoded extrinsic is always valid")
     }
 }
 

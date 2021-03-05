@@ -2,9 +2,9 @@
 
 use codec::{Decode, Encode};
 use sp_runtime::{
-	generic,
-	traits::{Verify, BlakeTwo256, IdentifyAccount},
-	OpaqueExtrinsic, MultiSignature, RuntimeDebug,
+    generic,
+    traits::{BlakeTwo256, IdentifyAccount, Verify},
+    MultiSignature, OpaqueExtrinsic, RuntimeDebug,
 };
 use sp_std::{
     convert::{Into, TryFrom, TryInto},
@@ -62,9 +62,9 @@ pub type Amount = i128;
 #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum TokenSymbol {
-	SGC = 0,
-	DOT = 1,
-	ACA = 2,
+    SGC = 0,
+    DOT = 1,
+    ACA = 2,
     AUSD = 3,
 }
 
@@ -141,11 +141,9 @@ impl Into<[u8; 32]> for CurrencyId {
 }
 
 impl Into<u64> for CurrencyId {
-	fn into(self) -> u64 {
-		match self {
-			CurrencyId::Token(token) => {
-				token as u64
-			}
-		}
-	}
+    fn into(self) -> u64 {
+        match self {
+            CurrencyId::Token(token) => token as u64,
+        }
+    }
 }

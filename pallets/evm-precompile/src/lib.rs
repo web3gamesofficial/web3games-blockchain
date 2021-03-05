@@ -2,12 +2,12 @@
 
 mod erc1155;
 
-use sp_core::H160;
-use evm::{ExitSucceed, ExitError, Context};
-use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
-use fp_evm::{PrecompileSet, Precompile};
-use sp_std::{result, marker::PhantomData, prelude::*, str::FromStr};
 pub use erc1155::Erc1155Precompile;
+use evm::{Context, ExitError, ExitSucceed};
+use fp_evm::{Precompile, PrecompileSet};
+use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
+use sp_core::H160;
+use sp_std::{marker::PhantomData, prelude::*, result, str::FromStr};
 
 pub trait Config: pallet_evm::Config + pallet_erc1155::Config {}
 
@@ -19,12 +19,7 @@ pub trait Config: pallet_evm::Config + pallet_erc1155::Config {}
 // 	Erc1155<Runtime>,
 // );
 
-pub type EthereumPrecompiles = (
-    ECRecover,
-    Sha256,
-    Ripemd160,
-    Identity,
-);
+pub type EthereumPrecompiles = (ECRecover, Sha256, Ripemd160, Identity);
 
 #[derive(Default)]
 pub struct SgcPrecompiles<T: Config> {

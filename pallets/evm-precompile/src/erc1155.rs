@@ -1,13 +1,12 @@
+use evm::{Context, ExitError, ExitSucceed};
 use fp_evm::Precompile;
-use evm::{ExitSucceed, ExitError, Context};
 // use pallet_evm::{AddressMapping, GasWeightMapping};
-use sp_std::{marker::PhantomData, prelude::*, result};
 use crate::Config;
+use sp_std::{marker::PhantomData, prelude::*, result};
 
 pub struct Erc1155Precompile<T: Config> {
     _marker: PhantomData<T>,
 }
-
 
 impl<T> Precompile for Erc1155Precompile<T>
 where
@@ -18,9 +17,8 @@ where
         _target_gas: Option<u64>,
         _context: &Context,
     ) -> result::Result<(ExitSucceed, Vec<u8>, u64), ExitError> {
-
         log::debug!(target: "evm", "input: {:?}", input);
-        
+
         log::info!("input: {:?}", input);
 
         let owner = T::AccountId::default();
@@ -47,7 +45,6 @@ where
         // }
     }
 }
-
 
 // enum Action {
 //     QueryBalance,

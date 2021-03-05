@@ -1,13 +1,15 @@
-use crate as pallet_template;
-use sp_core::H256;
+use crate as pallet_currency_token;
 use frame_support::parameter_types;
-use sp_runtime::{
-    traits::{BlakeTwo256, IdentityLookup}, testing::Header,
-};
 use frame_system as system;
+use sp_core::H256;
+use sp_runtime::{
+    testing::Header,
+    traits::{BlakeTwo256, IdentityLookup},
+    ModuleId,
+};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
-type Block = frame_system::mocking::MockBlock<Test>; 
+type Block = frame_system::mocking::MockBlock<Test>;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -17,7 +19,7 @@ frame_support::construct_runtime!(
         UncheckedExtrinsic = UncheckedExtrinsic,
     {
         System: frame_system::{Module, Call, Config, Storage, Event<T>},
-        TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
+        CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
     }
 );
 
@@ -51,11 +53,21 @@ impl system::Config for Test {
     type SS58Prefix = SS58Prefix;
 }
 
-impl pallet_template::Config for Test {
+parameter_types! {
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
+    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+}
+
+impl pallet_currency_token::Config for Test {
     type Event = Event;
+    type ModuleId = CurrencyTokenModuleId;
+    type Currency = Currencies;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+    system::GenesisConfig::default()
+        .build_storage::<Test>()
+        .unwrap()
+        .into()
 }
