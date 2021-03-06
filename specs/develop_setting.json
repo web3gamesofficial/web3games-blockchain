@@ -15,5 +15,7 @@
       "Token": "TokenSymbol"
     }
   },
-  "CurrencyIdOf": "CurrencyId"
+  "CurrencyIdOf": "CurrencyId",
+  "CollectionId": "u64",
+  "AssetId": "64"
 }
