@@ -56,6 +56,7 @@ pub mod pallet {
     // Errors inform users that something went wrong.
     #[pallet::error]
     pub enum Error<T> {
+        Unknown,
         NumOverflow,
         AlreadyTaoCreated,
         CurrencyTaoNotFound,
@@ -81,32 +82,6 @@ pub mod pallet {
         }
 
         #[pallet::weight(10_000)]
-        pub fn create_token(
-            origin: OriginFor<T>,
-            currency_id: CurrencyId,
-        ) -> DispatchResultWithPostInfo {
-            let who = ensure_signed(origin)?;
-
-            ensure!(CurrencyTao::<T>::exists(), Error::<T>::CurrencyTaoNotFound);
-            let tao_id = CurrencyTao::<T>::get();
-
-            let token_id = Self::convert_to_token_id(currency_id);
-            token::Module::<T>::do_create_token(&who, tao_id, token_id, false, [].to_vec())?;
-
-            let token_info = TokenInfo {
-                tao_id,
-                token_id: token_id.clone(),
-                total_supply: Default::default(),
-            };
-
-            CurrencyTokens::<T>::insert(currency_id, token_info);
-
-            Self::deposit_event(Event::TokenCreated(currency_id, who));
-
-            Ok(().into())
-        }
-
-        #[pallet::weight(10_000)]
         pub fn mint(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
@@ -119,10 +94,23 @@ pub mod pallet {
 
             T::Currency::deposit(currency_id, &who, amount)?;
 
+            if !CurrencyTokens::<T>::contains_key(currency_id) {
+                let token_id = Self::convert_to_token_id(currency_id);
+                token::Module::<T>::do_create_token(&who, tao_id, token_id, false, [].to_vec())?;
+
+                let token_info = TokenInfo {
+                    tao_id,
+                    token_id: token_id.clone(),
+                    total_supply: Default::default(),
+                };
+
+                CurrencyTokens::<T>::insert(currency_id, token_info);
+            }
+
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
                     .as_mut()
-                    .ok_or(Error::<T>::CurrencyTokenNotFound)?;
+                    .ok_or(Error::<T>::Unknown)?;
 
                 token::Module::<T>::do_mint(&who, tao_id, info.token_id, amount)?;
 
