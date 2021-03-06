@@ -18,9 +18,9 @@ pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
 pub type Result<T> = sp_std::result::Result<T, DispatchError>;
 
 // func_id 1002
-// do_create_tao(who: &T::AccountId, data: Vec<u8>) -> Result<T::TaoId, DispatchError>
+// do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct CreateTaoInputParam<AccountId> {
+pub struct CreateInstanceInputParam<AccountId> {
     who: AccountId,
     data: Vec<u8>,
 }
@@ -28,15 +28,15 @@ pub struct CreateTaoInputParam<AccountId> {
 // func_id 1003
 // do_create_token(
 // 		who: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_id: T::TokenId,
 // 		is_nf: bool,
 // 		uri: Vec<u8>,
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct CreateTokenInputParam<AccountId, TaoId, TokenId> {
+pub struct CreateTokenInputParam<AccountId, InstanceId, TokenId> {
     who: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
     is_nf: bool,
     uri: Vec<u8>,
@@ -58,14 +58,14 @@ pub struct SetApprovalForAllInputParam<AccountId> {
 // func_id 1005
 // do_mint(
 // 		to: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_id: T::TokenId,
 // 		amount: Balance
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct MintInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct MintInputParam<AccountId, InstanceId, TokenId, Balance> {
     to: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
     amount: Balance,
 }
@@ -73,14 +73,14 @@ pub struct MintInputParam<AccountId, TaoId, TokenId, Balance> {
 // func_id 1006
 // do_batch_mint(
 // 		to: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_ids: Vec<T::TokenId>,
 // 		amounts: Vec<Balance>
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BatchMintInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct BatchMintInputParam<AccountId, InstanceId, TokenId, Balance> {
     to: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_ids: Vec<TokenId>,
     amounts: Vec<Balance>,
 }
@@ -88,14 +88,14 @@ pub struct BatchMintInputParam<AccountId, TaoId, TokenId, Balance> {
 // func_id 1007
 // do_burn(
 // 		from: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_id: T::TokenId,
 // 		amount: Balance
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BurnInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct BurnInputParam<AccountId, InstanceId, TokenId, Balance> {
     from: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
     amount: Balance,
 }
@@ -103,14 +103,14 @@ pub struct BurnInputParam<AccountId, TaoId, TokenId, Balance> {
 // func_id 1008
 // do_batch_burn(
 // 		from: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_ids: Vec<T::TokenId>,
 // 		amounts: Vec<Balance>
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BatchBurnInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct BatchBurnInputParam<AccountId, InstanceId, TokenId, Balance> {
     from: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_ids: Vec<TokenId>,
     amounts: Vec<Balance>,
 }
@@ -119,15 +119,15 @@ pub struct BatchBurnInputParam<AccountId, TaoId, TokenId, Balance> {
 // do_transfer_from(
 // 		from: &T::AccountId,
 // 		to: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_id: T::TokenId,
 // 		amount: Balance
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct TransferFromInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct TransferFromInputParam<AccountId, InstanceId, TokenId, Balance> {
     from: AccountId,
     to: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
     amount: Balance,
 }
@@ -136,15 +136,15 @@ pub struct TransferFromInputParam<AccountId, TaoId, TokenId, Balance> {
 // do_batch_transfer_from(
 // 		from: &T::AccountId,
 // 		to: &T::AccountId,
-// 		tao_id: T::TaoId,
+// 		instance_id: T::InstanceId,
 // 		token_ids: Vec<T::TokenId>,
 // 		amounts: Vec<Balance>
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BatchTransferFromInputParam<AccountId, TaoId, TokenId, Balance> {
+pub struct BatchTransferFromInputParam<AccountId, InstanceId, TokenId, Balance> {
     from: AccountId,
     to: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_ids: Vec<TokenId>,
     amounts: Vec<Balance>,
 }
@@ -165,20 +165,20 @@ pub struct IsApprovedForAllInputParam<AccountId> {
     operator: AccountId,
 }
 // func_id 1013
-// fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance
+// fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BalanceOfInputParam<AccountId, TaoId, TokenId> {
+pub struct BalanceOfInputParam<AccountId, InstanceId, TokenId> {
     owner: AccountId,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
 }
 
 // func_id 1014
-// balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
+// balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct BalanceOfBatchInputParam<AccountId, TaoId, TokenId> {
+pub struct BalanceOfBatchInputParam<AccountId, InstanceId, TokenId> {
     owners: Vec<AccountId>,
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_ids: Vec<TokenId>,
 }
 
@@ -206,23 +206,23 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     .map_err(|_| DispatchError::Other("ChainExtension failed to call random"))?;
             }
             1002 => {
-                // do_create_tao(who: &T::AccountId, data: Vec<u8>) -> Result<T::TaoId, DispatchError>
+                // do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
                 log::info!("run 1002");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
                 log::info!("caller: {:?}", caller);
 
-                let input: CreateTaoInputParam<<E::T as SysConfig>::AccountId> = env.read_as()?;
+                let input: CreateInstanceInputParam<<E::T as SysConfig>::AccountId> = env.read_as()?;
 
-                let tao_id: u64 =
-                    pallet_erc1155::Module::<E::T>::do_create_tao(&input.who, input.data)?.into();
-                log::info!("balance: {:?}", tao_id);
+                let instance_id: u64 =
+                    pallet_erc1155::Module::<E::T>::do_create_instance(&input.who, input.data)?.into();
+                log::info!("balance: {:?}", instance_id);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                let tao_slice = tao_id.to_be_bytes();
-                log::info!("balance_slice: {:?}", tao_slice);
+                let instance_slice = instance_id.to_be_bytes();
+                log::info!("balance_slice: {:?}", instance_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -230,14 +230,14 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     func_id
                 );
 
-                env.write(&tao_slice, false, None).map_err(|_| {
+                env.write(&instance_slice, false, None).map_err(|_| {
                     DispatchError::Other("ChainExtension failed to call create collection")
                 })?;
             }
             1003 => {
                 // // do_create_token(
                 // 		who: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_id: T::TokenId,
                 // 		is_nf: bool,
                 // 		uri: Vec<u8>,
@@ -257,7 +257,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: CreateTokenInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
                 log::info!("input: {:?}", input);
@@ -267,7 +267,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 pallet_erc1155::Module::<E::T>::do_create_token(
                     &input.who,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_id,
                     input.is_nf,
                     input.uri,
@@ -308,7 +308,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1005 => {
                 // do_mint(
                 // 		to: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
@@ -328,7 +328,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: MintInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -339,7 +339,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 pallet_erc1155::Module::<E::T>::do_mint(
                     &input.to,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_id,
                     input.amount,
                 )?;
@@ -347,7 +347,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1006 => {
                 // do_batch_mint(
                 // 		to: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
@@ -366,7 +366,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BatchMintInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -377,7 +377,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 pallet_erc1155::Module::<E::T>::do_batch_mint(
                     &input.to,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_ids,
                     input.amounts,
                 )?;
@@ -385,7 +385,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1007 => {
                 // do_burn(
                 // 		from: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
@@ -405,7 +405,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BurnInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -416,7 +416,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 pallet_erc1155::Module::<E::T>::do_burn(
                     &input.from,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_id,
                     input.amount,
                 )?;
@@ -424,7 +424,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1008 => {
                 // do_batch_burn(
                 // 		from: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
@@ -443,7 +443,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BatchBurnInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -454,7 +454,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 pallet_erc1155::Module::<E::T>::do_batch_burn(
                     &input.from,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_ids,
                     input.amounts,
                 )?;
@@ -463,7 +463,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // do_transfer_from(
                 // 		from: &T::AccountId,
                 // 		to: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
@@ -482,7 +482,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: TransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -494,7 +494,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 pallet_erc1155::Module::<E::T>::do_transfer_from(
                     &input.from,
                     &input.to,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_id,
                     input.amount,
                 )?;
@@ -503,7 +503,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // do_batch_transfer_from(
                 // 		from: &T::AccountId,
                 // 		to: &T::AccountId,
-                // 		tao_id: T::TaoId,
+                // 		instance_id: T::InstanceId,
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
@@ -522,7 +522,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BatchTransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
@@ -534,7 +534,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 pallet_erc1155::Module::<E::T>::do_batch_transfer_from(
                     &input.from,
                     &input.to,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_ids,
                     input.amounts,
                 )?;
@@ -602,7 +602,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 })?;
             }
             1013 => {
-                // fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance
+                // fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
                 log::info!("run 1011");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
@@ -610,13 +610,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BalanceOfInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
                 let balance: u128 = pallet_erc1155::Module::<E::T>::balance_of(
                     &input.owner,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_id,
                 );
                 log::info!("balance: {:?}", balance);
@@ -638,7 +638,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 })?;
             }
             1014 => {
-                // balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
+                // balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
                 log::info!("run 1011");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
@@ -646,13 +646,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let input: BalanceOfBatchInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::TaoId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
                 let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_batch(
                     &input.owners,
-                    input.tao_id,
+                    input.instance_id,
                     input.token_ids,
                 )?;
                 let ret_slice = ret.encode();

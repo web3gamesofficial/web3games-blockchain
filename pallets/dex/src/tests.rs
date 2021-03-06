@@ -30,8 +30,8 @@ fn create_exchange_works() {
 }
 
 pub fn before_exchange() {
-    Tao::create_tao(Origin::signed(1), [0].to_vec());
-    Tao::create_tao_item(Origin::signed(1), 0, false, [0].to_vec());
+    Instance::create_instance(Origin::signed(1), [0].to_vec());
+    Instance::create_instance_item(Origin::signed(1), 0, false, [0].to_vec());
     assert!(Token::tokens(0).is_some());
 
     Currency::create(Origin::signed(1), [0].to_vec());

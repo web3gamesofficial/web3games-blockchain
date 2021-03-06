@@ -29,7 +29,7 @@ pub mod pallet {
         type ModuleId: Get<ModuleId>;
 
         #[pallet::constant]
-        type CurrencyTokenTaoId: Get<<Self as token::Config>::TaoId>;
+        type CurrencyTokenInstanceId: Get<<Self as token::Config>::InstanceId>;
 
         type Currency: MultiCurrencyExtended<
             Self::AccountId,
@@ -44,7 +44,7 @@ pub mod pallet {
 
     #[pallet::storage]
     pub(super) type CurrencyTokens<T: Config> =
-        StorageMap<_, Blake2_128Concat, CurrencyId, TokenInfo<T::TaoId, T::TokenId, Balance>>;
+        StorageMap<_, Blake2_128Concat, CurrencyId, TokenInfo<T::InstanceId, T::TokenId, Balance>>;
 
     #[pallet::event]
     #[pallet::metadata(T::AccountId = "AccountId")]
@@ -60,8 +60,6 @@ pub mod pallet {
     pub enum Error<T> {
         Unknown,
         NumOverflow,
-        AlreadyTaoCreated,
-        CurrencyTaoNotFound,
         CurrencyTokenNotFound,
     }
 
@@ -80,14 +78,14 @@ pub mod pallet {
 
             T::Currency::deposit(currency_id, &who, amount)?;
 
-            let tao_id = T::CurrencyTokenTaoId::get();
+            let instance_id = T::CurrencyTokenInstanceId::get();
 
             if !CurrencyTokens::<T>::contains_key(currency_id) {
                 let token_id = Self::convert_to_token_id(currency_id);
-                token::Module::<T>::do_create_token(&who, tao_id, token_id, false, [].to_vec())?;
+                token::Module::<T>::do_create_token(&who, instance_id, token_id, false, [].to_vec())?;
 
                 let token_info = TokenInfo {
-                    tao_id,
+                    instance_id,
                     token_id: token_id.clone(),
                     total_supply: Default::default(),
                 };
@@ -100,7 +98,7 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::Unknown)?;
 
-                token::Module::<T>::do_mint(&who, tao_id, info.token_id, amount)?;
+                token::Module::<T>::do_mint(&who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -129,8 +127,8 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::CurrencyTokenNotFound)?;
 
-                let tao_id = T::CurrencyTokenTaoId::get();
-                token::Module::<T>::do_burn(&who, tao_id, info.token_id, amount)?;
+                let instance_id = T::CurrencyTokenInstanceId::get();
+                token::Module::<T>::do_burn(&who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -148,11 +146,11 @@ pub mod pallet {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
 pub struct TokenInfo<
-    TaoId: Encode + Decode + Clone + Debug + Eq + PartialEq,
+    InstanceId: Encode + Decode + Clone + Debug + Eq + PartialEq,
     TokenId: Encode + Decode + Clone + Debug + Eq + PartialEq,
     Balance: Encode + Decode + Clone + Debug + Eq + PartialEq,
 > {
-    tao_id: TaoId,
+    instance_id: InstanceId,
     token_id: TokenId,
     total_supply: Balance,
 }
@@ -160,10 +158,10 @@ pub struct TokenInfo<
 impl<T: Config> Pallet<T> {
     pub fn get_currency_token(
         currency_id: CurrencyId,
-    ) -> Result<(T::TaoId, T::TokenId), DispatchError> {
+    ) -> Result<(T::InstanceId, T::TokenId), DispatchError> {
         let token_info =
             CurrencyTokens::<T>::get(currency_id).ok_or(Error::<T>::CurrencyTokenNotFound)?;
-        Ok((token_info.tao_id, token_info.token_id))
+        Ok((token_info.instance_id, token_info.token_id))
     }
 
     pub fn convert_to_token_id(id: CurrencyId) -> T::TokenId {

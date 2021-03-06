@@ -32,7 +32,7 @@ impl_outer_event! {
         dex<T>,
         token<T>,
         currency<T>,
-        tao<T>,
+        instance<T>,
     }
 }
 
@@ -104,9 +104,9 @@ impl currency::Trait for Test {
     type Event = TestEvent;
 }
 
-impl tao::Trait for Test {
+impl instance::Trait for Test {
     type Event = TestEvent;
-    type TaoId = u64;
+    type InstanceId = u64;
 }
 
 parameter_types! {
@@ -120,7 +120,7 @@ impl Trait for Test {
 pub type Dex = Module<Test>;
 pub type Currency = currency::Module<Test>;
 pub type Token = token::Module<Test>;
-pub type Tao = tao::Module<Test>;
+pub type Instance = instance::Module<Test>;
 pub type System = frame_system::Module<Test>;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {

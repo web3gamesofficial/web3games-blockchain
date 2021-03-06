@@ -22,9 +22,9 @@ where
         log::info!("input: {:?}", input);
 
         let owner = T::AccountId::default();
-        let tao_id = T::TaoId::from(2u64);
+        let instance_id = T::InstanceId::from(2u64);
         let token_id = T::TokenId::from(1u64);
-        let balance = pallet_erc1155::Module::<T>::balance_of(&owner, tao_id, token_id);
+        let balance = pallet_erc1155::Module::<T>::balance_of(&owner, instance_id, token_id);
         log::info!("balance: {:?}", balance);
 
         Ok((ExitSucceed::Returned, [].to_vec(), 0))

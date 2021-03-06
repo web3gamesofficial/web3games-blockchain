@@ -42,7 +42,7 @@ pub mod pallet {
 
     #[pallet::storage]
     pub(super) type Exchanges<T: Config> =
-        StorageMap<_, Blake2_128, ExchangeId, Exchange<T::TaoId, T::TokenId, T::AccountId>>;
+        StorageMap<_, Blake2_128, ExchangeId, Exchange<T::InstanceId, T::TokenId, T::AccountId>>;
 
     #[pallet::storage]
     #[pallet::getter(fn next_exchange_id)]
@@ -121,7 +121,7 @@ pub mod pallet {
         pub fn create_exchange(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
-            token_tao: T::TaoId,
+            token_instance: T::InstanceId,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
@@ -135,17 +135,17 @@ pub mod pallet {
                 })?;
 
             let fund_id = <T as Config>::ModuleId::get().into_sub_account(exchange_id);
-            let liquidity_tao = token::Module::<T>::do_create_tao(&fund_id, [].to_vec())?;
+            let lp_instance = token::Module::<T>::do_create_instance(&fund_id, [].to_vec())?;
 
-            let (currency_tao, currency_token) =
+            let (currency_instance, currency_token) =
                 currency_token::Module::<T>::get_currency_token(currency_id)?;
 
             let new_exchange = Exchange {
                 creator: who.clone(),
-                token_tao,
-                currency_tao,
+                token_instance,
+                currency_instance,
                 currency_token,
-                liquidity_tao,
+                lp_instance,
                 vault: fund_id,
             };
 
@@ -254,20 +254,20 @@ pub mod pallet {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
 pub struct Exchange<
-    TaoId: Encode + Decode + Clone + Debug + Eq + PartialEq,
+    InstanceId: Encode + Decode + Clone + Debug + Eq + PartialEq,
     TokenId: Encode + Decode + Clone + Debug + Eq + PartialEq,
     AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq,
 > {
     /// The creator of Exchange
     pub creator: AccountId,
-    /// The tao of the ERC-1155 token
-    pub token_tao: TaoId,
-    /// The tao of the currency
-    pub currency_tao: TaoId,
-    /// The token of the currency tao
+    /// The instance of the ERC-1155 token
+    pub token_instance: InstanceId,
+    /// The instance of the currency
+    pub currency_instance: InstanceId,
+    /// The token of the currency instance
     pub currency_token: TokenId,
-    /// The tao of exchange liquidity pool
-    pub liquidity_tao: TaoId,
+    /// The instance of exchange liquidity pool
+    pub lp_instance: InstanceId,
     /// The fund account of exchange
     pub vault: AccountId,
 }
@@ -288,7 +288,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_transfer_from(
             who,
             &exchange.vault,
-            exchange.currency_tao,
+            exchange.currency_instance,
             exchange.currency_token,
             max_currency,
         )?;
@@ -298,7 +298,7 @@ impl<T: Config> Pallet<T> {
         let mut amounts_in = vec![Balance::from(0u128); n];
 
         let token_reserves =
-            Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
+            Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
             let id = token_ids[i];
@@ -327,7 +327,7 @@ impl<T: Config> Pallet<T> {
             token::Module::<T>::do_transfer_from(
                 &exchange.vault,
                 &to,
-                exchange.currency_tao,
+                exchange.currency_instance,
                 exchange.currency_token,
                 total_refund_currency,
             )?;
@@ -337,7 +337,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_batch_transfer_from(
             &exchange.vault,
             &to,
-            exchange.token_tao,
+            exchange.token_instance,
             token_ids.clone(),
             token_amounts_out.clone(),
         )?;
@@ -369,7 +369,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_batch_transfer_from(
             who,
             &exchange.vault,
-            exchange.token_tao,
+            exchange.token_instance,
             token_ids.clone(),
             token_amounts_in.clone(),
         )?;
@@ -379,7 +379,7 @@ impl<T: Config> Pallet<T> {
         let mut amounts_out = vec![Balance::from(0u128); n];
 
         let token_reserves =
-            Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
+            Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
             let id = token_ids[i];
@@ -415,7 +415,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_transfer_from(
             &exchange.vault,
             &to,
-            exchange.currency_tao,
+            exchange.currency_instance,
             exchange.currency_token,
             total_currency,
         )?;
@@ -447,7 +447,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_batch_transfer_from(
             who,
             &exchange.vault,
-            exchange.token_tao,
+            exchange.token_instance,
             token_ids.clone(),
             token_amounts.clone(),
         )?;
@@ -458,7 +458,7 @@ impl<T: Config> Pallet<T> {
         let mut currency_amounts = vec![Balance::from(0u128); n];
 
         let token_reserves =
-            Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
+            Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
             let id = token_ids[i];
@@ -470,7 +470,7 @@ impl<T: Config> Pallet<T> {
             );
             ensure!(amount > Zero::zero(), Error::<T>::InsufficientTokenAmount);
 
-            if exchange.currency_tao == exchange.token_tao {
+            if exchange.currency_instance == exchange.token_instance {
                 ensure!(
                     exchange.currency_token != id,
                     Error::<T>::SameCurrencyAndToken
@@ -539,7 +539,7 @@ impl<T: Config> Pallet<T> {
         // Mint liquidity pool tokens
         token::Module::<T>::do_batch_mint(
             &to,
-            exchange.liquidity_tao,
+            exchange.lp_instance,
             token_ids.clone(),
             liquidities_to_mint,
         )?;
@@ -548,7 +548,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_transfer_from(
             &who,
             &exchange.vault,
-            exchange.currency_tao,
+            exchange.currency_instance,
             exchange.currency_token,
             total_currency,
         )?;
@@ -580,7 +580,7 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_batch_transfer_from(
             who,
             &exchange.vault,
-            exchange.liquidity_tao,
+            exchange.lp_instance,
             token_ids.clone(),
             liquidities.clone(),
         )?;
@@ -591,7 +591,7 @@ impl<T: Config> Pallet<T> {
         let mut currency_amounts = vec![Balance::from(0u128); n];
 
         let token_reserves =
-            Self::get_token_reserves(&exchange.vault, exchange.token_tao, token_ids.clone());
+            Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
             let id = token_ids[i];
@@ -640,7 +640,7 @@ impl<T: Config> Pallet<T> {
         // Burn liquidity pool tokens for offchain supplies
         token::Module::<T>::do_batch_burn(
             &exchange.vault,
-            exchange.liquidity_tao,
+            exchange.lp_instance,
             token_ids.clone(),
             liquidities,
         )?;
@@ -649,14 +649,14 @@ impl<T: Config> Pallet<T> {
         token::Module::<T>::do_transfer_from(
             &exchange.vault,
             &to,
-            exchange.currency_tao,
+            exchange.currency_instance,
             exchange.currency_token,
             total_currency,
         )?;
         token::Module::<T>::do_batch_transfer_from(
             &exchange.vault,
             &to,
-            exchange.token_tao,
+            exchange.token_instance,
             token_ids.clone(),
             token_amounts.clone(),
         )?;
@@ -718,19 +718,19 @@ impl<T: Config> Pallet<T> {
 
     fn get_token_reserves(
         vault: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
     ) -> Vec<Balance> {
         let n = token_ids.len();
 
         if n == 1 {
             let mut token_reserves = vec![Balance::from(0u128); n];
-            token_reserves[0] = token::Module::<T>::balance_of(vault, tao_id, token_ids[0]);
+            token_reserves[0] = token::Module::<T>::balance_of(vault, instance_id, token_ids[0]);
             token_reserves
         } else {
             let vaults = vec![vault.clone(); n];
             let token_reserves =
-                token::Module::<T>::balance_of_batch(&vaults, tao_id, token_ids).unwrap();
+                token::Module::<T>::balance_of_batch(&vaults, instance_id, token_ids).unwrap();
             token_reserves
         }
     }

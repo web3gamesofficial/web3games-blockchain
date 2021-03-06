@@ -1,6 +1,6 @@
 {
   "TokenId": "u64",
-  "TaoId": "u64",
+  "InstanceId": "u64",
   "ExchangeId": "u32",
   "TokenSymbol": {
     "_enum": {

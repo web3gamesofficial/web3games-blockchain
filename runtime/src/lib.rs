@@ -416,19 +416,19 @@ impl pallet_erc1155::Config for Runtime {
     type Event = Event;
     // type TokenBalance = u128;
     type TokenId = u64;
-    type TaoId = u64;
+    type InstanceId = u64;
 }
 
 parameter_types! {
     pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
     pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
-    pub const CurrencyTokenTaoId: u64 = 0;
+    pub const CurrencyTokenInstanceId: u64 = 0;
 }
 
 impl pallet_currency_token::Config for Runtime {
     type Event = Event;
     type ModuleId = CurrencyTokenModuleId;
-    type CurrencyTokenTaoId = CurrencyTokenTaoId;
+    type CurrencyTokenInstanceId = CurrencyTokenInstanceId;
     type Currency = Currencies;
 }
 

@@ -5,7 +5,7 @@ use frame_support::{assert_noop, assert_ok};
 fn test_create_token_works() {
     new_test_ext().execute_with(|| {
         let data = vec![0, 1];
-        assert_ok!(Erc1155::do_create_tao(&1, data));
+        assert_ok!(Erc1155::do_create_instance(&1, data));
 
         println!("token: {:?}", Tokens::<Test>::get(1, 2));
     })
@@ -18,17 +18,17 @@ fn test_create_token_not_works() {
 
         assert_noop!(
             Erc1155::do_create_token(&1, 1, 2, true, uri),
-            Error::<Test>::InvalidTaoId
+            Error::<Test>::InvalidInstanceId
         );
         println!("token: {:?}", Tokens::<Test>::get(1, 2));
     })
 }
 
 #[test]
-fn test_create_tao_works() {
+fn test_create_instance_works() {
     new_test_ext().execute_with(|| {
         let data = vec![0, 1];
-        assert_ok!(Erc1155::do_create_tao(&1, data));
+        assert_ok!(Erc1155::do_create_instance(&1, data));
     })
 }
 

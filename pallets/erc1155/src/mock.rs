@@ -56,7 +56,7 @@ impl pallet_erc1155::Config for Test {
     type Event = Event;
     // type TokenBalance = u128;
     type TokenId = u64;
-    type TaoId = u64;
+    type InstanceId = u64;
 }
 
 // Build genesis storage according to the mock runtime.

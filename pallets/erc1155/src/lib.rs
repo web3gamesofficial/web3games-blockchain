@@ -32,7 +32,7 @@ pub mod pallet {
 
         type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u64> + Into<u64>;
 
-        type TaoId: Member
+        type InstanceId: Member
             + Parameter
             + AtLeast32BitUnsigned
             + Default
@@ -41,29 +41,29 @@ pub mod pallet {
             + Into<u64>;
     }
 
-    pub type GenesisTaos<T> = (
+    pub type GenesisInstances<T> = (
         <T as frame_system::Config>::AccountId,
         Vec<u8>,
     );
 
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
-        pub taos: Vec<GenesisTaos<T>>,
+        pub instances: Vec<GenesisInstances<T>>,
     }
 
     #[cfg(feature = "std")]
     impl<T: Config> Default for GenesisConfig<T> {
         fn default() -> Self {
-            Self { taos: Default::default() }
+            Self { instances: Default::default() }
         }
     }
 
     #[pallet::genesis_build]
     impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
         fn build(&self) {
-            self.taos.iter().for_each(|tao| {
-                let _id = Pallet::<T>::do_create_tao(&tao.0, tao.1.to_vec())
-                    .expect("Create tao cannot fail while building genesis");
+            self.instances.iter().for_each(|instance| {
+                let _id = Pallet::<T>::do_create_instance(&instance.0, instance.1.to_vec())
+                    .expect("Create instance cannot fail while building genesis");
             })
         }
     }
@@ -73,20 +73,20 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::storage]
-    pub(super) type Taos<T: Config> = StorageMap<_, Blake2_128Concat, T::TaoId, Tao<T::AccountId>>;
+    pub(super) type Instances<T: Config> = StorageMap<_, Blake2_128Concat, T::InstanceId, Instance<T::AccountId>>;
 
     #[pallet::storage]
-    #[pallet::getter(fn next_tao_id)]
-    pub(super) type NextTaoId<T: Config> = StorageValue<_, T::TaoId, ValueQuery>;
+    #[pallet::getter(fn next_instance_id)]
+    pub(super) type NextInstanceId<T: Config> = StorageValue<_, T::InstanceId, ValueQuery>;
 
     #[pallet::storage]
     pub(super) type Tokens<T: Config> = StorageDoubleMap<
         _,
         Blake2_128Concat,
-        T::TaoId,
+        T::InstanceId,
         Blake2_128,
         T::TokenId,
-        Token<T::TaoId, T::AccountId>,
+        Token<T::InstanceId, T::AccountId>,
     >;
 
     #[pallet::storage]
@@ -96,7 +96,7 @@ pub mod pallet {
         Blake2_128Concat,
         T::AccountId,
         Blake2_128Concat,
-        (T::TaoId, T::TokenId),
+        (T::InstanceId, T::TokenId),
         Balance,
         ValueQuery,
     >;
@@ -117,17 +117,17 @@ pub mod pallet {
     #[pallet::metadata(T::AccountId = "AccountId")]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        TaoCreated(T::TaoId, T::AccountId),
-        TokenCreated(T::TaoId, T::TokenId, T::AccountId),
-        Mint(T::AccountId, T::TaoId, T::TokenId, Balance),
-        BatchMint(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<Balance>),
-        Burn(T::AccountId, T::TaoId, T::TokenId, Balance),
-        BatchBurn(T::AccountId, T::TaoId, Vec<T::TokenId>, Vec<Balance>),
-        Transferred(T::AccountId, T::AccountId, T::TaoId, T::TokenId, Balance),
+        InstanceCreated(T::InstanceId, T::AccountId),
+        TokenCreated(T::InstanceId, T::TokenId, T::AccountId),
+        Mint(T::AccountId, T::InstanceId, T::TokenId, Balance),
+        BatchMint(T::AccountId, T::InstanceId, Vec<T::TokenId>, Vec<Balance>),
+        Burn(T::AccountId, T::InstanceId, T::TokenId, Balance),
+        BatchBurn(T::AccountId, T::InstanceId, Vec<T::TokenId>, Vec<Balance>),
+        Transferred(T::AccountId, T::AccountId, T::InstanceId, T::TokenId, Balance),
         BatchTransferred(
             T::AccountId,
             T::AccountId,
-            T::TaoId,
+            T::InstanceId,
             Vec<T::TokenId>,
             Vec<Balance>,
         ),
@@ -143,8 +143,8 @@ pub mod pallet {
         NumOverflow,
         InvalidArrayLength,
         Overflow,
-        NoAvailableTaoId,
-        InvalidTaoId,
+        NoAvailableInstanceId,
+        InvalidInstanceId,
     }
 
     #[pallet::hooks]
@@ -153,24 +153,24 @@ pub mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         #[pallet::weight(10_000)]
-        pub fn create_tao(origin: OriginFor<T>, data: Vec<u8>) -> DispatchResultWithPostInfo {
+        pub fn create_instance(origin: OriginFor<T>, data: Vec<u8>) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            Self::do_create_tao(&who, data)?;
+            Self::do_create_instance(&who, data)?;
             Ok(().into())
         }
 
         #[pallet::weight(10_000)]
         pub fn create_token(
             origin: OriginFor<T>,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_id: T::TokenId,
             is_nf: bool,
             uri: Vec<u8>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            Self::do_create_token(&who, tao_id, token_id, is_nf, uri)?;
+            Self::do_create_token(&who, instance_id, token_id, is_nf, uri)?;
             Ok(().into())
         }
 
@@ -196,13 +196,13 @@ pub mod pallet {
             origin: OriginFor<T>,
             from: T::AccountId,
             to: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_id: T::TokenId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_transfer_from(&from, &to, tao_id, token_id, amount)?;
+            Self::do_transfer_from(&from, &to, instance_id, token_id, amount)?;
 
             Ok(().into())
         }
@@ -212,13 +212,13 @@ pub mod pallet {
             origin: OriginFor<T>,
             from: T::AccountId,
             to: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_ids: Vec<T::TokenId>,
             amounts: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_batch_transfer_from(&from, &to, tao_id, token_ids, amounts)?;
+            Self::do_batch_transfer_from(&from, &to, instance_id, token_ids, amounts)?;
 
             Ok(().into())
         }
@@ -227,13 +227,13 @@ pub mod pallet {
         pub fn mint(
             origin: OriginFor<T>,
             to: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_id: T::TokenId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_mint(&to, tao_id, token_id, amount)?;
+            Self::do_mint(&to, instance_id, token_id, amount)?;
 
             Ok(().into())
         }
@@ -242,13 +242,13 @@ pub mod pallet {
         pub fn batch_mint(
             origin: OriginFor<T>,
             to: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_ids: Vec<T::TokenId>,
             amounts: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_batch_mint(&to, tao_id, token_ids, amounts)?;
+            Self::do_batch_mint(&to, instance_id, token_ids, amounts)?;
 
             Ok(().into())
         }
@@ -257,13 +257,13 @@ pub mod pallet {
         pub fn burn(
             origin: OriginFor<T>,
             from: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_id: T::TokenId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_burn(&from, tao_id, token_id, amount)?;
+            Self::do_burn(&from, instance_id, token_id, amount)?;
 
             Ok(().into())
         }
@@ -272,13 +272,13 @@ pub mod pallet {
         pub fn batch_burn(
             origin: OriginFor<T>,
             from: T::AccountId,
-            tao_id: T::TaoId,
+            instance_id: T::InstanceId,
             token_ids: Vec<T::TokenId>,
             amounts: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
 
-            Self::do_batch_burn(&from, tao_id, token_ids, amounts)?;
+            Self::do_batch_burn(&from, instance_id, token_ids, amounts)?;
 
             Ok(().into())
         }
@@ -286,78 +286,78 @@ pub mod pallet {
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Tao<AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq> {
+pub struct Instance<AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq> {
     owner: AccountId,
     data: Vec<u8>,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
 pub struct Token<
-    TaoId: Encode + Decode + Clone + Debug + Eq + PartialEq,
+    InstanceId: Encode + Decode + Clone + Debug + Eq + PartialEq,
     AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq,
 > {
-    tao_id: TaoId,
+    instance_id: InstanceId,
     creator: AccountId,
     is_nf: bool,
     uri: Vec<u8>,
 }
 
 impl<T: Config> Pallet<T> {
-    // func_id 1002 do_create_tao(who: &T::AccountId, data: Vec<u8>) -> Result<T::TaoId, DispatchError>
-    pub fn do_create_tao(who: &T::AccountId, data: Vec<u8>) -> Result<T::TaoId, DispatchError> {
-        let tao_id = NextTaoId::<T>::try_mutate(|id| -> Result<T::TaoId, DispatchError> {
+    // func_id 1002 do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
+    pub fn do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError> {
+        let instance_id = NextInstanceId::<T>::try_mutate(|id| -> Result<T::InstanceId, DispatchError> {
             let current_id = *id;
             *id = id
                 .checked_add(&One::one())
-                .ok_or(Error::<T>::NoAvailableTaoId)?;
+                .ok_or(Error::<T>::NoAvailableInstanceId)?;
             Ok(current_id)
         })?;
 
-        let tao = Tao {
+        let instance = Instance {
             owner: who.clone(),
             data,
         };
 
-        Taos::<T>::insert(tao_id, tao);
+        Instances::<T>::insert(instance_id, instance);
 
-        Self::deposit_event(Event::TaoCreated(tao_id, who.clone()));
+        Self::deposit_event(Event::InstanceCreated(instance_id, who.clone()));
 
-        Ok(tao_id)
+        Ok(instance_id)
     }
 
     // func_id 1003
     // do_create_token(
     // 		who: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_id: T::TokenId,
     // 		is_nf: bool,
     // 		uri: Vec<u8>,
     // 	)
     pub fn do_create_token(
         who: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_id: T::TokenId,
         is_nf: bool,
         uri: Vec<u8>,
     ) -> DispatchResult {
-        ensure!(Taos::<T>::contains_key(tao_id), Error::<T>::InvalidTaoId);
+        ensure!(Instances::<T>::contains_key(instance_id), Error::<T>::InvalidInstanceId);
         ensure!(
-            !Tokens::<T>::contains_key(tao_id, token_id),
+            !Tokens::<T>::contains_key(instance_id, token_id),
             Error::<T>::InUse
         );
 
         Tokens::<T>::insert(
-            tao_id,
+            instance_id,
             token_id,
             Token {
-                tao_id,
+                instance_id,
                 creator: who.clone(),
                 is_nf,
                 uri,
             },
         );
 
-        Self::deposit_event(Event::TokenCreated(tao_id, token_id, who.clone()));
+        Self::deposit_event(Event::TokenCreated(instance_id, token_id, who.clone()));
         Ok(())
     }
 
@@ -389,22 +389,22 @@ impl<T: Config> Pallet<T> {
     // func_id 1005
     // do_mint(
     // 		to: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_id: T::TokenId,
     // 		amount: Balance
     // 	)
     pub fn do_mint(
         to: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
+        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
             *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
             Ok(())
         })?;
 
-        Self::deposit_event(Event::Mint(to.clone(), tao_id, token_id, amount));
+        Self::deposit_event(Event::Mint(to.clone(), instance_id, token_id, amount));
 
         Ok(())
     }
@@ -412,13 +412,13 @@ impl<T: Config> Pallet<T> {
     // func_id 1006
     // do_batch_mint(
     // 		to: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_ids: Vec<T::TokenId>,
     // 		amounts: Vec<Balance>
     // 	)
     pub fn do_batch_mint(
         to: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
@@ -432,13 +432,13 @@ impl<T: Config> Pallet<T> {
             let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
+            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
                 *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
                 Ok(())
             })?;
         }
 
-        Self::deposit_event(Event::BatchMint(to.clone(), tao_id, token_ids, amounts));
+        Self::deposit_event(Event::BatchMint(to.clone(), instance_id, token_ids, amounts));
 
         Ok(())
     }
@@ -446,22 +446,22 @@ impl<T: Config> Pallet<T> {
     // func_id 1007
     // do_burn(
     // 		from: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_id: T::TokenId,
     // 		amount: Balance
     // 	)
     pub fn do_burn(
         from: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
+        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
             *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
             Ok(())
         })?;
 
-        Self::deposit_event(Event::Burn(from.clone(), tao_id, token_id, amount));
+        Self::deposit_event(Event::Burn(from.clone(), instance_id, token_id, amount));
 
         Ok(())
     }
@@ -469,14 +469,14 @@ impl<T: Config> Pallet<T> {
     // func_id 1008
     // do_batch_burn(
     // 		from: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_ids: Vec<T::TokenId>,
     // 		amounts: Vec<Balance>
     // 	)
 
     pub fn do_batch_burn(
         from: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
@@ -490,13 +490,13 @@ impl<T: Config> Pallet<T> {
             let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
+            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
                 *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
                 Ok(())
             })?;
         }
 
-        Self::deposit_event(Event::BatchBurn(from.clone(), tao_id, token_ids, amounts));
+        Self::deposit_event(Event::BatchBurn(from.clone(), instance_id, token_ids, amounts));
 
         Ok(())
     }
@@ -505,14 +505,14 @@ impl<T: Config> Pallet<T> {
     // do_transfer_from(
     // 		from: &T::AccountId,
     // 		to: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_id: T::TokenId,
     // 		amount: Balance
     // 	)
     pub fn do_transfer_from(
         from: &T::AccountId,
         to: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
@@ -522,12 +522,12 @@ impl<T: Config> Pallet<T> {
             return Ok(());
         }
 
-        Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
+        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
             *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
             Ok(())
         })?;
 
-        Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
+        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
             *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
             Ok(())
         })?;
@@ -535,7 +535,7 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::Transferred(
             from.clone(),
             to.clone(),
-            tao_id,
+            instance_id,
             token_id,
             amount,
         ));
@@ -547,14 +547,14 @@ impl<T: Config> Pallet<T> {
     // do_batch_transfer_from(
     // 		from: &T::AccountId,
     // 		to: &T::AccountId,
-    // 		tao_id: T::TaoId,
+    // 		instance_id: T::InstanceId,
     // 		token_ids: Vec<T::TokenId>,
     // 		amounts: Vec<Balance>
     // 	)
     pub fn do_batch_transfer_from(
         from: &T::AccountId,
         to: &T::AccountId,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
@@ -572,12 +572,12 @@ impl<T: Config> Pallet<T> {
             let token_id = &token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(from, (tao_id, token_id), |balance| -> DispatchResult {
+            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
                 *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
                 Ok(())
             })?;
 
-            Balances::<T>::try_mutate(to, (tao_id, token_id), |balance| -> DispatchResult {
+            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
                 *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
                 Ok(())
             })?;
@@ -586,7 +586,7 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::BatchTransferred(
             from.clone(),
             to.clone(),
-            tao_id,
+            instance_id,
             token_ids,
             amounts,
         ));
@@ -605,17 +605,17 @@ impl<T: Config> Pallet<T> {
         Self::operator_approvals(owner, operator)
     }
 
-    // func_id 1013 fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance
-    pub fn balance_of(owner: &T::AccountId, tao_id: T::TaoId, token_id: T::TokenId) -> Balance {
+    // func_id 1013 fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
+    pub fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance {
         log::info!("run erc1155: balance_of");
 
-        Self::balances(owner, (tao_id, token_id))
+        Self::balances(owner, (instance_id, token_id))
     }
 
-    // func_id 1014 balance_of_batch(owners: &Vec<T::AccountId>, tao_id: T::TaoId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
+    // func_id 1014 balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
     pub fn balance_of_batch(
         owners: &Vec<T::AccountId>,
-        tao_id: T::TaoId,
+        instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
     ) -> Result<Vec<Balance>, DispatchError> {
         ensure!(
@@ -630,7 +630,7 @@ impl<T: Config> Pallet<T> {
             let owner = &owners[i];
             let token_id = token_ids[i];
 
-            batch_balances[i] = Self::balances(owner, (tao_id, token_id));
+            batch_balances[i] = Self::balances(owner, (instance_id, token_id));
         }
 
         Ok(batch_balances)

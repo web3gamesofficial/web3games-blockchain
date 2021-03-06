@@ -298,7 +298,7 @@ fn testnet_genesis(
                 .collect(),
         }),
         pallet_erc1155: Some(Erc1155Config {
-            taos: vec![
+            instances: vec![
                 (
                     AccountId::default(),
                     "currency token".as_bytes().to_vec(),
