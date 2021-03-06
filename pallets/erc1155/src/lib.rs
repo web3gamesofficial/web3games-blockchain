@@ -41,32 +41,32 @@ pub mod pallet {
             + Into<u64>;
     }
 
-    // pub type GenesisTaos<T> = (
-    // 	<T as frame_system::Config>::AccountId,
-    // 	Vec<u8>,
-    // );
+    pub type GenesisTaos<T> = (
+        <T as frame_system::Config>::AccountId,
+        Vec<u8>,
+    );
 
-    // #[pallet::genesis_config]
-    // pub struct GenesisConfig<T: Config> {
-    // 	pub taos: Vec<GenesisTaos<T>>,
-    // }
+    #[pallet::genesis_config]
+    pub struct GenesisConfig<T: Config> {
+        pub taos: Vec<GenesisTaos<T>>,
+    }
 
-    // #[cfg(feature = "std")]
-    // impl<T: Config> Default for GenesisConfig<T> {
-    // 	fn default() -> Self {
-    // 		GenesisConfig { tokens: vec![] }
-    // 	}
-    // }
+    #[cfg(feature = "std")]
+    impl<T: Config> Default for GenesisConfig<T> {
+        fn default() -> Self {
+            Self { taos: Default::default() }
+        }
+    }
 
-    // #[pallet::genesis_build]
-    // impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-    // 	fn build(&self) {
-    // 		self.taos.iter().for_each(|tao| {
-    // 			let _tao_id = Pallet::<T>::do_create_tao(&tao.0, tao.1.to_vec())
-    // 				.expect("Create tao cannot fail while building genesis");
-    // 		})
-    // 	}
-    // }
+    #[pallet::genesis_build]
+    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+        fn build(&self) {
+            self.taos.iter().for_each(|tao| {
+                let _id = Pallet::<T>::do_create_tao(&tao.0, tao.1.to_vec())
+                    .expect("Create tao cannot fail while building genesis");
+            })
+        }
+    }
 
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]

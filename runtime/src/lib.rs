@@ -422,11 +422,13 @@ impl pallet_erc1155::Config for Runtime {
 parameter_types! {
     pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
     pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+    pub const CurrencyTokenTaoId: u64 = 0;
 }
 
 impl pallet_currency_token::Config for Runtime {
     type Event = Event;
     type ModuleId = CurrencyTokenModuleId;
+    type CurrencyTokenTaoId = CurrencyTokenTaoId;
     type Currency = Currencies;
 }
 
@@ -467,7 +469,7 @@ construct_runtime!(
         Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
 
         // SGC pallets
-        Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
+        Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>, Config<T>},
         CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>},
         Dex: pallet_dex::{Module, Call, Storage, Event<T>},
         NFT: pallet_nft::{Module, Call, Storage, Event<T>},
