@@ -50,13 +50,27 @@ pub mod pallet {
 
     #[pallet::storage]
     #[pallet::getter(fn total_supplies)]
-    pub(super) type TotalSupplies<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::TokenId, Balance, ValueQuery>;
+    pub(super) type TotalSupplies<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        ExchangeId,
+        Blake2_128Concat,
+        T::TokenId,
+        Balance,
+        ValueQuery
+    >;
 
     #[pallet::storage]
     #[pallet::getter(fn currency_reserves)]
-    pub(super) type CurrencyReserves<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::TokenId, Balance, ValueQuery>;
+    pub(super) type CurrencyReserves<T: Config> = StorageDoubleMap<
+        _,
+        Blake2_128Concat,
+        ExchangeId,
+        Blake2_128Concat,
+        T::TokenId,
+        Balance,
+        ValueQuery
+    >;
 
     #[pallet::event]
     #[pallet::metadata(T::AccountId = "AccountId")]
@@ -301,20 +315,20 @@ impl<T: Config> Pallet<T> {
             Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
-            let id = token_ids[i];
+            let token_id = token_ids[i];
             let amount_out = token_amounts_out[i];
             let token_reserve = token_reserves[i];
 
             ensure!(amount_out > Zero::zero(), Error::<T>::NullTokensBought);
 
-            let currency_reserve = Self::currency_reserves(id);
+            let currency_reserve = Self::currency_reserves(exchange_id, token_id);
             let currency_amount = Self::get_buy_price(amount_out, currency_reserve, token_reserve)?;
 
             total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
 
             amounts_in[i] = currency_amount;
 
-            CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+            CurrencyReserves::<T>::try_mutate(exchange_id, token_id, |currency_reserve| -> DispatchResult {
                 *currency_reserve = currency_reserve
                     .checked_add(currency_amount)
                     .ok_or(Error::<T>::Overflow)?;
@@ -382,13 +396,13 @@ impl<T: Config> Pallet<T> {
             Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
-            let id = token_ids[i];
+            let token_id = token_ids[i];
             let amount_in = token_amounts_in[i];
             let token_reserve = token_reserves[i];
 
             ensure!(amount_in > Zero::zero(), Error::<T>::NullTokensSold);
 
-            let currency_reserve = Self::currency_reserves(id);
+            let currency_reserve = Self::currency_reserves(exchange_id, token_id);
             let currency_amount = Self::get_sell_price(
                 amount_in,
                 token_reserve.saturating_sub(amount_in),
@@ -398,7 +412,7 @@ impl<T: Config> Pallet<T> {
             total_currency = total_currency.saturating_add(currency_amount);
             amounts_out[i] = currency_amount;
 
-            CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+            CurrencyReserves::<T>::try_mutate(exchange_id, token_id, |currency_reserve| -> DispatchResult {
                 *currency_reserve = currency_reserve
                     .checked_sub(currency_amount)
                     .ok_or(Error::<T>::Overflow)?;
@@ -461,7 +475,7 @@ impl<T: Config> Pallet<T> {
             Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
-            let id = token_ids[i];
+            let token_id = token_ids[i];
             let amount = token_amounts[i];
 
             ensure!(
@@ -472,15 +486,15 @@ impl<T: Config> Pallet<T> {
 
             if exchange.currency_instance == exchange.token_instance {
                 ensure!(
-                    exchange.currency_token != id,
+                    exchange.currency_token != token_id,
                     Error::<T>::SameCurrencyAndToken
                 );
             }
 
-            let total_liquidity = Self::total_supplies(id);
+            let total_liquidity = Self::total_supplies(exchange_id, token_id);
 
             if total_liquidity > Zero::zero() {
-                let currency_reserve = Self::currency_reserves(id);
+                let currency_reserve = Self::currency_reserves(exchange_id, token_id);
                 let token_reserve = token_reserves[i];
 
                 let (currency_amount, rounded) = Self::div_round(
@@ -503,14 +517,14 @@ impl<T: Config> Pallet<T> {
                     (fixed_currency_amount.saturating_mul(total_liquidity)) / currency_reserve;
                 currency_amounts[i] = currency_amount;
 
-                CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+                CurrencyReserves::<T>::try_mutate(exchange_id, token_id, |currency_reserve| -> DispatchResult {
                     *currency_reserve = currency_reserve
                         .checked_add(currency_amount)
                         .ok_or(Error::<T>::Overflow)?;
                     Ok(())
                 })?;
 
-                TotalSupplies::<T>::try_mutate(id, |total_supply| -> DispatchResult {
+                TotalSupplies::<T>::try_mutate(exchange_id, token_id, |total_supply| -> DispatchResult {
                     *total_supply = total_liquidity
                         .checked_add(liquidities_to_mint[i])
                         .ok_or(Error::<T>::Overflow)?;
@@ -529,10 +543,10 @@ impl<T: Config> Pallet<T> {
                 liquidities_to_mint[i] = max_currency;
                 currency_amounts[i] = max_currency;
 
-                CurrencyReserves::<T>::mutate(id, |currency_reserve| {
+                CurrencyReserves::<T>::mutate(exchange_id, token_id, |currency_reserve| {
                     *currency_reserve = max_currency
                 });
-                TotalSupplies::<T>::mutate(id, |total_supply| *total_supply = max_currency);
+                TotalSupplies::<T>::mutate(exchange_id, token_id, |total_supply| *total_supply = max_currency);
             }
         }
 
@@ -594,17 +608,17 @@ impl<T: Config> Pallet<T> {
             Self::get_token_reserves(&exchange.vault, exchange.token_instance, token_ids.clone());
 
         for i in 0..n {
-            let id = token_ids[i];
+            let token_id = token_ids[i];
             let liquidity = liquidities[i];
             let token_reserve = token_reserves[i];
 
-            let total_liquidity = Self::total_supplies(id);
+            let total_liquidity = Self::total_supplies(exchange_id, token_id);
             ensure!(
                 total_liquidity > Zero::zero(),
                 Error::<T>::InsufficientLiquidity
             );
 
-            let currency_reserve = Self::currency_reserves(id);
+            let currency_reserve = Self::currency_reserves(exchange_id, token_id);
 
             let currency_amount = liquidity.saturating_mul(currency_reserve) / total_liquidity;
             let token_amount = liquidity.saturating_mul(token_reserve) / total_liquidity;
@@ -622,14 +636,14 @@ impl<T: Config> Pallet<T> {
             token_amounts[i] = token_amount;
             currency_amounts[i] = currency_amount;
 
-            CurrencyReserves::<T>::try_mutate(id, |currency_reserve| -> DispatchResult {
+            CurrencyReserves::<T>::try_mutate(exchange_id, token_id, |currency_reserve| -> DispatchResult {
                 *currency_reserve = currency_reserve
                     .checked_sub(currency_amount)
                     .ok_or(Error::<T>::Overflow)?;
                 Ok(())
             })?;
 
-            TotalSupplies::<T>::try_mutate(id, |total_supply| -> DispatchResult {
+            TotalSupplies::<T>::try_mutate(exchange_id, token_id, |total_supply| -> DispatchResult {
                 *total_supply = total_liquidity
                     .checked_sub(liquidity)
                     .ok_or(Error::<T>::Overflow)?;
