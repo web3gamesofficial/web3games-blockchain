@@ -237,43 +237,43 @@ fn testnet_genesis(
     const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
 
     GenesisConfig {
-        frame_system: Some(SystemConfig {
+        frame_system: SystemConfig {
             // Add Wasm runtime to storage.
             code: wasm_binary.to_vec(),
             changes_trie_config: Default::default(),
-        }),
-        pallet_balances: Some(BalancesConfig {
+        },
+        pallet_balances: BalancesConfig {
             // Configure endowed accounts with initial balance of 1 << 60.
             balances: endowed_accounts
                 .iter()
                 .cloned()
                 .map(|k| (k, ENDOWMENT))
                 .collect(),
-        }),
-        pallet_aura: Some(AuraConfig {
+        },
+        pallet_aura: AuraConfig {
             authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
-        }),
-        pallet_grandpa: Some(GrandpaConfig {
+        },
+        pallet_grandpa: GrandpaConfig {
             authorities: initial_authorities
                 .iter()
                 .map(|x| (x.1.clone(), 1))
                 .collect(),
-        }),
-        pallet_contracts: Some(ContractsConfig {
+        },
+        pallet_contracts: ContractsConfig {
             current_schedule: pallet_contracts::Schedule {
                 enable_println, // this should only be enabled on development chains
                 ..Default::default()
             },
-        }),
-        pallet_sudo: Some(SudoConfig {
+        },
+        pallet_sudo: SudoConfig {
             // Assign network admin rights.
             key: root_key,
-        }),
-        pallet_evm: Some(EVMConfig {
+        },
+        pallet_evm: EVMConfig {
             accounts: evm_accounts,
-        }),
-        pallet_ethereum: Some(EthereumConfig {}),
-        orml_tokens: Some(TokensConfig {
+        },
+        pallet_ethereum: EthereumConfig {},
+        orml_tokens: TokensConfig {
             endowed_accounts: endowed_accounts
                 .iter()
                 .flat_map(|x| {
@@ -296,14 +296,14 @@ fn testnet_genesis(
                     ]
                 })
                 .collect(),
-        }),
-        pallet_erc1155: Some(Erc1155Config {
+        },
+        pallet_erc1155: Erc1155Config {
             instances: vec![
                 (
                     AccountId::default(),
                     "currency token".as_bytes().to_vec(),
                 )
             ]
-        }),
+        },
     }
 }
