@@ -166,7 +166,11 @@ pub mod pallet {
         pub fn create_instance(origin: OriginFor<T>, data: Vec<u8>) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
+            let deposit = T::CreateInstanceDeposit::get();
+            T::Currency::reserve(&who, deposit.clone())?;
+
             Self::do_create_instance(&who, data)?;
+
             Ok(().into())
         }
 
@@ -248,9 +252,6 @@ impl<T: Config> Pallet<T> {
                 .ok_or(Error::<T>::NoAvailableInstanceId)?;
             Ok(current_id)
         })?;
-
-        let deposit = T::CreateInstanceDeposit::get();
-        T::Currency::reserve(who, deposit.clone())?;
 
         let instance = Instance {
             owner: who.clone(),
