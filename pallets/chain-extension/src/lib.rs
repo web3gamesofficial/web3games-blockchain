@@ -312,7 +312,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
-
                 log::info!("run 1005");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
@@ -389,7 +388,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
-
                 log::info!("run 1007");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
@@ -603,7 +601,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1013 => {
                 // fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
-                log::info!("run 1011");
+                log::info!("run 1013");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
                 log::info!("caller: {:?}", caller);
@@ -639,7 +637,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1014 => {
                 // balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
-                log::info!("run 1011");
+                log::info!("run 1014");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
                 log::info!("caller: {:?}", caller);
