@@ -36,7 +36,7 @@ pub mod pallet {
     pub trait Config: frame_system::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-        /// The minimum balance to create class
+        /// The minimum balance to create collection
         #[pallet::constant]
         type CreateCollectionDeposit: Get<BalanceOf<Self>>;
 
