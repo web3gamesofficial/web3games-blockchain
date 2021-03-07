@@ -196,7 +196,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 log::info!("run 1001");
                 let mut env = env.buf_in_buf_out();
                 let random_slice = <E::T as Config>::Randomness::random_seed().encode();
-                // let random_slice = random_seed.encode();
                 log::trace!(
                     target: "runtime",
                     "[ChainExtension]|call|func_id:{:}",
@@ -221,7 +220,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                let instance_slice = instance_id.to_be_bytes();
+                let instance_slice = instance_id.encode();
                 log::info!("balance_slice: {:?}", instance_slice);
 
                 log::trace!(
@@ -549,13 +548,12 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let ret: bool =
                     pallet_erc1155::Module::<E::T>::approved_or_owner(&input.who, &input.account);
-                let ret = ret as u8;
                 log::info!("balance: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                let ret_slice = ret.to_be_bytes();
+                let ret_slice = ret.encode();
                 log::info!("balance_slice: {:?}", ret_slice);
 
                 log::trace!(
@@ -580,13 +578,12 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
 
                 let ret: bool =
                     pallet_erc1155::Module::<E::T>::is_approved_for_all(&input.who, &input.account);
-                let ret = ret as u8;
                 log::info!("ret: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                let ret_slice = ret.to_be_bytes();
+                let ret_slice = ret.encode();
                 log::info!("ret_slice: {:?}", ret_slice);
 
                 log::trace!(
@@ -612,7 +609,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
-                let balance: u128 = pallet_erc1155::Module::<E::T>::balance_of(
+                let balance: Balance = pallet_erc1155::Module::<E::T>::balance_of(
                     &input.owner,
                     input.instance_id,
                     input.token_id,
@@ -622,7 +619,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                let balance_slice = balance.to_be_bytes();
+                let balance_slice = balance.encode();
                 log::info!("balance_slice: {:?}", balance_slice);
 
                 log::trace!(
@@ -659,7 +656,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                // let ret_slice = ret.to_be_bytes();
                 log::info!("ret_slice: {:?}", ret_slice);
 
                 log::trace!(
