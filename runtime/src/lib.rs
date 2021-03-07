@@ -412,9 +412,14 @@ impl chain_extension::Config for Runtime {
     type Randomness = RandomnessCollectiveFlip;
 }
 
+parameter_types! {
+    pub const CreateInstanceDeposit: Balance = 500 * MILLICENTS;
+}
+
 impl pallet_erc1155::Config for Runtime {
     type Event = Event;
-    // type TokenBalance = u128;
+    type CreateInstanceDeposit = CreateInstanceDeposit;
+    type Currency = Balances;
     type TokenId = u64;
     type InstanceId = u64;
 }

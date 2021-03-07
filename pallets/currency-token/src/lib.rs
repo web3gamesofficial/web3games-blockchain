@@ -76,7 +76,7 @@ pub mod pallet {
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            T::Currency::deposit(currency_id, &who, amount)?;
+            <T as Config>::Currency::deposit(currency_id, &who, amount)?;
 
             let instance_id = T::CurrencyTokenInstanceId::get();
 
@@ -120,7 +120,7 @@ pub mod pallet {
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            T::Currency::withdraw(currency_id, &who, amount)?;
+            <T as Config>::Currency::withdraw(currency_id, &who, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info

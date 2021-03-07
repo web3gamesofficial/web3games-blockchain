@@ -2,8 +2,9 @@
 
 use codec::{Decode, Encode, HasCompact};
 use frame_support::{
-    dispatch::{DispatchError, DispatchResult},
     ensure,
+    dispatch::{DispatchError, DispatchResult},
+    traits::{Currency, Get, ReservableCurrency},
 };
 use primitives::Balance;
 use sp_runtime::{
@@ -20,6 +21,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+type BalanceOf<T> =
+    <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
@@ -29,6 +33,12 @@ pub mod pallet {
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+        /// The minimum balance to create instance
+        #[pallet::constant]
+        type CreateInstanceDeposit: Get<BalanceOf<Self>>;
+
+        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
         type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u64> + Into<u64>;
 
@@ -238,6 +248,9 @@ impl<T: Config> Pallet<T> {
                 .ok_or(Error::<T>::NoAvailableInstanceId)?;
             Ok(current_id)
         })?;
+
+        let deposit = T::CreateInstanceDeposit::get();
+        T::Currency::reserve(who, deposit.clone())?;
 
         let instance = Instance {
             owner: who.clone(),
