@@ -209,7 +209,7 @@ pub mod pallet {
             to: T::AccountId,
             token_ids: Vec<T::TokenId>,
             token_amounts: Vec<Balance>,
-            max_currencys: Vec<Balance>,
+            max_currencies: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
@@ -219,7 +219,7 @@ pub mod pallet {
                 &to,
                 token_ids,
                 token_amounts,
-                max_currencys,
+                max_currencies,
             )?;
 
             Ok(().into())
@@ -232,7 +232,7 @@ pub mod pallet {
             to: T::AccountId,
             token_ids: Vec<T::TokenId>,
             liquidities: Vec<Balance>,
-            min_currencys: Vec<Balance>,
+            min_currencies: Vec<Balance>,
             min_tokens: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
@@ -243,7 +243,7 @@ pub mod pallet {
                 &to,
                 token_ids,
                 liquidities,
-                min_currencys,
+                min_currencies,
                 min_tokens,
             )?;
 
@@ -308,7 +308,7 @@ impl<T: Config> Pallet<T> {
             ensure!(amount_out > Zero::zero(), Error::<T>::NullTokensBought);
 
             let currency_reserve = Self::currency_reserves(id);
-            let currency_amount = Self::get_amount_in(amount_out, currency_reserve, token_reserve)?;
+            let currency_amount = Self::get_buy_price(amount_out, currency_reserve, token_reserve)?;
 
             total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
 
@@ -389,7 +389,7 @@ impl<T: Config> Pallet<T> {
             ensure!(amount_in > Zero::zero(), Error::<T>::NullTokensSold);
 
             let currency_reserve = Self::currency_reserves(id);
-            let currency_amount = Self::get_amount_out(
+            let currency_amount = Self::get_sell_price(
                 amount_in,
                 token_reserve.saturating_sub(amount_in),
                 currency_reserve,
@@ -439,7 +439,7 @@ impl<T: Config> Pallet<T> {
         to: &T::AccountId,
         token_ids: Vec<T::TokenId>,
         token_amounts: Vec<Balance>,
-        max_currencys: Vec<Balance>,
+        max_currencies: Vec<Balance>,
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
 
@@ -465,7 +465,7 @@ impl<T: Config> Pallet<T> {
             let amount = token_amounts[i];
 
             ensure!(
-                max_currencys[i] > Zero::zero(),
+                max_currencies[i] > Zero::zero(),
                 Error::<T>::InvalidMaxCurrency
             );
             ensure!(amount > Zero::zero(), Error::<T>::InsufficientTokenAmount);
@@ -488,7 +488,7 @@ impl<T: Config> Pallet<T> {
                     U256::from(token_reserve).saturating_sub(U256::from(amount)),
                 );
                 ensure!(
-                    max_currencys[i] >= currency_amount,
+                    max_currencies[i] >= currency_amount,
                     Error::<T>::MaxCurrencyAmountExceeded
                 );
 
@@ -517,7 +517,7 @@ impl<T: Config> Pallet<T> {
                     Ok(())
                 })?;
             } else {
-                let max_currency = max_currencys[i];
+                let max_currency = max_currencies[i];
 
                 // Otherwise rounding error could end up being significant on second deposit
                 ensure!(
@@ -571,7 +571,7 @@ impl<T: Config> Pallet<T> {
         to: &T::AccountId,
         token_ids: Vec<T::TokenId>,
         liquidities: Vec<Balance>,
-        min_currencys: Vec<Balance>,
+        min_currencies: Vec<Balance>,
         min_tokens: Vec<Balance>,
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
@@ -610,7 +610,7 @@ impl<T: Config> Pallet<T> {
             let token_amount = liquidity.saturating_mul(token_reserve) / total_liquidity;
 
             ensure!(
-                currency_amount >= min_currencys[i],
+                currency_amount >= min_currencies[i],
                 Error::<T>::InsufficientCurrencyAmount
             );
             ensure!(
@@ -672,7 +672,13 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn get_amount_in(
+    /// Pricing function used for converting between currency token to Tokens.
+    ///
+    /// - `amount_out`: Amount of Tokens being bought.
+    /// - `reserve_in`: Amount of currency tokens in exchange reserves.
+    /// - `reserve_out`: Amount of Tokens in exchange reserves.
+    /// Return the price Amount of currency tokens to send to dex.
+    pub fn get_buy_price(
         amount_out: Balance,
         reserve_in: Balance,
         reserve_out: Balance,
@@ -692,7 +698,13 @@ impl<T: Config> Pallet<T> {
         Ok(amount_in)
     }
 
-    fn get_amount_out(
+    /// Pricing function used for converting Tokens to currency token.
+    ///
+    /// - `amount_in`: Amount of Tokens being sold.
+    /// - `reserve_in`: Amount of Tokens in exchange reserves.
+    /// - `reserve_out`: Amount of currency tokens in exchange reserves.
+    /// Return the price Amount of currency tokens to receive from dex.
+    pub fn get_sell_price(
         amount_in: Balance,
         reserve_in: Balance,
         reserve_out: Balance,
