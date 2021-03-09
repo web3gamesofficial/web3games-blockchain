@@ -243,7 +243,6 @@ pub struct Token<
 }
 
 impl<T: Config> Pallet<T> {
-    // func_id 1002 do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
     pub fn do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError> {
         let instance_id = NextInstanceId::<T>::try_mutate(|id| -> Result<T::InstanceId, DispatchError> {
             let current_id = *id;
@@ -265,14 +264,6 @@ impl<T: Config> Pallet<T> {
         Ok(instance_id)
     }
 
-    // func_id 1003
-    // do_create_token(
-    // 		who: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		is_nf: bool,
-    // 		uri: Vec<u8>,
-    // 	)
     pub fn do_create_token(
         who: &T::AccountId,
         instance_id: T::InstanceId,
@@ -301,12 +292,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1004
-    // do_set_approval_for_all(
-    // 		owner: &T::AccountId,
-    // 		operator: &T::AccountId,
-    // 		approved: bool,
-    // 	)
     pub fn do_set_approval_for_all(
         owner: &T::AccountId,
         operator: &T::AccountId,
@@ -326,13 +311,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1005
-    // do_mint(
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_mint(
         to: &T::AccountId,
         instance_id: T::InstanceId,
@@ -349,13 +327,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1006
-    // do_batch_mint(
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
     pub fn do_batch_mint(
         to: &T::AccountId,
         instance_id: T::InstanceId,
@@ -383,13 +354,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1007
-    // do_burn(
-    // 		from: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_burn(
         from: &T::AccountId,
         instance_id: T::InstanceId,
@@ -405,14 +369,6 @@ impl<T: Config> Pallet<T> {
 
         Ok(())
     }
-
-    // func_id 1008
-    // do_batch_burn(
-    // 		from: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
 
     pub fn do_batch_burn(
         from: &T::AccountId,
@@ -441,14 +397,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1009
-    // do_transfer_from(
-    // 		from: &T::AccountId,
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_transfer_from(
         from: &T::AccountId,
         to: &T::AccountId,
@@ -483,14 +431,6 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1010
-    // do_batch_transfer_from(
-    // 		from: &T::AccountId,
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
     pub fn do_batch_transfer_from(
         from: &T::AccountId,
         to: &T::AccountId,
@@ -534,25 +474,21 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1011  approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool
     pub fn approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool {
         *account != T::AccountId::default()
             && (*who == *account || Self::operator_approvals(who, account))
     }
 
-    // func_id 1012 is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool
     pub fn is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool {
         Self::operator_approvals(owner, operator)
     }
 
-    // func_id 1013 fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
     pub fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance {
         log::info!("run erc1155: balance_of");
 
         Self::balances(owner, (instance_id, token_id))
     }
 
-    // func_id 1014 balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
     pub fn balance_of_batch(
         owners: &Vec<T::AccountId>,
         instance_id: T::InstanceId,
