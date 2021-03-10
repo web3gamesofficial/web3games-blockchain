@@ -94,6 +94,16 @@ pub mod pallet {
     >;
 
     #[pallet::storage]
+    #[pallet::getter(fn token_count)]
+    pub(super) type TokenCount<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::InstanceId,
+        u64,
+        ValueQuery,
+    >;
+
+    #[pallet::storage]
     #[pallet::getter(fn balances)]
     pub(super) type Balances<T: Config> = StorageDoubleMap<
         _,
@@ -335,6 +345,13 @@ impl<T: Config> Pallet<T> {
                 uri,
             },
         );
+
+        TokenCount::<T>::try_mutate(instance_id, |count| -> DispatchResult {
+            *count = count
+                .checked_add(One::one())
+                .ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
 
         Self::deposit_event(Event::TokenCreated(instance_id, token_id, who.clone()));
         Ok(())
