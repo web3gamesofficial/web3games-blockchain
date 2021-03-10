@@ -527,7 +527,7 @@ impl<T: Config> Pallet<T> {
         account: &T::AccountId,
         instance_id: T::InstanceId,
     ) -> bool {
-        *who == *account || Self::is_approved_for_all(who, account, instance_id)
+        *who == *account || Self::is_approved_for_all(account, who, instance_id)
     }
 
     pub fn is_approved_for_all(
