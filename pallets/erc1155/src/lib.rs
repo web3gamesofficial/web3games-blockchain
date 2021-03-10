@@ -8,10 +8,10 @@ use frame_support::{
 };
 use primitives::Balance;
 use sp_runtime::{
-    traits::{AtLeast32BitUnsigned, CheckedAdd, One},
+    traits::{AtLeast32BitUnsigned, CheckedAdd, One, Zero},
     RuntimeDebug,
 };
-use sp_std::{fmt::Debug, prelude::*};
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
@@ -23,6 +23,27 @@ mod tests;
 
 type BalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
+pub struct Instance<AccountId> {
+    owner: AccountId,
+    data: Vec<u8>,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
+pub struct Token<InstanceId, AccountId> {
+    instance_id: InstanceId,
+    creator: AccountId,
+    is_nf: bool,
+    uri: Vec<u8>,
+}
+
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug)]
+pub struct ApprovalKey<AccountId> {
+    owner: AccountId,
+    operator: AccountId,
+}
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -51,33 +72,6 @@ pub mod pallet {
             + Into<u64>;
     }
 
-    pub type GenesisInstances<T> = (
-        <T as frame_system::Config>::AccountId,
-        Vec<u8>,
-    );
-
-    #[pallet::genesis_config]
-    pub struct GenesisConfig<T: Config> {
-        pub instances: Vec<GenesisInstances<T>>,
-    }
-
-    #[cfg(feature = "std")]
-    impl<T: Config> Default for GenesisConfig<T> {
-        fn default() -> Self {
-            Self { instances: Default::default() }
-        }
-    }
-
-    #[pallet::genesis_build]
-    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-        fn build(&self) {
-            self.instances.iter().for_each(|instance| {
-                let _id = Pallet::<T>::do_create_instance(&instance.0, instance.1.to_vec())
-                    .expect("Create instance cannot fail while building genesis");
-            })
-        }
-    }
-
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
@@ -100,6 +94,16 @@ pub mod pallet {
     >;
 
     #[pallet::storage]
+    #[pallet::getter(fn token_count)]
+    pub(super) type TokenCount<T: Config> = StorageMap<
+        _,
+        Blake2_128Concat,
+        T::InstanceId,
+        u64,
+        ValueQuery,
+    >;
+
+    #[pallet::storage]
     #[pallet::getter(fn balances)]
     pub(super) type Balances<T: Config> = StorageDoubleMap<
         _,
@@ -116,9 +120,9 @@ pub mod pallet {
     pub(super) type OperatorApprovals<T: Config> = StorageDoubleMap<
         _,
         Blake2_128Concat,
-        T::AccountId,
+        T::InstanceId,
         Blake2_128Concat,
-        T::AccountId,
+        ApprovalKey<T::AccountId>,
         bool,
         ValueQuery,
     >;
@@ -141,7 +145,7 @@ pub mod pallet {
             Vec<T::TokenId>,
             Vec<Balance>,
         ),
-        ApprovalForAll(T::AccountId, T::AccountId, bool),
+        ApprovalForAll(T::AccountId, T::AccountId, T::InstanceId, bool),
     }
 
     #[pallet::error]
@@ -155,6 +159,9 @@ pub mod pallet {
         Overflow,
         NoAvailableInstanceId,
         InvalidInstanceId,
+        NoPermission,
+        InstanceNotFound,
+        TokenNotFound,
     }
 
     #[pallet::hooks]
@@ -166,11 +173,22 @@ pub mod pallet {
         pub fn create_instance(origin: OriginFor<T>, data: Vec<u8>) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            let deposit = T::CreateInstanceDeposit::get();
-            T::Currency::reserve(&who, deposit.clone())?;
-
             Self::do_create_instance(&who, data)?;
 
+            Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn create_token(
+            origin: OriginFor<T>,
+            instance_id: T::InstanceId,
+            token_id: T::TokenId,
+            is_nf: bool,
+            uri: Vec<u8>,
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            Self::do_create_token(&who, instance_id, token_id, is_nf, uri)?;
             Ok(().into())
         }
 
@@ -178,15 +196,12 @@ pub mod pallet {
         pub fn set_approval_for_all(
             origin: OriginFor<T>,
             operator: T::AccountId,
+            instance_id: T::InstanceId,
             approved: bool,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            if operator == who {
-                return Ok(().into());
-            }
-
-            Self::do_set_approval_for_all(&who, &operator, approved)?;
+            Self::do_set_approval_for_all(&who, &operator, instance_id, approved)?;
 
             Ok(().into())
         }
@@ -200,9 +215,9 @@ pub mod pallet {
             token_id: T::TokenId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
-            let _who = ensure_signed(origin)?;
+            let who = ensure_signed(origin)?;
 
-            Self::do_transfer_from(&from, &to, instance_id, token_id, amount)?;
+            Self::do_transfer_from(&who, &from, &to, instance_id, token_id, amount)?;
 
             Ok(().into())
         }
@@ -216,35 +231,80 @@ pub mod pallet {
             token_ids: Vec<T::TokenId>,
             amounts: Vec<Balance>,
         ) -> DispatchResultWithPostInfo {
-            let _who = ensure_signed(origin)?;
+            let who = ensure_signed(origin)?;
 
-            Self::do_batch_transfer_from(&from, &to, instance_id, token_ids, amounts)?;
+            Self::do_batch_transfer_from(&who, &from, &to, instance_id, token_ids, amounts)?;
+
+            Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn mint(
+            origin: OriginFor<T>,
+            to: T::AccountId,
+            instance_id: T::InstanceId,
+            token_id: T::TokenId,
+            amount: Balance,
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            Self::do_mint(&who, &to, instance_id, token_id, amount)?;
+
+            Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn batch_mint(
+            origin: OriginFor<T>,
+            to: T::AccountId,
+            instance_id: T::InstanceId,
+            token_ids: Vec<T::TokenId>,
+            amounts: Vec<Balance>,
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            Self::do_batch_mint(&who, &to, instance_id, token_ids, amounts)?;
+
+            Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn burn(
+            origin: OriginFor<T>,
+            from: T::AccountId,
+            instance_id: T::InstanceId,
+            token_id: T::TokenId,
+            amount: Balance,
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            Self::do_burn(&who, &from, instance_id, token_id, amount)?;
+
+            Ok(().into())
+        }
+
+        #[pallet::weight(10_000)]
+        pub fn batch_burn(
+            origin: OriginFor<T>,
+            from: T::AccountId,
+            instance_id: T::InstanceId,
+            token_ids: Vec<T::TokenId>,
+            amounts: Vec<Balance>,
+        ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
+
+            Self::do_batch_burn(&who, &from, instance_id, token_ids, amounts)?;
 
             Ok(().into())
         }
     }
 }
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Instance<AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq> {
-    owner: AccountId,
-    data: Vec<u8>,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Token<
-    InstanceId: Encode + Decode + Clone + Debug + Eq + PartialEq,
-    AccountId: Encode + Decode + Clone + Debug + Eq + PartialEq,
-> {
-    instance_id: InstanceId,
-    creator: AccountId,
-    is_nf: bool,
-    uri: Vec<u8>,
-}
-
 impl<T: Config> Pallet<T> {
-    // func_id 1002 do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
     pub fn do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError> {
+        let deposit = T::CreateInstanceDeposit::get();
+        T::Currency::reserve(&who, deposit.clone())?;
+
         let instance_id = NextInstanceId::<T>::try_mutate(|id| -> Result<T::InstanceId, DispatchError> {
             let current_id = *id;
             *id = id
@@ -265,14 +325,6 @@ impl<T: Config> Pallet<T> {
         Ok(instance_id)
     }
 
-    // func_id 1003
-    // do_create_token(
-    // 		who: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		is_nf: bool,
-    // 		uri: Vec<u8>,
-    // 	)
     pub fn do_create_token(
         who: &T::AccountId,
         instance_id: T::InstanceId,
@@ -280,11 +332,8 @@ impl<T: Config> Pallet<T> {
         is_nf: bool,
         uri: Vec<u8>,
     ) -> DispatchResult {
-        ensure!(Instances::<T>::contains_key(instance_id), Error::<T>::InvalidInstanceId);
-        ensure!(
-            !Tokens::<T>::contains_key(instance_id, token_id),
-            Error::<T>::InUse
-        );
+        Self::maybe_check_owner(who, instance_id)?;
+        ensure!(!Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::InUse);
 
         Tokens::<T>::insert(
             instance_id,
@@ -297,22 +346,30 @@ impl<T: Config> Pallet<T> {
             },
         );
 
+        TokenCount::<T>::try_mutate(instance_id, |count| -> DispatchResult {
+            *count = count
+                .checked_add(One::one())
+                .ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
+
         Self::deposit_event(Event::TokenCreated(instance_id, token_id, who.clone()));
         Ok(())
     }
 
-    // func_id 1004
-    // do_set_approval_for_all(
-    // 		owner: &T::AccountId,
-    // 		operator: &T::AccountId,
-    // 		approved: bool,
-    // 	)
     pub fn do_set_approval_for_all(
         owner: &T::AccountId,
         operator: &T::AccountId,
+        instance_id: T::InstanceId,
         approved: bool,
     ) -> DispatchResult {
-        OperatorApprovals::<T>::try_mutate(owner, operator, |status| -> DispatchResult {
+        ensure!(Instances::<T>::contains_key(instance_id), Error::<T>::InstanceNotFound);
+
+        let key = ApprovalKey {
+            owner: owner.clone(),
+            operator: operator.clone(),
+        };
+        OperatorApprovals::<T>::try_mutate(instance_id, &key, |status| -> DispatchResult {
             *status = approved;
             Ok(())
         })?;
@@ -320,62 +377,48 @@ impl<T: Config> Pallet<T> {
         Self::deposit_event(Event::ApprovalForAll(
             owner.clone(),
             operator.clone(),
+            instance_id,
             approved,
         ));
 
         Ok(())
     }
 
-    // func_id 1005
-    // do_mint(
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_mint(
+        who: &T::AccountId,
         to: &T::AccountId,
         instance_id: T::InstanceId,
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::maybe_check_owner(who, instance_id)?;
+        ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
+
+        Self::add_balance_to(to, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Mint(to.clone(), instance_id, token_id, amount));
 
         Ok(())
     }
 
-    // func_id 1006
-    // do_batch_mint(
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
     pub fn do_batch_mint(
+        who: &T::AccountId,
         to: &T::AccountId,
         instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
-        ensure!(
-            token_ids.len() == amounts.len(),
-            Error::<T>::InvalidArrayLength
-        );
+        Self::maybe_check_owner(who, instance_id)?;
+        ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
         let n = token_ids.len();
         for i in 0..n {
             let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
+
+            Self::add_balance_to(to, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchMint(to.clone(), instance_id, token_ids, amounts));
@@ -383,57 +426,41 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1007
-    // do_burn(
-    // 		from: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_burn(
+        who: &T::AccountId,
         from: &T::AccountId,
         instance_id: T::InstanceId,
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::maybe_check_owner(who, instance_id)?;
+        ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
+
+        Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Burn(from.clone(), instance_id, token_id, amount));
 
         Ok(())
     }
 
-    // func_id 1008
-    // do_batch_burn(
-    // 		from: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
-
     pub fn do_batch_burn(
+        who: &T::AccountId,
         from: &T::AccountId,
         instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
-        ensure!(
-            token_ids.len() == amounts.len(),
-            Error::<T>::InvalidArrayLength
-        );
+        Self::maybe_check_owner(who, instance_id)?;
+        ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
         let n = token_ids.len();
         for i in 0..n {
             let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
+
+            Self::remove_balance_from(from, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchBurn(from.clone(), instance_id, token_ids, amounts));
@@ -441,15 +468,8 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1009
-    // do_transfer_from(
-    // 		from: &T::AccountId,
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_id: T::TokenId,
-    // 		amount: Balance
-    // 	)
     pub fn do_transfer_from(
+        who: &T::AccountId,
         from: &T::AccountId,
         to: &T::AccountId,
         instance_id: T::InstanceId,
@@ -458,19 +478,15 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         log::info!("run erc1155: do_transfer_from");
 
-        if from == to {
+        ensure!(Self::approved_or_owner(who, from, instance_id), Error::<T>::NoPermission);
+
+        if from == to || amount == Zero::zero() {
             return Ok(());
         }
 
-        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
-        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::add_balance_to(to, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Transferred(
             from.clone(),
@@ -483,21 +499,16 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1010
-    // do_batch_transfer_from(
-    // 		from: &T::AccountId,
-    // 		to: &T::AccountId,
-    // 		instance_id: T::InstanceId,
-    // 		token_ids: Vec<T::TokenId>,
-    // 		amounts: Vec<Balance>
-    // 	)
     pub fn do_batch_transfer_from(
+        who: &T::AccountId,
         from: &T::AccountId,
         to: &T::AccountId,
         instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
+        ensure!(Self::approved_or_owner(who, from, instance_id), Error::<T>::NoPermission);
+
         if from == to {
             return Ok(());
         }
@@ -509,18 +520,12 @@ impl<T: Config> Pallet<T> {
 
         let n = token_ids.len();
         for i in 0..n {
-            let token_id = &token_ids[i];
+            let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
-            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::add_balance_to(to, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchTransferred(
@@ -534,25 +539,32 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    // func_id 1011  approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool
-    pub fn approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool {
-        *account != T::AccountId::default()
-            && (*who == *account || Self::operator_approvals(who, account))
+    pub fn approved_or_owner(
+        who: &T::AccountId,
+        account: &T::AccountId,
+        instance_id: T::InstanceId,
+    ) -> bool {
+        *who == *account || Self::is_approved_for_all(account, who, instance_id)
     }
 
-    // func_id 1012 is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool
-    pub fn is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool {
-        Self::operator_approvals(owner, operator)
+    pub fn is_approved_for_all(
+        owner: &T::AccountId,
+        operator: &T::AccountId,
+        instance_id: T::InstanceId,
+    ) -> bool {
+        let key = ApprovalKey {
+            owner: owner.clone(),
+            operator: operator.clone(),
+        };
+        Self::operator_approvals(instance_id, &key)
     }
 
-    // func_id 1013 fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
     pub fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance {
         log::info!("run erc1155: balance_of");
 
         Self::balances(owner, (instance_id, token_id))
     }
 
-    // func_id 1014 balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
     pub fn balance_of_batch(
         owners: &Vec<T::AccountId>,
         instance_id: T::InstanceId,
@@ -576,12 +588,12 @@ impl<T: Config> Pallet<T> {
         Ok(batch_balances)
     }
 
+
     pub fn balance_of_single_owner_batch(
         owner: &T::AccountId,
         instance_id: T::InstanceId,
         token_ids: Vec<T::TokenId>,
     ) -> Result<Vec<Balance>, DispatchError> {
-
         let mut batch_balances = vec![Balance::from(0u32); token_ids.len()];
 
         let n = token_ids.len();
@@ -594,4 +606,40 @@ impl<T: Config> Pallet<T> {
 
         Ok(batch_balances)
     }
+
+    fn add_balance_to(
+        to: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_id: T::TokenId,
+        amount: Balance,
+    ) -> DispatchResult {
+        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
+            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn remove_balance_from(
+        from: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_id: T::TokenId,
+        amount: Balance,
+    ) -> DispatchResult {
+        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
+            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn maybe_check_owner(who: &T::AccountId, instance_id: T::InstanceId) -> DispatchResult {
+        let instance = Instances::<T>::get(instance_id).ok_or(Error::<T>::InvalidInstanceId)?;
+        ensure!(*who == instance.owner, Error::<T>::NoPermission);
+
+        Ok(())
+    }
 }
+

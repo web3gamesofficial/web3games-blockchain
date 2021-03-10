@@ -1,10 +1,17 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use frame_support::dispatch::DispatchError;
+use frame_support::{
+    traits::Get,
+    dispatch::{DispatchResult, DispatchError},
+};
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
-use sp_runtime::{ModuleId, RuntimeDebug};
+use sp_runtime::{
+    ModuleId,
+    traits::AccountIdConversion,
+    RuntimeDebug,
+};
 use sp_std::{fmt::Debug, prelude::*};
 
 pub use pallet::*;
@@ -28,9 +35,6 @@ pub mod pallet {
         #[pallet::constant]
         type ModuleId: Get<ModuleId>;
 
-        #[pallet::constant]
-        type CurrencyTokenInstanceId: Get<<Self as token::Config>::InstanceId>;
-
         type Currency: MultiCurrencyExtended<
             Self::AccountId,
             CurrencyId = CurrencyId,
@@ -38,9 +42,38 @@ pub mod pallet {
         >;
     }
 
+    pub type GenesisInstance<T> = (
+        <T as frame_system::Config>::AccountId,
+        Vec<u8>,
+    );
+
+    #[pallet::genesis_config]
+    pub struct GenesisConfig<T: Config> {
+        pub instance: GenesisInstance<T>,
+    }
+
+    #[cfg(feature = "std")]
+    impl<T: Config> Default for GenesisConfig<T> {
+        fn default() -> Self {
+            Self { instance: Default::default() }
+        }
+    }
+
+    #[pallet::genesis_build]
+    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+        fn build(&self) {
+            Pallet::<T>::create_instance(&self.instance.0, self.instance.1.to_vec())
+                .expect("Create instance cannot fail while building genesis");
+        }
+    }
+
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
+
+    #[pallet::storage]
+    #[pallet::getter(fn currency_instance)]
+    pub(super) type CurrencyInstance<T: Config> = StorageValue<_, T::InstanceId, OptionQuery>;
 
     #[pallet::storage]
     pub(super) type CurrencyTokens<T: Config> =
@@ -60,6 +93,7 @@ pub mod pallet {
     pub enum Error<T> {
         Unknown,
         NumOverflow,
+        CurrencyInstanceNotCreated,
         CurrencyTokenNotFound,
     }
 
@@ -72,13 +106,15 @@ pub mod pallet {
         pub fn mint(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
+            to: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            <T as Config>::Currency::deposit(currency_id, &who, amount)?;
+            let instance_id = CurrencyInstance::<T>::get().ok_or(Error::<T>::CurrencyInstanceNotCreated)?;
 
-            let instance_id = T::CurrencyTokenInstanceId::get();
+            let module_account = Self::account_id();
+            <T as Config>::Currency::transfer(currency_id, &who, &module_account, amount)?;
 
             if !CurrencyTokens::<T>::contains_key(currency_id) {
                 let token_id = Self::convert_to_token_id(currency_id);
@@ -98,7 +134,7 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::Unknown)?;
 
-                token::Module::<T>::do_mint(&who, instance_id, info.token_id, amount)?;
+                token::Module::<T>::do_mint(&who, &to, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -116,19 +152,22 @@ pub mod pallet {
         pub fn burn(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
+            from: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
-
-            <T as Config>::Currency::withdraw(currency_id, &who, amount)?;
 
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
                     .as_mut()
                     .ok_or(Error::<T>::CurrencyTokenNotFound)?;
 
-                let instance_id = T::CurrencyTokenInstanceId::get();
-                token::Module::<T>::do_burn(&who, instance_id, info.token_id, amount)?;
+                let instance_id = CurrencyInstance::<T>::get().ok_or(Error::<T>::CurrencyInstanceNotCreated)?;
+
+                let module_account = Self::account_id();
+                <T as Config>::Currency::transfer(currency_id, &module_account, &who, amount)?;
+
+                token::Module::<T>::do_burn(&who, &from, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -156,6 +195,17 @@ pub struct TokenInfo<
 }
 
 impl<T: Config> Pallet<T> {
+    pub fn account_id() -> T::AccountId {
+        T::ModuleId::get().into_account()
+    }
+
+    pub fn create_instance(who: &T::AccountId, data: Vec<u8>) -> DispatchResult {
+        let instance_id = token::Module::<T>::do_create_instance(who, data)?;
+        CurrencyInstance::<T>::put(instance_id);
+
+        Ok(())
+    }
+
     pub fn get_currency_token(
         currency_id: CurrencyId,
     ) -> Result<(T::InstanceId, T::TokenId), DispatchError> {
