@@ -301,6 +301,7 @@ impl<T: Config> Pallet<T> {
         // Transfer currency token to exchange vault
         token::Module::<T>::do_transfer_from(
             who,
+            who,
             &exchange.vault,
             exchange.currency_instance,
             exchange.currency_token,
@@ -340,6 +341,7 @@ impl<T: Config> Pallet<T> {
         if total_refund_currency > Zero::zero() {
             token::Module::<T>::do_transfer_from(
                 &exchange.vault,
+                &exchange.vault,
                 &to,
                 exchange.currency_instance,
                 exchange.currency_token,
@@ -349,6 +351,7 @@ impl<T: Config> Pallet<T> {
 
         // Send Tokens all tokens purchased
         token::Module::<T>::do_batch_transfer_from(
+            &exchange.vault,
             &exchange.vault,
             &to,
             exchange.token_instance,
@@ -381,6 +384,7 @@ impl<T: Config> Pallet<T> {
 
         // Transfer the tokens to sell to exchange vault
         token::Module::<T>::do_batch_transfer_from(
+            who,
             who,
             &exchange.vault,
             exchange.token_instance,
@@ -428,6 +432,7 @@ impl<T: Config> Pallet<T> {
         // Transfer currency here
         token::Module::<T>::do_transfer_from(
             &exchange.vault,
+            &exchange.vault,
             &to,
             exchange.currency_instance,
             exchange.currency_token,
@@ -459,6 +464,7 @@ impl<T: Config> Pallet<T> {
 
         // Transfer the tokens to add to the exchange liquidity pools
         token::Module::<T>::do_batch_transfer_from(
+            who,
             who,
             &exchange.vault,
             exchange.token_instance,
@@ -552,6 +558,7 @@ impl<T: Config> Pallet<T> {
 
         // Mint liquidity pool tokens
         token::Module::<T>::do_batch_mint(
+            &exchange.vault,
             &to,
             exchange.lp_instance,
             token_ids.clone(),
@@ -560,6 +567,7 @@ impl<T: Config> Pallet<T> {
 
         // Transfer all currency to this contract
         token::Module::<T>::do_transfer_from(
+            &who,
             &who,
             &exchange.vault,
             exchange.currency_instance,
@@ -592,6 +600,7 @@ impl<T: Config> Pallet<T> {
 
         // Transfer the liquidity pool tokens to burn to exchange vault
         token::Module::<T>::do_batch_transfer_from(
+            who,
             who,
             &exchange.vault,
             exchange.lp_instance,
@@ -654,6 +663,7 @@ impl<T: Config> Pallet<T> {
         // Burn liquidity pool tokens for offchain supplies
         token::Module::<T>::do_batch_burn(
             &exchange.vault,
+            &exchange.vault,
             exchange.lp_instance,
             token_ids.clone(),
             liquidities,
@@ -662,12 +672,14 @@ impl<T: Config> Pallet<T> {
         // Transfer total currency and all Tokens ids
         token::Module::<T>::do_transfer_from(
             &exchange.vault,
+            &exchange.vault,
             &to,
             exchange.currency_instance,
             exchange.currency_token,
             total_currency,
         )?;
         token::Module::<T>::do_batch_transfer_from(
+            &exchange.vault,
             &exchange.vault,
             &to,
             exchange.token_instance,

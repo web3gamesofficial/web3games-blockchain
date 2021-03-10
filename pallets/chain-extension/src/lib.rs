@@ -49,9 +49,10 @@ pub struct CreateTokenInputParam<AccountId, InstanceId, TokenId> {
 // 		approved: bool,
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct SetApprovalForAllInputParam<AccountId> {
+pub struct SetApprovalForAllInputParam<AccountId, InstanceId> {
     owner: AccountId,
     operator: AccountId,
+    instance_id: InstanceId,
     approved: bool,
 }
 
@@ -152,17 +153,19 @@ pub struct BatchTransferFromInputParam<AccountId, InstanceId, TokenId, Balance> 
 // func_id 1011
 // approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct ApprovedOrOwnerInputParam<AccountId> {
+pub struct ApprovedOrOwnerInputParam<AccountId, InstanceId> {
     who: AccountId,
-    account: AccountId,
+    operator: AccountId,
+    instance_id: InstanceId
 }
 
 // func_id 1012
 // is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct IsApprovedForAllInputParam<AccountId> {
+pub struct IsApprovedForAllInputParam<AccountId, InstanceId> {
     owner: AccountId,
     operator: AccountId,
+    instance_id: InstanceId,
 }
 // func_id 1013
 // fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
@@ -291,8 +294,10 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.read_into(&mut &mut buffer[..])?;
                 log::info!("buffer: {:?}", buffer);
 
-                let input: SetApprovalForAllInputParam<<E::T as SysConfig>::AccountId> =
-                    env.read_as()?;
+                let input: SetApprovalForAllInputParam<
+                    <E::T as SysConfig>::AccountId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
+                > = env.read_as()?;
                 log::info!("input: {:?}", input);
 
                 let weight = 100_000;
@@ -301,6 +306,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 pallet_erc1155::Module::<E::T>::do_set_approval_for_all(
                     &input.owner,
                     &input.operator,
+                    input.instance_id,
                     input.approved,
                 )?;
             }
@@ -336,6 +342,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_mint(
+                    &caller,
                     &input.to,
                     input.instance_id,
                     input.token_id,
@@ -374,6 +381,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_batch_mint(
+                    &caller,
                     &input.to,
                     input.instance_id,
                     input.token_ids,
@@ -412,6 +420,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_burn(
+                    &caller,
                     &input.from,
                     input.instance_id,
                     input.token_id,
@@ -450,6 +459,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_batch_burn(
+                    &caller,
                     &input.from,
                     input.instance_id,
                     input.token_ids,
@@ -489,6 +499,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_transfer_from(
+                    &caller,
                     &input.from,
                     &input.to,
                     input.instance_id,
@@ -529,6 +540,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Module::<E::T>::do_batch_transfer_from(
+                    &caller,
                     &input.from,
                     &input.to,
                     input.instance_id,
@@ -543,11 +555,16 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let caller = env.ext().caller().clone();
                 log::info!("caller: {:?}", caller);
 
-                let input: ApprovedOrOwnerInputParam<<E::T as SysConfig>::AccountId> =
-                    env.read_as()?;
+                let input: ApprovedOrOwnerInputParam<
+                    <E::T as SysConfig>::AccountId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
+                > = env.read_as()?;
 
-                let ret: bool =
-                    pallet_erc1155::Module::<E::T>::approved_or_owner(&input.who, &input.account);
+                let ret: bool = pallet_erc1155::Module::<E::T>::approved_or_owner(
+                    &input.who,
+                    &input.operator,
+                    input.instance_id,
+                );
                 log::info!("balance: {:?}", ret);
 
                 let weight = 100_000;
@@ -573,11 +590,16 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let caller = env.ext().caller().clone();
                 log::info!("caller: {:?}", caller);
 
-                let input: ApprovedOrOwnerInputParam<<E::T as SysConfig>::AccountId> =
-                    env.read_as()?;
+                let input: IsApprovedForAllInputParam<
+                    <E::T as SysConfig>::AccountId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
+                > = env.read_as()?;
 
-                let ret: bool =
-                    pallet_erc1155::Module::<E::T>::is_approved_for_all(&input.who, &input.account);
+                let ret: bool = pallet_erc1155::Module::<E::T>::is_approved_for_all(
+                    &input.owner,
+                    &input.operator,
+                    input.instance_id,
+                );
                 log::info!("ret: {:?}", ret);
 
                 let weight = 100_000;

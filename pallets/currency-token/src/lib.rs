@@ -72,6 +72,7 @@ pub mod pallet {
         pub fn mint(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
+            to: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
@@ -98,7 +99,7 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::Unknown)?;
 
-                token::Module::<T>::do_mint(&who, instance_id, info.token_id, amount)?;
+                token::Module::<T>::do_mint(&who, &to, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -116,6 +117,7 @@ pub mod pallet {
         pub fn burn(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
+            from: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
@@ -128,7 +130,7 @@ pub mod pallet {
                     .ok_or(Error::<T>::CurrencyTokenNotFound)?;
 
                 let instance_id = T::CurrencyTokenInstanceId::get();
-                token::Module::<T>::do_burn(&who, instance_id, info.token_id, amount)?;
+                token::Module::<T>::do_burn(&who, &from, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
