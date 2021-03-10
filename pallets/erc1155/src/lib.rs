@@ -377,10 +377,7 @@ impl<T: Config> Pallet<T> {
         Self::mayby_check_owner(who, instance_id)?;
         ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
-        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::add_balance_to(to, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Mint(to.clone(), instance_id, token_id, amount));
 
@@ -404,10 +401,7 @@ impl<T: Config> Pallet<T> {
 
             ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
-            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::add_balance_to(to, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchMint(to.clone(), instance_id, token_ids, amounts));
@@ -425,10 +419,7 @@ impl<T: Config> Pallet<T> {
         Self::mayby_check_owner(who, instance_id)?;
         ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
-        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Burn(from.clone(), instance_id, token_id, amount));
 
@@ -452,10 +443,7 @@ impl<T: Config> Pallet<T> {
 
             ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
-            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::remove_balance_from(from, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchBurn(from.clone(), instance_id, token_ids, amounts));
@@ -479,15 +467,9 @@ impl<T: Config> Pallet<T> {
             return Ok(());
         }
 
-        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
-        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-            Ok(())
-        })?;
+        Self::add_balance_to(to, instance_id, token_id, amount)?;
 
         Self::deposit_event(Event::Transferred(
             from.clone(),
@@ -521,18 +503,12 @@ impl<T: Config> Pallet<T> {
 
         let n = token_ids.len();
         for i in 0..n {
-            let token_id = &token_ids[i];
+            let token_id = token_ids[i];
             let amount = amounts[i];
 
-            Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
-            Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
-                *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-                Ok(())
-            })?;
+            Self::add_balance_to(to, instance_id, token_id, amount)?;
         }
 
         Self::deposit_event(Event::BatchTransferred(
@@ -593,6 +569,34 @@ impl<T: Config> Pallet<T> {
         }
 
         Ok(batch_balances)
+    }
+
+    fn add_balance_to(
+        to: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_id: T::TokenId,
+        amount: Balance,
+    ) -> DispatchResult {
+        Balances::<T>::try_mutate(to, (instance_id, token_id), |balance| -> DispatchResult {
+            *balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    fn remove_balance_from(
+        from: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_id: T::TokenId,
+        amount: Balance,
+    ) -> DispatchResult {
+        Balances::<T>::try_mutate(from, (instance_id, token_id), |balance| -> DispatchResult {
+            *balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+            Ok(())
+        })?;
+
+        Ok(())
     }
 
     fn mayby_check_owner(who: &T::AccountId, instance_id: T::InstanceId) -> DispatchResult {
