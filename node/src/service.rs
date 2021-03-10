@@ -11,7 +11,7 @@ use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::TelemetrySpan;
 use sgc_runtime::{self, opaque::Block, RuntimeApi};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sc_consensus_aura::{ImportQueueParams, StartAuraParams};
+use sc_consensus_aura::{ImportQueueParams, StartAuraParams, SlotProportion};
 use sp_inherents::InherentDataProviders;
 use std::time::Duration;
 use std::{
@@ -273,6 +273,7 @@ pub fn new_full(
                 keystore: keystore_container.sync_keystore(),
                 can_author_with,
                 sync_oracle: network.clone(),
+                block_proposal_slot_portion: SlotProportion::new(2f32 / 3f32),
             },
         )?;
 
