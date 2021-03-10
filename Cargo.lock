@@ -3824,6 +3824,7 @@ dependencies = [
  "orml-traits",
  "pallet-erc1155",
  "parity-scale-codec",
+ "serde",
  "sgc-primitives",
  "sp-core",
  "sp-io",

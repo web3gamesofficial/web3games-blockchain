@@ -5,6 +5,7 @@ authors = ["Web3Games Developers"]
 edition = "2018"
 
 [dependencies]
+serde = { version = "1.0.101", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 
 frame-support = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
@@ -25,6 +26,7 @@ token = { package = "pallet-erc1155", path = "../erc1155", default-features = fa
 [features]
 default = ["std"]
 std = [
+	"serde",
 	"codec/std",
 	"frame-support/std",
 	"frame-system/std",

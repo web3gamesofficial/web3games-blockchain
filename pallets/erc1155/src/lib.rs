@@ -72,33 +72,6 @@ pub mod pallet {
             + Into<u64>;
     }
 
-    pub type GenesisInstances<T> = (
-        <T as frame_system::Config>::AccountId,
-        Vec<u8>,
-    );
-
-    #[pallet::genesis_config]
-    pub struct GenesisConfig<T: Config> {
-        pub instances: Vec<GenesisInstances<T>>,
-    }
-
-    #[cfg(feature = "std")]
-    impl<T: Config> Default for GenesisConfig<T> {
-        fn default() -> Self {
-            Self { instances: Default::default() }
-        }
-    }
-
-    #[pallet::genesis_build]
-    impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
-        fn build(&self) {
-            self.instances.iter().for_each(|instance| {
-                let _id = Pallet::<T>::do_create_instance(&instance.0, instance.1.to_vec())
-                    .expect("Create instance cannot fail while building genesis");
-            })
-        }
-    }
-
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
@@ -190,9 +163,6 @@ pub mod pallet {
         pub fn create_instance(origin: OriginFor<T>, data: Vec<u8>) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            let deposit = T::CreateInstanceDeposit::get();
-            T::Currency::reserve(&who, deposit.clone())?;
-
             Self::do_create_instance(&who, data)?;
 
             Ok(().into())
@@ -248,6 +218,9 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
     pub fn do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError> {
+        let deposit = T::CreateInstanceDeposit::get();
+        T::Currency::reserve(&who, deposit.clone())?;
+
         let instance_id = NextInstanceId::<T>::try_mutate(|id| -> Result<T::InstanceId, DispatchError> {
             let current_id = *id;
             *id = id

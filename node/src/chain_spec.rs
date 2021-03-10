@@ -5,7 +5,7 @@ use serde_json::json;
 use sgc_runtime::{
     AccountId, AuraConfig, Balance, BalancesConfig, ContractsConfig, CurrencyId, EVMConfig,
     EthereumConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, TokenSymbol,
-    TokensConfig, Erc1155Config, DOLLARS, WASM_BINARY,
+    TokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
@@ -297,13 +297,11 @@ fn testnet_genesis(
                 })
                 .collect(),
         },
-        pallet_erc1155: Erc1155Config {
-            instances: vec![
-                (
-                    AccountId::default(),
-                    "currency token".as_bytes().to_vec(),
-                )
-            ]
+        pallet_currency_token: CurrencyTokenConfig {
+            instance: (
+                get_account_id_from_seed::<sr25519::Public>("Alice"),
+                "currency token instance".as_bytes().to_vec(),
+            )
         },
     }
 }
