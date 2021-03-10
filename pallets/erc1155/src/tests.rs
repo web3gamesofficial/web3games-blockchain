@@ -33,7 +33,6 @@ fn test_create_instance_works() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_set_approval_for_all() {
     new_test_ext().execute_with(|| {
         assert_ok!(Erc1155::do_set_approval_for_all(&1, &2, true));
@@ -42,7 +41,6 @@ fn test_do_set_approval_for_all() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_mint() {
     new_test_ext().execute_with(|| {
         assert_ok!(Erc1155::do_mint(&1, 1, 2, 100));
@@ -50,7 +48,6 @@ fn test_do_mint() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_batch_mint() {
     new_test_ext().execute_with(|| {
         let token_ids = vec![1, 2, 3];
@@ -60,7 +57,6 @@ fn test_do_batch_mint() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_burn_works() {
     new_test_ext().execute_with(|| {
         assert_ok!(Erc1155::do_mint(&1, 1, 2, 100));
@@ -69,7 +65,6 @@ fn test_do_burn_works() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_batch_burn() {
     new_test_ext().execute_with(|| {
         let token_ids = vec![1, 2, 3];
@@ -80,7 +75,6 @@ fn test_do_batch_burn() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_transfer_from() {
     new_test_ext().execute_with(|| {
         assert_ok!(Erc1155::do_mint(&1, 1, 2, 100));
@@ -89,7 +83,6 @@ fn test_do_transfer_from() {
 }
 
 #[test]
-// #[ignore]
 fn test_do_batch_transfer_from() {
     new_test_ext().execute_with(|| {
         let token_ids = vec![1, 2, 3];
@@ -100,7 +93,6 @@ fn test_do_batch_transfer_from() {
 }
 
 #[test]
-// #[ignore]
 fn test_approved_or_owner() {
     new_test_ext().execute_with(|| {
         assert_eq!(Erc1155::approved_or_owner(&1, &2), false);
@@ -108,7 +100,6 @@ fn test_approved_or_owner() {
 }
 
 #[test]
-// #[ignore]
 fn test_is_approved_for_all() {
     new_test_ext().execute_with(|| {
         assert_eq!(Erc1155::is_approved_for_all(&1, &2), false);
@@ -116,7 +107,6 @@ fn test_is_approved_for_all() {
 }
 
 #[test]
-// #[ignore]
 fn test_balance_of() {
     new_test_ext().execute_with(|| {
         assert_ok!(Erc1155::do_mint(&1, 1, 2, 100));
@@ -125,7 +115,6 @@ fn test_balance_of() {
 }
 
 #[test]
-// #[ignore]
 fn test_balance_of_batch_token_ids_sample() {
     new_test_ext().execute_with(|| {
         let token_ids = vec![1; 3];
@@ -141,7 +130,6 @@ fn test_balance_of_batch_token_ids_sample() {
 }
 
 #[test]
-// #[ignore]
 fn test_balance_of_batch_token_ids_not_sample() {
     new_test_ext().execute_with(|| {
         let token_ids = vec![1, 2, 3];

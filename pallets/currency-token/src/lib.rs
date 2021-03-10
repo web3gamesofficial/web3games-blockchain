@@ -171,7 +171,7 @@ pub mod pallet {
 
                 info.total_supply = info
                     .total_supply
-                    .checked_sub(amount)
+                    .checked_s:qub(amount)
                     .ok_or(Error::<T>::NumOverflow)?;
                 Ok(())
             })?;
