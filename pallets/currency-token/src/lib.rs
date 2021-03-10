@@ -1,10 +1,17 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use frame_support::dispatch::{DispatchResult, DispatchError};
+use frame_support::{
+    traits::Get,
+    dispatch::{DispatchResult, DispatchError},
+};
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
-use sp_runtime::{ModuleId, RuntimeDebug};
+use sp_runtime::{
+    ModuleId,
+    traits::AccountIdConversion,
+    RuntimeDebug,
+};
 use sp_std::{fmt::Debug, prelude::*};
 
 pub use pallet::*;
@@ -104,9 +111,10 @@ pub mod pallet {
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            <T as Config>::Currency::deposit(currency_id, &who, amount)?;
-
             let instance_id = CurrencyInstance::<T>::get().ok_or(Error::<T>::CurrencyInstanceNotCreated)?;
+
+            let module_account = Self::account_id();
+            <T as Config>::Currency::transfer(currency_id, &who, &module_account, amount)?;
 
             if !CurrencyTokens::<T>::contains_key(currency_id) {
                 let token_id = Self::convert_to_token_id(currency_id);
@@ -149,14 +157,15 @@ pub mod pallet {
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
 
-            <T as Config>::Currency::withdraw(currency_id, &who, amount)?;
-
             CurrencyTokens::<T>::try_mutate(currency_id, |token_info| -> DispatchResult {
                 let info = token_info
                     .as_mut()
                     .ok_or(Error::<T>::CurrencyTokenNotFound)?;
 
                 let instance_id = CurrencyInstance::<T>::get().ok_or(Error::<T>::CurrencyInstanceNotCreated)?;
+
+                let module_account = Self::account_id();
+                <T as Config>::Currency::transfer(currency_id, &module_account, &who, amount)?;
 
                 token::Module::<T>::do_burn(&who, &from, instance_id, info.token_id, amount)?;
 
@@ -186,6 +195,10 @@ pub struct TokenInfo<
 }
 
 impl<T: Config> Pallet<T> {
+    pub fn account_id() -> T::AccountId {
+        T::ModuleId::get().into_account()
+    }
+
     pub fn create_instance(who: &T::AccountId, data: Vec<u8>) -> DispatchResult {
         let instance_id = token::Module::<T>::do_create_instance(who, data)?;
         CurrencyInstance::<T>::put(instance_id);
