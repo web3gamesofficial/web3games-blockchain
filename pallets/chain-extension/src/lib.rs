@@ -182,6 +182,20 @@ pub struct BalanceOfBatchInputParam<AccountId, InstanceId, TokenId> {
     token_ids: Vec<TokenId>,
 }
 
+// func_id 1015
+// balance_of_single_owner_batch(
+//         owner: T::AccountId,
+//         instance_id: T::InstanceId,
+//         token_ids: Vec<T::TokenId>,
+//     )
+#[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
+pub struct BalanceOfSingleOwnerBatchInputParam<AccountId, InstanceId, TokenId> {
+    owners: AccountId,
+    instance_id: InstanceId,
+    token_ids: Vec<TokenId>,
+}
+
+
 /// chain extension of contract
 pub struct SgcChainExtension;
 
@@ -646,6 +660,46 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 > = env.read_as()?;
 
                 let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_batch(
+                    &input.owners,
+                    input.instance_id,
+                    input.token_ids,
+                )?;
+                let ret_slice = ret.encode();
+                log::info!("ret: {:?}", ret);
+
+                let weight = 100_000;
+                env.charge_weight(weight)?;
+
+                log::info!("ret_slice: {:?}", ret_slice);
+
+                log::trace!(
+                    target: "runtime",
+                    "[ChainExtension]|call|func_id:{:}",
+                    func_id
+                );
+
+                env.write(&ret_slice, false, None).map_err(|_| {
+                    DispatchError::Other("ChainExtension failed to call create collection")
+                })?;
+            }
+            1015 => {
+                //fn balance_of_single_owner_batch(
+                //         owner: &T::AccountId,
+                //         instance_id: T::InstanceId,
+                //         token_ids: Vec<T::TokenId>,
+                //     )-> Result<Vec<Balance>, DispatchError>
+                log::info!("run 1015");
+                let mut env = env.buf_in_buf_out();
+                let caller = env.ext().caller().clone();
+                log::info!("caller: {:?}", caller);
+
+                let input: BalanceOfSingleOwnerBatchInputParam<
+                    <E::T as SysConfig>::AccountId,
+                    <E::T as pallet_erc1155::Config>::InstanceId,
+                    <E::T as pallet_erc1155::Config>::TokenId,
+                > = env.read_as()?;
+
+                let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_single_owner_batch(
                     &input.owners,
                     input.instance_id,
                     input.token_ids,

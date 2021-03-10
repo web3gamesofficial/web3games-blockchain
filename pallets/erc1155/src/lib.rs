@@ -575,4 +575,23 @@ impl<T: Config> Pallet<T> {
 
         Ok(batch_balances)
     }
+
+    pub fn balance_of_single_owner_batch(
+        owner: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_ids: Vec<T::TokenId>,
+    ) -> Result<Vec<Balance>, DispatchError> {
+
+        let mut batch_balances = vec![Balance::from(0u32); token_ids.len()];
+
+        let n = token_ids.len();
+        for i in 0..n {
+            let owner = owner.clone();
+            let token_id = token_ids[i];
+
+            batch_balances[i] = Self::balances(owner, (instance_id, token_id));
+        }
+
+        Ok(batch_balances)
+    }
 }
