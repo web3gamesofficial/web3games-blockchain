@@ -11,7 +11,7 @@ use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::prelude::*;
 
 pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
-    type Randomness: Randomness<Self::Hash>;
+    type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 }
 
 /// Result that returns a [`DispatchError`] on error.
@@ -198,7 +198,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1001 => {
                 log::info!("run 1001");
                 let mut env = env.buf_in_buf_out();
-                let random_slice = <E::T as Config>::Randomness::random_seed().encode();
+                let random_slice = <E::T as Config>::Randomness::random_seed().0.encode();
                 log::trace!(
                     target: "runtime",
                     "[ChainExtension]|call|func_id:{:}",
