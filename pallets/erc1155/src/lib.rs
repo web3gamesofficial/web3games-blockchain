@@ -332,7 +332,7 @@ impl<T: Config> Pallet<T> {
         is_nf: bool,
         uri: Vec<u8>,
     ) -> DispatchResult {
-        Self::mayby_check_owner(who, instance_id)?;
+        Self::maybe_check_owner(who, instance_id)?;
         ensure!(!Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::InUse);
 
         Tokens::<T>::insert(
@@ -391,7 +391,7 @@ impl<T: Config> Pallet<T> {
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Self::mayby_check_owner(who, instance_id)?;
+        Self::maybe_check_owner(who, instance_id)?;
         ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
         Self::add_balance_to(to, instance_id, token_id, amount)?;
@@ -408,7 +408,7 @@ impl<T: Config> Pallet<T> {
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
-        Self::mayby_check_owner(who, instance_id)?;
+        Self::maybe_check_owner(who, instance_id)?;
         ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
         let n = token_ids.len();
@@ -433,7 +433,7 @@ impl<T: Config> Pallet<T> {
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        Self::mayby_check_owner(who, instance_id)?;
+        Self::maybe_check_owner(who, instance_id)?;
         ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
         Self::remove_balance_from(from, instance_id, token_id, amount)?;
@@ -450,7 +450,7 @@ impl<T: Config> Pallet<T> {
         token_ids: Vec<T::TokenId>,
         amounts: Vec<Balance>,
     ) -> DispatchResult {
-        Self::mayby_check_owner(who, instance_id)?;
+        Self::maybe_check_owner(who, instance_id)?;
         ensure!(token_ids.len() == amounts.len(), Error::<T>::InvalidArrayLength);
 
         let n = token_ids.len();
@@ -588,6 +588,25 @@ impl<T: Config> Pallet<T> {
         Ok(batch_balances)
     }
 
+
+    pub fn balance_of_single_owner_batch(
+        owner: &T::AccountId,
+        instance_id: T::InstanceId,
+        token_ids: Vec<T::TokenId>,
+    ) -> Result<Vec<Balance>, DispatchError> {
+        let mut batch_balances = vec![Balance::from(0u32); token_ids.len()];
+
+        let n = token_ids.len();
+        for i in 0..n {
+            let owner = owner.clone();
+            let token_id = token_ids[i];
+
+            batch_balances[i] = Self::balances(owner, (instance_id, token_id));
+        }
+
+        Ok(batch_balances)
+    }
+
     fn add_balance_to(
         to: &T::AccountId,
         instance_id: T::InstanceId,
@@ -616,10 +635,11 @@ impl<T: Config> Pallet<T> {
         Ok(())
     }
 
-    fn mayby_check_owner(who: &T::AccountId, instance_id: T::InstanceId) -> DispatchResult {
+    fn maybe_check_owner(who: &T::AccountId, instance_id: T::InstanceId) -> DispatchResult {
         let instance = Instances::<T>::get(instance_id).ok_or(Error::<T>::InvalidInstanceId)?;
         ensure!(*who == instance.owner, Error::<T>::NoPermission);
 
         Ok(())
     }
 }
+
