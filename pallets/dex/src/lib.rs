@@ -2,8 +2,9 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-    dispatch::{DispatchError, DispatchResult},
     ensure,
+    dispatch::{DispatchError, DispatchResult},
+    traits::{Currency, Get, ReservableCurrency, ExistenceRequirement::AllowDeath},
 };
 use primitives::{Balance, CurrencyId};
 use sp_core::U256;
@@ -23,6 +24,9 @@ mod tests;
 
 pub type ExchangeId = u32;
 
+type BalanceOf<T> =
+    <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
 #[frame_support::pallet]
 pub mod pallet {
     use super::*;
@@ -34,6 +38,12 @@ pub mod pallet {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
         type ModuleId: Get<ModuleId>;
+
+        /// The minimum balance to create exchange
+        #[pallet::constant]
+        type CreateExchangeDeposit: Get<BalanceOf<Self>>;
+
+        type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
     }
 
     #[pallet::pallet]
@@ -148,8 +158,12 @@ pub mod pallet {
                     Ok(current_id)
                 })?;
 
-            let fund_id = <T as Config>::ModuleId::get().into_sub_account(exchange_id);
-            let lp_instance = token::Module::<T>::do_create_instance(&fund_id, [].to_vec())?;
+            let fund_account = <T as Config>::ModuleId::get().into_sub_account(exchange_id);
+
+            let deposit = T::CreateExchangeDeposit::get();
+            <T as Config>::Currency::transfer(&who, &fund_account, deposit, AllowDeath)?;
+
+            let lp_instance = token::Module::<T>::do_create_instance(&fund_account, [].to_vec())?;
 
             let (currency_instance, currency_token) =
                 currency_token::Module::<T>::get_currency_token(currency_id)?;
@@ -160,7 +174,7 @@ pub mod pallet {
                 currency_instance,
                 currency_token,
                 lp_instance,
-                vault: fund_id,
+                vault: fund_account,
             };
 
             Exchanges::<T>::insert(exchange_id, new_exchange);

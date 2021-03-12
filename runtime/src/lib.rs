@@ -414,6 +414,8 @@ impl chain_extension::Config for Runtime {
 
 parameter_types! {
     pub const CreateInstanceDeposit: Balance = 500 * MILLICENTS;
+    pub const CreateExchangeDeposit: Balance = 500 * MILLICENTS;
+    pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
 }
 
 impl pallet_erc1155::Config for Runtime {
@@ -438,10 +440,8 @@ impl pallet_currency_token::Config for Runtime {
 impl pallet_dex::Config for Runtime {
     type Event = Event;
     type ModuleId = DexModuleId;
-}
-
-parameter_types! {
-    pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
+    type CreateExchangeDeposit = CreateExchangeDeposit;
+    type Currency = Balances;
 }
 
 impl pallet_nft::Config for Runtime {
