@@ -416,6 +416,7 @@ parameter_types! {
     pub const CreateInstanceDeposit: Balance = 500 * MILLICENTS;
     pub const CreateExchangeDeposit: Balance = 500 * MILLICENTS;
     pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
+    pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
 impl pallet_erc1155::Config for Runtime {
@@ -435,6 +436,8 @@ impl pallet_currency_token::Config for Runtime {
     type Event = Event;
     type ModuleId = CurrencyTokenModuleId;
     type Currency = Currencies;
+    type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
+    type GetNativeCurrencyId = GetNativeCurrencyId;
 }
 
 impl pallet_dex::Config for Runtime {

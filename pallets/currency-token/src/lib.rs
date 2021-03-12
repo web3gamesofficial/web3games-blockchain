@@ -40,6 +40,12 @@ pub mod pallet {
             CurrencyId = CurrencyId,
             Balance = Balance,
         >;
+
+        #[pallet::constant]
+        type CreateCurrencyInstanceDeposit: Get<Balance>;
+
+        #[pallet::constant]
+        type GetNativeCurrencyId: Get<CurrencyId>;
     }
 
     pub type GenesisInstance<T> = (
@@ -106,7 +112,6 @@ pub mod pallet {
         pub fn mint(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
-            to: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
@@ -118,7 +123,7 @@ pub mod pallet {
 
             if !CurrencyTokens::<T>::contains_key(currency_id) {
                 let token_id = Self::convert_to_token_id(currency_id);
-                token::Module::<T>::do_create_token(&who, instance_id, token_id, false, [].to_vec())?;
+                token::Module::<T>::do_create_token(&module_account, instance_id, token_id, false, [].to_vec())?;
 
                 let token_info = TokenInfo {
                     instance_id,
@@ -134,7 +139,7 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::Unknown)?;
 
-                token::Module::<T>::do_mint(&who, &to, instance_id, info.token_id, amount)?;
+                token::Module::<T>::do_mint(&module_account, &who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -152,7 +157,6 @@ pub mod pallet {
         pub fn burn(
             origin: OriginFor<T>,
             currency_id: CurrencyId,
-            from: T::AccountId,
             amount: Balance,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
@@ -167,7 +171,7 @@ pub mod pallet {
                 let module_account = Self::account_id();
                 <T as Config>::Currency::transfer(currency_id, &module_account, &who, amount)?;
 
-                token::Module::<T>::do_burn(&who, &from, instance_id, info.token_id, amount)?;
+                token::Module::<T>::do_burn(&module_account, &who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -200,7 +204,13 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn create_instance(who: &T::AccountId, data: Vec<u8>) -> DispatchResult {
-        let instance_id = token::Module::<T>::do_create_instance(who, data)?;
+        let module_account = Self::account_id();
+        let native_currency_id = T::GetNativeCurrencyId::get();
+        let amount = T::CreateCurrencyInstanceDeposit::get();
+
+        <T as Config>::Currency::transfer(native_currency_id, &who, &module_account, amount)?;
+
+        let instance_id = token::Module::<T>::do_create_instance(&module_account, data)?;
         CurrencyInstance::<T>::put(instance_id);
 
         Ok(())
