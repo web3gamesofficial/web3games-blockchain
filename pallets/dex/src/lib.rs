@@ -339,7 +339,7 @@ impl<T: Config> Pallet<T> {
             let currency_reserve = Self::currency_reserves(exchange_id, token_id);
             let currency_amount = Self::get_buy_price(amount_out, currency_reserve, token_reserve)?;
 
-            total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
+            total_refund_currency = total_refund_currency.checked_sub(currency_amount).ok_or(Error::<T>::MaxCurrencyAmountExceeded)?;
 
             amounts_in[i] = currency_amount;
 
