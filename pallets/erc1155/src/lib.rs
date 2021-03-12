@@ -392,7 +392,6 @@ impl<T: Config> Pallet<T> {
         amount: Balance,
     ) -> DispatchResult {
         Self::maybe_check_owner(who, instance_id)?;
-        ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
         Self::add_balance_to(to, instance_id, token_id, amount)?;
 
@@ -416,8 +415,6 @@ impl<T: Config> Pallet<T> {
             let token_id = token_ids[i];
             let amount = amounts[i];
 
-            ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
-
             Self::add_balance_to(to, instance_id, token_id, amount)?;
         }
 
@@ -434,7 +431,6 @@ impl<T: Config> Pallet<T> {
         amount: Balance,
     ) -> DispatchResult {
         Self::maybe_check_owner(who, instance_id)?;
-        ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
         Self::remove_balance_from(from, instance_id, token_id, amount)?;
 
@@ -457,8 +453,6 @@ impl<T: Config> Pallet<T> {
         for i in 0..n {
             let token_id = token_ids[i];
             let amount = amounts[i];
-
-            ensure!(Tokens::<T>::contains_key(instance_id, token_id), Error::<T>::TokenNotFound);
 
             Self::remove_balance_from(from, instance_id, token_id, amount)?;
         }
