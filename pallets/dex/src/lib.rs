@@ -312,18 +312,8 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
 
-        // Transfer currency token to exchange vault
-        token::Module::<T>::do_transfer_from(
-            who,
-            who,
-            &exchange.vault,
-            exchange.currency_instance,
-            exchange.currency_token,
-            max_currency,
-        )?;
-
         let n = token_ids.len();
-        let mut total_refund_currency: Balance = max_currency;
+        let mut total_currency = Balance::from(0u128);
         let mut amounts_in = vec![Balance::from(0u128); n];
 
         let token_reserves =
@@ -339,7 +329,8 @@ impl<T: Config> Pallet<T> {
             let currency_reserve = Self::currency_reserves(exchange_id, token_id);
             let currency_amount = Self::get_buy_price(amount_out, currency_reserve, token_reserve)?;
 
-            total_refund_currency = total_refund_currency.checked_sub(currency_amount).ok_or(Error::<T>::MaxCurrencyAmountExceeded)?;
+            total_currency = total_currency.saturating_add(currency_amount);
+            ensure!(total_currency <= max_currency, Error::<T>::MaxCurrencyAmountExceeded);
 
             amounts_in[i] = currency_amount;
 
@@ -351,17 +342,15 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
-        // Refund currency token if any
-        if total_refund_currency > Zero::zero() {
-            token::Module::<T>::do_transfer_from(
-                &exchange.vault,
-                &exchange.vault,
-                &to,
-                exchange.currency_instance,
-                exchange.currency_token,
-                total_refund_currency,
-            )?;
-        }
+        // Transfer currency token to exchange vault
+        token::Module::<T>::do_transfer_from(
+            who,
+            who,
+            &exchange.vault,
+            exchange.currency_instance,
+            exchange.currency_token,
+            total_currency,
+        )?;
 
         // Send Tokens all tokens purchased
         token::Module::<T>::do_batch_transfer_from(
@@ -396,16 +385,6 @@ impl<T: Config> Pallet<T> {
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
 
-        // Transfer the tokens to sell to exchange vault
-        token::Module::<T>::do_batch_transfer_from(
-            who,
-            who,
-            &exchange.vault,
-            exchange.token_instance,
-            token_ids.clone(),
-            token_amounts_in.clone(),
-        )?;
-
         let n = token_ids.len();
         let mut total_currency = Balance::from(0u128);
         let mut amounts_out = vec![Balance::from(0u128); n];
@@ -438,10 +417,17 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
-        ensure!(
-            total_currency >= min_currency,
-            Error::<T>::InsufficientCurrencyAmount
-        );
+        ensure!(total_currency >= min_currency, Error::<T>::InsufficientCurrencyAmount);
+
+        // Transfer the tokens to sell to exchange vault
+        token::Module::<T>::do_batch_transfer_from(
+            who,
+            who,
+            &exchange.vault,
+            exchange.token_instance,
+            token_ids.clone(),
+            token_amounts_in.clone(),
+        )?;
 
         // Transfer currency here
         token::Module::<T>::do_transfer_from(
@@ -475,16 +461,6 @@ impl<T: Config> Pallet<T> {
         max_currencies: Vec<Balance>,
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
-
-        // Transfer the tokens to add to the exchange liquidity pools
-        token::Module::<T>::do_batch_transfer_from(
-            who,
-            who,
-            &exchange.vault,
-            exchange.token_instance,
-            token_ids.clone(),
-            token_amounts.clone(),
-        )?;
 
         let n = token_ids.len();
         let mut total_currency = Balance::from(0u128);
@@ -570,6 +546,16 @@ impl<T: Config> Pallet<T> {
             }
         }
 
+        // Transfer the tokens to add to the exchange liquidity pools
+        token::Module::<T>::do_batch_transfer_from(
+            who,
+            who,
+            &exchange.vault,
+            exchange.token_instance,
+            token_ids.clone(),
+            token_amounts.clone(),
+        )?;
+
         // Mint liquidity pool tokens
         token::Module::<T>::do_batch_mint(
             &exchange.vault,
@@ -611,16 +597,6 @@ impl<T: Config> Pallet<T> {
         min_tokens: Vec<Balance>,
     ) -> DispatchResult {
         let exchange = Exchanges::<T>::get(exchange_id).ok_or(Error::<T>::InvalidExchangeId)?;
-
-        // Transfer the liquidity pool tokens to burn to exchange vault
-        token::Module::<T>::do_batch_transfer_from(
-            who,
-            who,
-            &exchange.vault,
-            exchange.lp_instance,
-            token_ids.clone(),
-            liquidities.clone(),
-        )?;
 
         let n = token_ids.len();
         let mut total_currency = Balance::from(0u128);
@@ -674,6 +650,16 @@ impl<T: Config> Pallet<T> {
             })?;
         }
 
+        // Transfer the liquidity pool tokens to burn to exchange vault
+        token::Module::<T>::do_batch_transfer_from(
+            who,
+            who,
+            &exchange.vault,
+            exchange.lp_instance,
+            token_ids.clone(),
+            liquidities.clone(),
+        )?;
+
         // Burn liquidity pool tokens for offchain supplies
         token::Module::<T>::do_batch_burn(
             &exchange.vault,
@@ -683,7 +669,7 @@ impl<T: Config> Pallet<T> {
             liquidities,
         )?;
 
-        // Transfer total currency and all Tokens ids
+        // Transfer total currency
         token::Module::<T>::do_transfer_from(
             &exchange.vault,
             &exchange.vault,
@@ -692,6 +678,8 @@ impl<T: Config> Pallet<T> {
             exchange.currency_token,
             total_currency,
         )?;
+
+        // Transfer all Tokens ids
         token::Module::<T>::do_batch_transfer_from(
             &exchange.vault,
             &exchange.vault,
