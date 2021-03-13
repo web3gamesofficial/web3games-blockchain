@@ -619,8 +619,17 @@ impl<T: Config> Pallet<T> {
 
             let currency_reserve = Self::currency_reserves(exchange_id, token_id);
 
-            let currency_amount = liquidity.saturating_mul(currency_reserve) / total_liquidity;
-            let token_amount = liquidity.saturating_mul(token_reserve) / total_liquidity;
+            let currency_amount = U256::from(liquidity)
+                .saturating_mul(U256::from(currency_reserve))
+                .checked_div(U256::from(total_liquidity))
+                .and_then(|n| TryInto::<Balance>::try_into(n).ok())
+                .unwrap_or_else(Zero::zero);
+
+            let token_amount = U256::from(liquidity)
+                .saturating_mul(U256::from(token_reserve))
+                .checked_div(U256::from(total_liquidity))
+                .and_then(|n| TryInto::<Balance>::try_into(n).ok())
+                .unwrap_or_else(Zero::zero);
 
             ensure!(
                 currency_amount >= min_currencies[i],
