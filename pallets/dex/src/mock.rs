@@ -1,54 +1,34 @@
-use crate::{Module, Trait};
-
-use frame_support::{
-    impl_outer_event, impl_outer_origin, parameter_types, traits::OnFinalize, traits::OnInitialize,
-    weights::Weight,
-};
-use frame_system as system;
+use super::*;
+use crate as pallet_dex;
 use sp_core::H256;
-use sp_runtime::{
-    testing::Header,
-    traits::{BlakeTwo256, IdentityLookup},
-    ModuleId, Perbill,
+use sp_runtime::{traits::{BlakeTwo256, IdentityLookup}, testing::Header};
+use frame_support::{
+    parameter_types, construct_runtime,
+    traits::{OnInitialize, OnFinalize, GenesisBuild},
 };
+use orml_traits::parameter_type_with_key;
+use primitives::{CurrencyId, Balance, TokenSymbol, Amount, BlockNumber};
 
-pub const MILLISECS_PER_BLOCK: u64 = 4000;
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
+type Block = frame_system::mocking::MockBlock<Test>;
 
-pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
+pub const MILLICENTS: Balance = 10_000_000_000_000;
+pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
+pub const DOLLARS: Balance = 100 * CENTS;
 
-impl_outer_origin! {
-    pub enum Origin for Test where system = frame_system {}
-}
+pub const SGC: CurrencyId = CurrencyId::Token(TokenSymbol::SGC);
 
-mod dex {
-    // pub use crate::Event;
-    pub use super::super::*;
-}
-
-impl_outer_event! {
-    pub enum TestEvent for Test {
-        system<T>,
-        pallet_balances<T>,
-        dex<T>,
-        token<T>,
-        currency<T>,
-        instance<T>,
-    }
-}
-
-#[derive(Clone, Eq, PartialEq, Debug)]
-pub struct Test;
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
-    pub const MaximumBlockWeight: Weight = 1024;
-    pub const MaximumBlockLength: u32 = 2 * 1024;
-    pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
-
-    pub const ExistentialDeposit: u64 = 1;
+    pub const SS58Prefix: u8 = 42;
 }
-impl system::Trait for Test {
+
+impl frame_system::Config for Test {
+    type BaseCallFilter = ();
+    type BlockWeights = ();
+    type BlockLength = ();
     type Origin = Origin;
-    type Call = ();
+    type Call = Call;
     type Index = u64;
     type BlockNumber = u64;
     type Hash = H256;
@@ -56,93 +36,133 @@ impl system::Trait for Test {
     type AccountId = u64;
     type Lookup = IdentityLookup<Self::AccountId>;
     type Header = Header;
-    type Event = TestEvent;
+    type Event = Event;
     type BlockHashCount = BlockHashCount;
-    type MaximumBlockWeight = MaximumBlockWeight;
     type DbWeight = ();
-    type BlockExecutionWeight = ();
-    type ExtrinsicBaseWeight = ();
-    type MaximumExtrinsicWeight = MaximumBlockWeight;
-    type MaximumBlockLength = MaximumBlockLength;
-    type AvailableBlockRatio = AvailableBlockRatio;
     type Version = ();
-    type SystemWeightInfo = ();
-    type PalletInfo = ();
-    type AccountData = pallet_balances::AccountData<u64>;
+    type PalletInfo = PalletInfo;
+    type AccountData = pallet_balances::AccountData<Balance>;
     type OnNewAccount = ();
     type OnKilledAccount = ();
-    type BaseCallFilter = ();
+    type SystemWeightInfo = ();
+    type SS58Prefix = SS58Prefix;
 }
-impl pallet_balances::Trait for Test {
-    type Balance = u64;
-    type MaxLocks = ();
-    type Event = TestEvent;
+
+parameter_types! {
+	pub const ExistentialDeposit: Balance = 1;
+}
+
+impl pallet_balances::Config for Test {
+    type Balance = Balance;
+    type Event = Event;
     type DustRemoval = ();
     type ExistentialDeposit = ExistentialDeposit;
-    type AccountStore = system::Module<Test>;
+    type AccountStore = System;
+    type WeightInfo = ();
+    type MaxLocks = ();
+}
+
+parameter_type_with_key! {
+    pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+        Zero::zero()
+    };
+}
+
+impl orml_tokens::Config for Test {
+    type Event = Event;
+    type Balance = Balance;
+    type Amount = Amount;
+    type CurrencyId = CurrencyId;
+    type WeightInfo = ();
+    type ExistentialDeposits = ExistentialDeposits;
+    type OnDust = ();
+}
+
+parameter_types! {
+	pub const GetNativeCurrencyId: CurrencyId = SGC;
+}
+
+pub type AdaptedBasicCurrency = orml_currencies::BasicCurrencyAdapter<Test, Balances, Amount, BlockNumber>;
+
+impl orml_currencies::Config for Test {
+    type Event = Event;
+    type MultiCurrency = Tokens;
+    type NativeCurrency = AdaptedBasicCurrency;
+    type GetNativeCurrencyId = GetNativeCurrencyId;
     type WeightInfo = ();
 }
 
 parameter_types! {
-    pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
+    pub const CreateInstanceDeposit: Balance = 1;
+    pub const CreateExchangeDeposit: Balance = 1;
+    pub const CreateCollectionDeposit: Balance = 1;
+    pub const CreateCurrencyInstanceDeposit: Balance = 1;
 }
 
-impl pallet_timestamp::Trait for Test {
-    type Moment = u64;
-    type OnTimestampSet = ();
-    type MinimumPeriod = MinimumPeriod;
-    type WeightInfo = ();
-}
-
-impl token::Trait for Test {
-    type Event = TestEvent;
-    type TokenBalance = u128;
+impl token::Config for Test {
+    type Event = Event;
+    type CreateInstanceDeposit = CreateInstanceDeposit;
+    type Currency = Balances;
     type TokenId = u64;
-}
-
-impl currency::Trait for Test {
-    type Event = TestEvent;
-}
-
-impl instance::Trait for Test {
-    type Event = TestEvent;
     type InstanceId = u64;
 }
 
 parameter_types! {
-    pub const DexModuleId: ModuleId = ModuleId(*b"spr/dexm");
-}
-impl Trait for Test {
-    type Event = TestEvent;
-    type ModuleId = DexModuleId;
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
+    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
 }
 
-pub type Dex = Module<Test>;
-pub type Currency = currency::Module<Test>;
-pub type Token = token::Module<Test>;
-pub type Instance = instance::Module<Test>;
-pub type System = frame_system::Module<Test>;
+impl currency_token::Config for Test {
+    type Event = Event;
+    type ModuleId = CurrencyTokenModuleId;
+    type Currency = Currencies;
+    type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
+    type GetNativeCurrencyId = GetNativeCurrencyId;
+}
+
+impl Config for Test {
+    type Event = Event;
+    type ModuleId = DexModuleId;
+    type CreateExchangeDeposit = CreateExchangeDeposit;
+    type Currency = Balances;
+}
+
+// Configure a mock runtime to test the pallet.
+construct_runtime!(
+    pub enum Test where
+        Block = Block,
+        NodeBlock = Block,
+        UncheckedExtrinsic = UncheckedExtrinsic,
+    {
+        System: frame_system::{Module, Call, Config, Storage, Event<T>},
+        Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+        Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
+        Currencies: orml_currencies::{Module, Call, Event<T>},
+        Dex: pallet_dex::{Module, Call, Storage, Event<T>},
+        Token: token::{Module, Call, Storage, Event<T>},
+        CurrencyToken: currency_token::{Module, Call, Storage, Event<T>},
+    }
+);
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    let mut t = system::GenesisConfig::default()
-        .build_storage::<Test>()
-        .unwrap();
-    pallet_balances::GenesisConfig::<Test> {
-        balances: vec![(1, 10000), (2, 11000), (3, 12000), (4, 13000), (5, 14000)],
-    }
-    .assimilate_storage(&mut t)
-    .unwrap();
-    let mut ext: sp_io::TestExternalities = t.into();
-    ext.execute_with(|| System::set_block_number(1));
-    ext
+    let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+    pallet_balances::GenesisConfig::<Test>{
+        balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
+    }.assimilate_storage(&mut t).unwrap();
+    currency_token::GenesisConfig::<Test>{
+        instance: (1, [].to_vec())
+    }.assimilate_storage(&mut t).unwrap();
+    t.into()
 }
 
 pub fn run_to_block(n: u64) {
     while System::block_number() < n {
         Dex::on_finalize(System::block_number());
+        Balances::on_finalize(System::block_number());
         System::on_finalize(System::block_number());
         System::set_block_number(System::block_number() + 1);
         System::on_initialize(System::block_number());
+        Balances::on_initialize(System::block_number());
         Dex::on_initialize(System::block_number());
     }
 }

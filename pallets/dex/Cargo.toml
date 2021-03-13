@@ -6,6 +6,7 @@ edition = "2018"
 license = 'GPL-3.0'
 
 [dependencies]
+serde = { version = "1.0.101", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 integer-sqrt = "0.1.2"
 
@@ -22,11 +23,15 @@ token = { package = "pallet-erc1155", path = "../erc1155", default-features = fa
 currency-token = { package = "pallet-currency-token", path = "../currency-token", default-features = false }
 
 [dev-dependencies]
-pallet-balances = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+pallet-balances = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git", branch = "master" }
+orml-traits = { version = '0.4.1-dev', git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-tokens = { version = '0.4.1-dev', git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-currencies = { version = '0.4.1-dev', git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
 
 [features]
 default = ["std"]
 std = [
+    "serde",
 	"codec/std",
 	"frame-support/std",
 	"frame-system/std",
