@@ -20,7 +20,7 @@
 
 # 2. Overview
 
-# 3. Build
+# 3. Building
 
 Install Rust:
 
