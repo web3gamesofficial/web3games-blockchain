@@ -210,7 +210,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
     {
         match func_id {
             1001 => {
-                log::info!("run 1001");
                 let mut env = env.buf_in_buf_out();
                 let random_slice = <E::T as Config>::Randomness::random_seed().0.encode();
                 log::trace!(
@@ -223,22 +222,18 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1002 => {
                 // do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
-                log::info!("run 1002");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: CreateInstanceInputParam<<E::T as SysConfig>::AccountId> = env.read_as()?;
 
                 let instance_id: u64 =
                     pallet_erc1155::Pallet::<E::T>::do_create_instance(&input.who, input.data)?.into();
-                log::info!("balance: {:?}", instance_id);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
                 let instance_slice = instance_id.encode();
-                log::info!("balance_slice: {:?}", instance_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -258,25 +253,19 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		is_nf: bool,
                 // 		uri: Vec<u8>,
                 // 	)
-                log::info!("run 1003");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: CreateTokenInputParam<
                     <E::T as SysConfig>::AccountId,
                     <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -295,24 +284,18 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		operator: &T::AccountId,
                 // 		approved: bool,
                 // 	)
-                log::info!("run 1004");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: SetApprovalForAllInputParam<
                     <E::T as SysConfig>::AccountId,
                     <E::T as pallet_erc1155::Config>::InstanceId,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -331,18 +314,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
-                log::info!("run 1005");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: MintInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -350,7 +328,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -370,18 +347,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
-                log::info!("run 1006");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: BatchMintInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -389,7 +361,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -409,18 +380,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
-                log::info!("run 1007");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: BurnInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -428,7 +394,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -448,18 +413,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
-                log::info!("run 1008");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: BatchBurnInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -467,7 +427,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -488,18 +447,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_id: T::TokenId,
                 // 		amount: Balance
                 // 	)
-                log::info!("run 1009");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: TransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -507,7 +461,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -529,18 +482,13 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 // 		token_ids: Vec<T::TokenId>,
                 // 		amounts: Vec<Balance>
                 // 	)
-                log::info!("run 1010");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let in_len = env.in_len();
-                log::info!("in_len: {}", in_len);
-
                 let mut buffer = vec![0u8; in_len as usize];
 
                 env.read_into(&mut &mut buffer[..])?;
-                log::info!("buffer: {:?}", buffer);
 
                 let input: BatchTransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -548,7 +496,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
-                log::info!("input: {:?}", input);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -564,10 +511,8 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1011 => {
                 // approved_or_owner(who: &T::AccountId, account: &T::AccountId) -> bool
-                log::info!("run 1011");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: ApprovedOrOwnerInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -579,13 +524,11 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     &input.operator,
                     input.instance_id,
                 );
-                log::info!("balance: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
                 let ret_slice = ret.encode();
-                log::info!("balance_slice: {:?}", ret_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -599,10 +542,8 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1012 => {
                 // is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool
-                log::info!("run 1012");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: IsApprovedForAllInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -614,13 +555,11 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     &input.operator,
                     input.instance_id,
                 );
-                log::info!("ret: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
                 let ret_slice = ret.encode();
-                log::info!("ret_slice: {:?}", ret_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -634,10 +573,8 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1013 => {
                 // fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
-                log::info!("run 1013");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: BalanceOfInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -650,13 +587,11 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.instance_id,
                     input.token_id,
                 );
-                log::info!("balance: {:?}", balance);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
                 let balance_slice = balance.encode();
-                log::info!("balance_slice: {:?}", balance_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -670,10 +605,8 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             }
             1014 => {
                 // balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
-                log::info!("run 1014");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: BalanceOfBatchInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -687,12 +620,9 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.token_ids,
                 )?;
                 let ret_slice = ret.encode();
-                log::info!("ret: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
-
-                log::info!("ret_slice: {:?}", ret_slice);
 
                 log::trace!(
                     target: "runtime",
@@ -710,10 +640,8 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 //         instance_id: T::InstanceId,
                 //         token_ids: Vec<T::TokenId>,
                 //     )-> Result<Vec<Balance>, DispatchError>
-                log::info!("run 1015");
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
-                log::info!("caller: {:?}", caller);
 
                 let input: BalanceOfSingleOwnerBatchInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -727,12 +655,9 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.token_ids,
                 )?;
                 let ret_slice = ret.encode();
-                log::info!("ret: {:?}", ret);
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
-
-                log::info!("ret_slice: {:?}", ret_slice);
 
                 log::trace!(
                     target: "runtime",

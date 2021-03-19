@@ -470,8 +470,6 @@ impl<T: Config> Pallet<T> {
         token_id: T::TokenId,
         amount: Balance,
     ) -> DispatchResult {
-        log::info!("run erc1155: do_transfer_from");
-
         ensure!(Self::approved_or_owner(who, from, instance_id), Error::<T>::NoPermission);
 
         if from == to || amount == Zero::zero() {
@@ -554,8 +552,6 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance {
-        log::info!("run erc1155: balance_of");
-
         Self::balances(owner, (instance_id, token_id))
     }
 

@@ -19,13 +19,11 @@ where
     ) -> result::Result<(ExitSucceed, Vec<u8>, u64), ExitError> {
         log::debug!(target: "evm", "input: {:?}", input);
 
-        log::info!("input: {:?}", input);
-
         let owner = T::AccountId::default();
         let instance_id = T::InstanceId::from(2u64);
         let token_id = T::TokenId::from(1u64);
         let balance = pallet_erc1155::Pallet::<T>::balance_of(&owner, instance_id, token_id);
-        log::info!("balance: {:?}", balance);
+        log::debug!(target: "evm", "balance: {:?}", balance);
 
         Ok((ExitSucceed::Returned, [].to_vec(), 0))
 
