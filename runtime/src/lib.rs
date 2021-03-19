@@ -264,7 +264,7 @@ parameter_types! {
     pub const DepositPerContract: Balance = TombstoneDeposit::get();
     pub const DepositPerStorageByte: Balance = deposit(0, 1);
     pub const DepositPerStorageItem: Balance = deposit(1, 0);
-    pub RentFraction: Perbill = Perbill::from_rational_approximation(1u32, 30 * DAYS);
+    pub RentFraction: Perbill = Perbill::from_rational(1u32, 30 * DAYS);
     pub const SurchargeReward: Balance = 150 * MILLICENTS;
     pub const SignedClaimHandicap: u32 = 2;
     pub const MaxDepth: u32 = 32;
@@ -296,7 +296,7 @@ impl pallet_contracts::Config for Runtime {
     type SurchargeReward = SurchargeReward;
     type MaxDepth = MaxDepth;
     type MaxValueSize = MaxValueSize;
-    type WeightPrice = pallet_transaction_payment::Module<Self>;
+    type WeightPrice = pallet_transaction_payment::Pallet<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
     type ChainExtension = chain_extension::SgcChainExtension;
     type DeletionQueueDepth = DeletionQueueDepth;
@@ -459,26 +459,26 @@ construct_runtime!(
         NodeBlock = opaque::Block,
         UncheckedExtrinsic = UncheckedExtrinsic
     {
-        System: frame_system::{Module, Call, Config, Storage, Event<T>},
-        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
-        Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-        Aura: pallet_aura::{Module, Config<T>},
-        Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event},
-        Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-        TransactionPayment: pallet_transaction_payment::{Module, Storage},
-        Contracts: pallet_contracts::{Module, Call, Config<T>, Storage, Event<T>},
-        Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
-        Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
-        Ethereum: pallet_ethereum::{Module, Call, Storage, Event, Config, ValidateUnsigned},
-        EVM: pallet_evm::{Module, Config, Call, Storage, Event<T>},
-        Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
-        Currencies: orml_currencies::{Module, Storage, Call, Event<T>},
+        System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Call, Storage},
+        Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+        Aura: pallet_aura::{Pallet, Config<T>},
+        Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event},
+        Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+        TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
+        Contracts: pallet_contracts::{Pallet, Call, Config<T>, Storage, Event<T>},
+        Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
+        Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
+        Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, ValidateUnsigned},
+        EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>},
+        Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
+        Currencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
         // SGC pallets
-        Erc1155: pallet_erc1155::{Module, Call, Storage, Event<T>},
-        CurrencyToken: pallet_currency_token::{Module, Call, Storage, Event<T>, Config<T>},
-        Dex: pallet_dex::{Module, Call, Storage, Event<T>},
-        NFT: pallet_nft::{Module, Call, Storage, Event<T>},
+        Erc1155: pallet_erc1155::{Pallet, Call, Storage, Event<T>},
+        CurrencyToken: pallet_currency_token::{Pallet, Call, Storage, Event<T>, Config<T>},
+        Dex: pallet_dex::{Pallet, Call, Storage, Event<T>},
+        NFT: pallet_nft::{Pallet, Call, Storage, Event<T>},
     }
 );
 
@@ -536,7 +536,7 @@ pub type Executive = frame_executive::Executive<
     Block,
     frame_system::ChainContext<Runtime>,
     Runtime,
-    AllModules,
+    AllPallets,
 >;
 
 impl_runtime_apis! {
@@ -601,8 +601,8 @@ impl_runtime_apis! {
     }
 
     impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
-        fn slot_duration() -> u64 {
-            Aura::slot_duration()
+        fn slot_duration() -> sp_consensus_aura::SlotDuration {
+            sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
         }
 
         fn authorities() -> Vec<AuraId> {
@@ -699,7 +699,7 @@ impl_runtime_apis! {
         }
 
         fn author() -> H160 {
-            <pallet_ethereum::Module<Runtime>>::find_author()
+            <pallet_ethereum::Pallet<Runtime>>::find_author()
         }
 
         fn storage_at(address: H160, index: U256) -> H256 {
@@ -814,7 +814,7 @@ impl_runtime_apis! {
     //     ) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
     //         use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
 
-    //         use frame_system_benchmarking::Module as SystemBench;
+    //         use frame_system_benchmarking::Pallet as SystemBench;
     //         impl frame_system_benchmarking::Config for Runtime {}
 
     //         let whitelist: Vec<TrackedStorageKey> = vec![

@@ -123,7 +123,7 @@ pub mod pallet {
 
             if !CurrencyTokens::<T>::contains_key(currency_id) {
                 let token_id = Self::convert_to_token_id(currency_id);
-                token::Module::<T>::do_create_token(&module_account, instance_id, token_id, false, [].to_vec())?;
+                token::Pallet::<T>::do_create_token(&module_account, instance_id, token_id, false, [].to_vec())?;
 
                 let token_info = TokenInfo {
                     instance_id,
@@ -139,7 +139,7 @@ pub mod pallet {
                     .as_mut()
                     .ok_or(Error::<T>::Unknown)?;
 
-                token::Module::<T>::do_mint(&module_account, &who, instance_id, info.token_id, amount)?;
+                token::Pallet::<T>::do_mint(&module_account, &who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -171,7 +171,7 @@ pub mod pallet {
                 let module_account = Self::account_id();
                 <T as Config>::Currency::transfer(currency_id, &module_account, &who, amount)?;
 
-                token::Module::<T>::do_burn(&module_account, &who, instance_id, info.token_id, amount)?;
+                token::Pallet::<T>::do_burn(&module_account, &who, instance_id, info.token_id, amount)?;
 
                 info.total_supply = info
                     .total_supply
@@ -210,7 +210,7 @@ impl<T: Config> Pallet<T> {
 
         <T as Config>::Currency::transfer(native_currency_id, &who, &module_account, amount)?;
 
-        let instance_id = token::Module::<T>::do_create_instance(&module_account, data)?;
+        let instance_id = token::Pallet::<T>::do_create_instance(&module_account, data)?;
         CurrencyInstance::<T>::put(instance_id);
 
         Ok(())

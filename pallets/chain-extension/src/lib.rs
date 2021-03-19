@@ -231,7 +231,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let input: CreateInstanceInputParam<<E::T as SysConfig>::AccountId> = env.read_as()?;
 
                 let instance_id: u64 =
-                    pallet_erc1155::Module::<E::T>::do_create_instance(&input.who, input.data)?.into();
+                    pallet_erc1155::Pallet::<E::T>::do_create_instance(&input.who, input.data)?.into();
                 log::info!("balance: {:?}", instance_id);
 
                 let weight = 100_000;
@@ -281,7 +281,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_create_token(
+                pallet_erc1155::Pallet::<E::T>::do_create_token(
                     &input.who,
                     input.instance_id,
                     input.token_id,
@@ -317,7 +317,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_set_approval_for_all(
+                pallet_erc1155::Pallet::<E::T>::do_set_approval_for_all(
                     &input.owner,
                     &input.operator,
                     input.instance_id,
@@ -355,7 +355,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_mint(
+                pallet_erc1155::Pallet::<E::T>::do_mint(
                     &caller,
                     &input.to,
                     input.instance_id,
@@ -394,7 +394,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_batch_mint(
+                pallet_erc1155::Pallet::<E::T>::do_batch_mint(
                     &caller,
                     &input.to,
                     input.instance_id,
@@ -433,7 +433,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_burn(
+                pallet_erc1155::Pallet::<E::T>::do_burn(
                     &caller,
                     &input.from,
                     input.instance_id,
@@ -472,7 +472,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_batch_burn(
+                pallet_erc1155::Pallet::<E::T>::do_batch_burn(
                     &caller,
                     &input.from,
                     input.instance_id,
@@ -512,7 +512,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_transfer_from(
+                pallet_erc1155::Pallet::<E::T>::do_transfer_from(
                     &caller,
                     &input.from,
                     &input.to,
@@ -553,7 +553,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Module::<E::T>::do_batch_transfer_from(
+                pallet_erc1155::Pallet::<E::T>::do_batch_transfer_from(
                     &caller,
                     &input.from,
                     &input.to,
@@ -574,7 +574,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::InstanceId,
                 > = env.read_as()?;
 
-                let ret: bool = pallet_erc1155::Module::<E::T>::approved_or_owner(
+                let ret: bool = pallet_erc1155::Pallet::<E::T>::approved_or_owner(
                     &input.who,
                     &input.operator,
                     input.instance_id,
@@ -609,7 +609,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::InstanceId,
                 > = env.read_as()?;
 
-                let ret: bool = pallet_erc1155::Module::<E::T>::is_approved_for_all(
+                let ret: bool = pallet_erc1155::Pallet::<E::T>::is_approved_for_all(
                     &input.owner,
                     &input.operator,
                     input.instance_id,
@@ -645,7 +645,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
-                let balance: Balance = pallet_erc1155::Module::<E::T>::balance_of(
+                let balance: Balance = pallet_erc1155::Pallet::<E::T>::balance_of(
                     &input.owner,
                     input.instance_id,
                     input.token_id,
@@ -681,7 +681,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
-                let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_batch(
+                let ret: Vec<Balance> = pallet_erc1155::Pallet::<E::T>::balance_of_batch(
                     &input.owners,
                     input.instance_id,
                     input.token_ids,
@@ -721,7 +721,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
 
-                let ret: Vec<Balance> = pallet_erc1155::Module::<E::T>::balance_of_single_owner_batch(
+                let ret: Vec<Balance> = pallet_erc1155::Pallet::<E::T>::balance_of_single_owner_batch(
                     &input.owners,
                     input.instance_id,
                     input.token_ids,

@@ -3,7 +3,7 @@ use crate::mock::*;
 use frame_support::{assert_noop, assert_ok};
 
 fn last_event() -> mock::Event {
-    frame_system::Module::<Test>::events().pop().expect("Event expected").event
+    frame_system::Pallet::<Test>::events().pop().expect("Event expected").event
 }
 
 pub fn before_exchange() {
