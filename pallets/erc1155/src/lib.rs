@@ -358,7 +358,7 @@ impl<T: Config> Pallet<T> {
     }
 
     pub fn do_set_approval_for_all(
-        owner: &T::AccountId,
+        who: &T::AccountId,
         operator: &T::AccountId,
         instance_id: T::InstanceId,
         approved: bool,
@@ -366,7 +366,7 @@ impl<T: Config> Pallet<T> {
         ensure!(Instances::<T>::contains_key(instance_id), Error::<T>::InstanceNotFound);
 
         let key = ApprovalKey {
-            owner: owner.clone(),
+            owner: who.clone(),
             operator: operator.clone(),
         };
         OperatorApprovals::<T>::try_mutate(instance_id, &key, |status| -> DispatchResult {
@@ -375,7 +375,7 @@ impl<T: Config> Pallet<T> {
         })?;
 
         Self::deposit_event(Event::ApprovalForAll(
-            owner.clone(),
+            who.clone(),
             operator.clone(),
             instance_id,
             approved,

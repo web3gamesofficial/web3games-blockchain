@@ -20,8 +20,7 @@ pub type Result<T> = sp_std::result::Result<T, DispatchError>;
 // func_id 1002
 // do_create_instance(who: &T::AccountId, data: Vec<u8>) -> Result<T::InstanceId, DispatchError>
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct CreateInstanceInputParam<AccountId> {
-    who: AccountId,
+pub struct CreateInstanceInputParam {
     data: Vec<u8>,
 }
 
@@ -34,8 +33,7 @@ pub struct CreateInstanceInputParam<AccountId> {
 // 		uri: Vec<u8>,
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
-pub struct CreateTokenInputParam<AccountId, InstanceId, TokenId> {
-    who: AccountId,
+pub struct CreateTokenInputParam<InstanceId, TokenId> {
     instance_id: InstanceId,
     token_id: TokenId,
     is_nf: bool,
@@ -50,7 +48,6 @@ pub struct CreateTokenInputParam<AccountId, InstanceId, TokenId> {
 // 	)
 #[derive(Clone, Encode, Decode, PartialEq, Eq, RuntimeDebug)]
 pub struct SetApprovalForAllInputParam<AccountId, InstanceId> {
-    owner: AccountId,
     operator: AccountId,
     instance_id: InstanceId,
     approved: bool,
@@ -225,10 +222,10 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 let mut env = env.buf_in_buf_out();
                 let caller = env.ext().caller().clone();
 
-                let input: CreateInstanceInputParam<<E::T as SysConfig>::AccountId> = env.read_as()?;
+                let input: CreateInstanceInputParam = env.read_as()?;
 
                 let instance_id: u64 =
-                    pallet_erc1155::Pallet::<E::T>::do_create_instance(&input.who, input.data)?.into();
+                    pallet_erc1155::Pallet::<E::T>::do_create_instance(&caller, input.data)?.into();
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -262,7 +259,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.read_into(&mut &mut buffer[..])?;
 
                 let input: CreateTokenInputParam<
-                    <E::T as SysConfig>::AccountId,
                     <E::T as pallet_erc1155::Config>::InstanceId,
                     <E::T as pallet_erc1155::Config>::TokenId,
                 > = env.read_as()?;
@@ -271,7 +267,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Pallet::<E::T>::do_create_token(
-                    &input.who,
+                    &caller,
                     input.instance_id,
                     input.token_id,
                     input.is_nf,
@@ -301,7 +297,7 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 env.charge_weight(weight)?;
 
                 pallet_erc1155::Pallet::<E::T>::do_set_approval_for_all(
-                    &input.owner,
+                    &caller,
                     &input.operator,
                     input.instance_id,
                     input.approved,
@@ -520,13 +516,10 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 > = env.read_as()?;
 
                 let ret: bool = pallet_erc1155::Pallet::<E::T>::approved_or_owner(
-                    &input.who,
+                    &caller,
                     &input.operator,
                     input.instance_id,
                 );
-
-                let weight = 100_000;
-                env.charge_weight(weight)?;
 
                 let ret_slice = ret.encode();
 
@@ -543,7 +536,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1012 => {
                 // is_approved_for_all(owner: &T::AccountId, operator: &T::AccountId) -> bool
                 let mut env = env.buf_in_buf_out();
-                let caller = env.ext().caller().clone();
 
                 let input: IsApprovedForAllInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -555,9 +547,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     &input.operator,
                     input.instance_id,
                 );
-
-                let weight = 100_000;
-                env.charge_weight(weight)?;
 
                 let ret_slice = ret.encode();
 
@@ -574,7 +563,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1013 => {
                 // fn balance_of(owner: &T::AccountId, instance_id: T::InstanceId, token_id: T::TokenId) -> Balance
                 let mut env = env.buf_in_buf_out();
-                let caller = env.ext().caller().clone();
 
                 let input: BalanceOfInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -587,9 +575,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.instance_id,
                     input.token_id,
                 );
-
-                let weight = 100_000;
-                env.charge_weight(weight)?;
 
                 let balance_slice = balance.encode();
 
@@ -606,7 +591,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
             1014 => {
                 // balance_of_batch(owners: &Vec<T::AccountId>, instance_id: T::InstanceId, token_ids: Vec<T::TokenId>) -> Result<Vec<Balance>, DispatchError>
                 let mut env = env.buf_in_buf_out();
-                let caller = env.ext().caller().clone();
 
                 let input: BalanceOfBatchInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -620,9 +604,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.token_ids,
                 )?;
                 let ret_slice = ret.encode();
-
-                let weight = 100_000;
-                env.charge_weight(weight)?;
 
                 log::trace!(
                     target: "runtime",
@@ -641,7 +622,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                 //         token_ids: Vec<T::TokenId>,
                 //     )-> Result<Vec<Balance>, DispatchError>
                 let mut env = env.buf_in_buf_out();
-                let caller = env.ext().caller().clone();
 
                 let input: BalanceOfSingleOwnerBatchInputParam<
                     <E::T as SysConfig>::AccountId,
@@ -655,9 +635,6 @@ impl<C: Config> ChainExtension<C> for SgcChainExtension {
                     input.token_ids,
                 )?;
                 let ret_slice = ret.encode();
-
-                let weight = 100_000;
-                env.charge_weight(weight)?;
 
                 log::trace!(
                     target: "runtime",
