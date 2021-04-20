@@ -16,7 +16,7 @@ pub const MILLICENTS: Balance = 10_000_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
 pub const DOLLARS: Balance = 100 * CENTS;
 
-pub const SGC: CurrencyId = CurrencyId::Token(TokenSymbol::SGC);
+pub const W3G: CurrencyId = CurrencyId::Token(TokenSymbol::W3G);
 
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
@@ -79,7 +79,7 @@ impl orml_tokens::Config for Test {
 }
 
 parameter_types! {
-	pub const GetNativeCurrencyId: CurrencyId = SGC;
+	pub const GetNativeCurrencyId: CurrencyId = W3G;
 }
 
 pub type AdaptedBasicCurrency = orml_currencies::BasicCurrencyAdapter<Test, Balances, Amount, BlockNumber>;
@@ -108,8 +108,8 @@ impl token::Config for Test {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
+    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
 }
 
 impl currency_token::Config for Test {

@@ -2,7 +2,7 @@ use hex_literal::hex;
 use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
-use sgc_runtime::{
+use web3games_runtime::{
     AccountId, AuraConfig, Balance, BalancesConfig, ContractsConfig, CurrencyId, EVMConfig,
     EthereumConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, TokenSymbol,
     TokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
@@ -79,7 +79,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
         Some(
             json!({
               "tokenDecimals": 18,
-              "tokenSymbol": "SGC"
+              "tokenSymbol": "W3G"
             })
             .as_object()
             .expect("Provided valid json map")
@@ -137,7 +137,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
         Some(
             json!({
               "tokenDecimals": 18,
-              "tokenSymbol": "SGC"
+              "tokenSymbol": "W3G"
             })
             .as_object()
             .expect("Provided valid json map")
@@ -153,9 +153,9 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 
     Ok(ChainSpec::from_genesis(
         // Name
-        "SGC Plum",
+        "Web3Games Plum",
         // ID
-        "sgc_plum",
+        "web3games_plum",
         ChainType::Live,
         move || {
             testnet_genesis(
@@ -203,7 +203,7 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
         Some(
             json!({
               "tokenDecimals": 18,
-              "tokenSymbol": "SGC"
+              "tokenSymbol": "W3G"
             })
             .as_object()
             .expect("Provided valid json map")

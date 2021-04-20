@@ -11,7 +11,7 @@ use sp_std::{marker::PhantomData, prelude::*, result, str::FromStr};
 
 pub trait Config: pallet_evm::Config + pallet_erc1155::Config {}
 
-// pub type SgcPrecompiles<Runtime> = (
+// pub type Precompiles<Runtime> = (
 // 	ECRecover,
 // 	Sha256,
 // 	Ripemd160,
@@ -22,11 +22,11 @@ pub trait Config: pallet_evm::Config + pallet_erc1155::Config {}
 pub type EthereumPrecompiles = (ECRecover, Sha256, Ripemd160, Identity);
 
 #[derive(Default)]
-pub struct SgcPrecompiles<T: Config> {
+pub struct Precompiles<T: Config> {
     _marker: PhantomData<T>,
 }
 
-impl<T: Config> PrecompileSet for SgcPrecompiles<T> {
+impl<T: Config> PrecompileSet for Precompiles<T> {
     fn execute(
         address: H160,
         input: &[u8],
@@ -54,7 +54,7 @@ impl<T: Config> PrecompileSet for SgcPrecompiles<T> {
 // 	let addr_sha256 = H160::from_str("0000000000000000000000000000000000000002").unwrap();
 // 	let addr_ripemd160 = H160::from_str("0000000000000000000000000000000000000003").unwrap();
 // 	let addr_identity = H160::from_str("0000000000000000000000000000000000000004").unwrap();
-// 	// sgc precompiles
+// 	// web3games precompiles
 // 	let addr_erc1155 = H160::from_str("0000000000000000000000000000000000000401").unwrap();
 
 // 	let exec: Option<PrecompiledCallable> = match *address {
@@ -68,9 +68,9 @@ impl<T: Config> PrecompileSet for SgcPrecompiles<T> {
 // 	exec
 // }
 
-// pub struct SgcPrecompiles;
+// pub struct Precompiles;
 
-// impl PrecompileSet for SgcPrecompiles {
+// impl PrecompileSet for Precompiles {
 // 	fn execute(
 // 		address: H160,
 // 		input: &[u8],

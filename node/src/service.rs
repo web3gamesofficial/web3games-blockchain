@@ -9,7 +9,7 @@ use sc_finality_grandpa::SharedVoterState;
 use sc_keystore::LocalKeystore;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sgc_runtime::{self, opaque::Block, RuntimeApi};
+use web3games_runtime::{self, opaque::Block, RuntimeApi};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sc_consensus_aura::{ImportQueueParams, StartAuraParams, SlotProportion};
 use sp_inherents::InherentDataProviders;
@@ -22,8 +22,8 @@ use std::{
 // Our native executor instance.
 native_executor_instance!(
     pub Executor,
-    sgc_runtime::api::dispatch,
-    sgc_runtime::native_version,
+    web3games_runtime::api::dispatch,
+    web3games_runtime::native_version,
     // frame_benchmarking::benchmarking::HostFunctions,
 );
 

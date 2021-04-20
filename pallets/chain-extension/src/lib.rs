@@ -197,9 +197,9 @@ pub struct BalanceOfSingleOwnerBatchInputParam<AccountId, InstanceId, TokenId> {
 
 
 /// chain extension of contract
-pub struct SgcChainExtension;
+pub struct ExtChainExtension;
 
-impl<C: Config> ChainExtension<C> for SgcChainExtension {
+impl<C: Config> ChainExtension<C> for ExtChainExtension {
     fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
     where
         E: Ext<T = C>,

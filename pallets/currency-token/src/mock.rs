@@ -54,8 +54,8 @@ impl system::Config for Test {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
+    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
 }
 
 impl pallet_currency_token::Config for Test {

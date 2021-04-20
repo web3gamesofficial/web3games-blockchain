@@ -7,7 +7,7 @@ fn last_event() -> mock::Event {
 }
 
 pub fn before_exchange() {
-    assert_ok!(CurrencyToken::mint(Origin::signed(1), SGC, 500 * CENTS));
+    assert_ok!(CurrencyToken::mint(Origin::signed(1), W3G, 500 * CENTS));
 
     assert_ok!(Token::create_instance(Origin::signed(1), [0].to_vec()));
     assert_ok!(Token::create_token(Origin::signed(1), 1, 1, false, [0].to_vec()));
@@ -19,7 +19,7 @@ fn create_exchange_works() {
     new_test_ext().execute_with(|| {
         before_exchange();
         run_to_block(10);
-        assert_ok!(Dex::create_exchange(Origin::signed(1), SGC, 1));
+        assert_ok!(Dex::create_exchange(Origin::signed(1), W3G, 1));
 
         assert_eq!(
             last_event(),
@@ -34,7 +34,7 @@ fn add_liquidity_works() {
         before_exchange();
         run_to_block(10);
 
-        assert_ok!(Dex::create_exchange(Origin::signed(1), SGC, 1));
+        assert_ok!(Dex::create_exchange(Origin::signed(1), W3G, 1));
 
         assert_ok!(Dex::add_liquidity(
             Origin::signed(1),

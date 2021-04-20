@@ -62,7 +62,7 @@ pub type Amount = i128;
 #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum TokenSymbol {
-    SGC = 0,
+    W3G = 0,
     DOT = 1,
     ACA = 2,
     AUSD = 3,
@@ -73,7 +73,7 @@ impl TryFrom<u8> for TokenSymbol {
 
     fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0 => Ok(TokenSymbol::SGC),
+            0 => Ok(TokenSymbol::W3G),
             1 => Ok(TokenSymbol::DOT),
             2 => Ok(TokenSymbol::ACA),
             3 => Ok(TokenSymbol::AUSD),
@@ -98,7 +98,7 @@ impl TryFrom<Vec<u8>> for CurrencyId {
     type Error = ();
     fn try_from(v: Vec<u8>) -> Result<CurrencyId, ()> {
         match v.as_slice() {
-            b"SGC" => Ok(CurrencyId::Token(TokenSymbol::SGC)),
+            b"W3G" => Ok(CurrencyId::Token(TokenSymbol::W3G)),
             b"DOT" => Ok(CurrencyId::Token(TokenSymbol::DOT)),
             b"ACA" => Ok(CurrencyId::Token(TokenSymbol::ACA)),
             b"AUSD" => Ok(CurrencyId::Token(TokenSymbol::AUSD)),

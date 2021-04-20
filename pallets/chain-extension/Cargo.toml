@@ -15,7 +15,7 @@ sp-std = { version = "3.0.0", git = "https://github.com/paritytech/substrate", b
 frame-support = { version = "3.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
 pallet-contracts = { version = "3.0.0", git = "https://github.com/paritytech/substrate.git",  branch = "master", default-features = false }
 
-primitives = { package = "sgc-primitives", path = "../../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 pallet-erc1155 = { default-features = false, path = "../../pallets/erc1155" }
 
 [features]

@@ -5,7 +5,7 @@ use sc_service::PartialComponents;
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
-        "sgc".into()
+        "web3games".into()
     }
 
     fn impl_version() -> String {
@@ -40,7 +40,7 @@ impl SubstrateCli for Cli {
     }
 
     fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        &sgc_runtime::VERSION
+        &web3games_runtime::VERSION
     }
 }
 

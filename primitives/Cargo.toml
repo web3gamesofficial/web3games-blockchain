@@ -1,5 +1,5 @@
 [package]
-name = "sgc-primitives"
+name = "web3games-primitives"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"

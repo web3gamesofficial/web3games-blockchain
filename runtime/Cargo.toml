@@ -1,5 +1,5 @@
 [package]
-name = "sgc-runtime"
+name = "web3games-runtime"
 version = "0.0.1"
 authors = ["Web3Games Developers"]
 edition = "2018"
@@ -63,7 +63,7 @@ orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://
 # frame-system-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
 # hex-literal = { version = "0.3.1", optional = true }
 
-primitives = { package = "sgc-primitives", path = "../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../primitives", default-features = false }
 precompile = { package = "pallet-evm-precompile", default-features = false, path = "../pallets/evm-precompile" }
 chain-extension = { package = "pallet-chain-extension", default-features = false, path = "../pallets/chain-extension" }
 

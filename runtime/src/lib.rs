@@ -87,8 +87,8 @@ pub mod opaque {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("sgc-node"),
-    impl_name: create_runtime_str!("sgc-node"),
+    spec_name: create_runtime_str!("web3games-node"),
+    impl_name: create_runtime_str!("web3games-node"),
     authoring_version: 1,
     spec_version: 1,
     impl_version: 1,
@@ -298,7 +298,7 @@ impl pallet_contracts::Config for Runtime {
     type MaxValueSize = MaxValueSize;
     type WeightPrice = pallet_transaction_payment::Pallet<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-    type ChainExtension = chain_extension::SgcChainExtension;
+    type ChainExtension = chain_extension::ExtChainExtension;
     type DeletionQueueDepth = DeletionQueueDepth;
     type DeletionWeightLimit = DeletionWeightLimit;
     type MaxCodeSize = MaxCodeSize;
@@ -332,7 +332,7 @@ impl pallet_evm::Config for Runtime {
     type Currency = Balances;
     type Event = Event;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
-    type Precompiles = precompile::SgcPrecompiles<Self>;
+    type Precompiles = precompile::Precompiles<Self>;
     type ChainId = ChainId;
 }
 
@@ -395,7 +395,7 @@ impl orml_tokens::Config for Runtime {
 }
 
 parameter_types! {
-    pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::SGC);
+    pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::W3G);
 }
 
 impl orml_currencies::Config for Runtime {
@@ -428,8 +428,8 @@ impl pallet_erc1155::Config for Runtime {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"sgc/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"sgc/dexm");
+    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
+    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
 }
 
 impl pallet_currency_token::Config for Runtime {
@@ -474,7 +474,7 @@ construct_runtime!(
         Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
         Currencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
-        // SGC pallets
+        // web3games pallets
         Erc1155: pallet_erc1155::{Pallet, Call, Storage, Event<T>},
         CurrencyToken: pallet_currency_token::{Pallet, Call, Storage, Event<T>, Config<T>},
         Dex: pallet_dex::{Pallet, Call, Storage, Event<T>},

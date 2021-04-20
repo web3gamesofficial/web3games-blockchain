@@ -18,7 +18,7 @@ sp-runtime = { version = "3.0.0", default-features = false, git = "https://githu
 pallet-timestamp = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
-primitives = { package = "sgc-primitives", path = "../../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 token = { package = "pallet-erc1155", path = "../erc1155", default-features = false }
 currency-token = { package = "pallet-currency-token", path = "../currency-token", default-features = false }
 

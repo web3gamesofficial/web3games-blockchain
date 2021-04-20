@@ -11,7 +11,7 @@ use sc_client_api::{
 use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 use sc_rpc_api::DenyUnsafe;
-use sgc_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
+use web3games_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
@@ -95,7 +95,7 @@ where
     io.extend_with(EthApiServer::to_delegate(EthApi::new(
         client.clone(),
         pool.clone(),
-        sgc_runtime::TransactionConverter,
+        web3games_runtime::TransactionConverter,
         network.clone(),
         pending_transactions.clone(),
         signers,
