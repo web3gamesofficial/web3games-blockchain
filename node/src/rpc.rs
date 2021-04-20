@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 
+use std::collections::BTreeMap;
 use fc_rpc_core::types::{FilterPool, PendingTransactions};
 use jsonrpc_pubsub::manager::SubscriptionManager;
 use sc_client_api::{
@@ -11,19 +12,24 @@ use sc_client_api::{
 use sc_network::NetworkService;
 use sc_rpc::SubscriptionTaskExecutor;
 use sc_rpc_api::DenyUnsafe;
+use sc_transaction_graph::{ChainApi, Pool};
 use web3games_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_runtime::traits::BlakeTwo256;
 use sp_transaction_pool::TransactionPool;
+use pallet_ethereum::EthereumStorageSchema;
+use fc_rpc::{StorageOverride, SchemaV1Override};
 
 /// Full client dependencies.
-pub struct FullDeps<C, P> {
+pub struct FullDeps<C, P, A: ChainApi> {
     /// The client instance to use.
     pub client: Arc<C>,
     /// Transaction pool instance.
     pub pool: Arc<P>,
+    /// Graph pool instance.
+	pub graph: Arc<Pool<A>>,
     /// Whether to deny unsafe calls
     pub deny_unsafe: DenyUnsafe,
     /// The Node authority flag
@@ -36,11 +42,13 @@ pub struct FullDeps<C, P> {
     pub pending_transactions: PendingTransactions,
     /// EthFilterApi pool.
     pub filter_pool: Option<FilterPool>,
+    /// Backend.
+	pub backend: Arc<fc_db::Backend<Block>>,
 }
 
 /// Instantiate all Full RPC extensions.
-pub fn create_full<C, P, BE>(
-    deps: FullDeps<C, P>,
+pub fn create_full<C, P, BE, A>(
+    deps: FullDeps<C, P, A>,
     subscription_task_executor: SubscriptionTaskExecutor,
 ) -> jsonrpc_core::IoHandler<sc_rpc::Metadata>
 where
@@ -56,6 +64,7 @@ where
     C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
     C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
     P: TransactionPool<Block = Block> + 'static,
+    A: ChainApi<Block = Block> + 'static,
 {
     use fc_rpc::{
         EthApi, EthApiServer, EthDevSigner, EthFilterApi, EthFilterApiServer, EthPubSubApi,
@@ -70,12 +79,14 @@ where
     let FullDeps {
         client,
         pool,
+        graph,
         deny_unsafe,
         is_authority,
         network,
         pending_transactions,
         filter_pool,
         enable_dev_signer,
+        backend,
     } = deps;
 
     io.extend_with(SystemApi::to_delegate(FullSystem::new(
@@ -92,13 +103,23 @@ where
     if enable_dev_signer {
         signers.push(Box::new(EthDevSigner::new()) as Box<dyn EthSigner>);
     }
+
+    let mut overrides = BTreeMap::new();
+	overrides.insert(
+		EthereumStorageSchema::V1,
+		Box::new(SchemaV1Override::new(client.clone())) as Box<dyn StorageOverride<_> + Send + Sync>
+	);
+
     io.extend_with(EthApiServer::to_delegate(EthApi::new(
         client.clone(),
         pool.clone(),
+        graph,
         web3games_runtime::TransactionConverter,
         network.clone(),
         pending_transactions.clone(),
         signers,
+        overrides,
+        backend,
         is_authority,
     )));
 

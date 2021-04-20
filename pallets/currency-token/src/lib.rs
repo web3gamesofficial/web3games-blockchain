@@ -2,13 +2,13 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
+    PalletId,
     traits::Get,
     dispatch::{DispatchResult, DispatchError},
 };
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
 use sp_runtime::{
-    ModuleId,
     traits::AccountIdConversion,
     RuntimeDebug,
 };
@@ -33,7 +33,7 @@ pub mod pallet {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
         #[pallet::constant]
-        type ModuleId: Get<ModuleId>;
+        type PalletId: Get<PalletId>;
 
         type Currency: MultiCurrencyExtended<
             Self::AccountId,
@@ -200,7 +200,7 @@ pub struct TokenInfo<
 
 impl<T: Config> Pallet<T> {
     pub fn account_id() -> T::AccountId {
-        T::ModuleId::get().into_account()
+        T::PalletId::get().into_account()
     }
 
     pub fn create_instance(who: &T::AccountId, data: Vec<u8>) -> DispatchResult {

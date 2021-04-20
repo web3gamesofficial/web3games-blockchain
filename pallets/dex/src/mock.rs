@@ -108,13 +108,13 @@ impl token::Config for Test {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
+    pub const CurrencyTokenModuleId: PalletId = PalletId(*b"w3g/curr");
+    pub const DexModuleId: PalletId = PalletId(*b"w3g/dexm");
 }
 
 impl currency_token::Config for Test {
     type Event = Event;
-    type ModuleId = CurrencyTokenModuleId;
+    type PalletId = CurrencyTokenModuleId;
     type Currency = Currencies;
     type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
     type GetNativeCurrencyId = GetNativeCurrencyId;
@@ -122,7 +122,7 @@ impl currency_token::Config for Test {
 
 impl Config for Test {
     type Event = Event;
-    type ModuleId = DexModuleId;
+    type PalletId = DexModuleId;
     type CreateExchangeDeposit = CreateExchangeDeposit;
     type Currency = Balances;
 }

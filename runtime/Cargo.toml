@@ -10,114 +10,108 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-serde = { version = "1.0.101", optional = true, features = ["derive"] }
+serde = { version = "1.0.124", optional = true, default-features = false }
 
-frame-executive = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-frame-support = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-frame-system = { version = "3.0.0", default-features = false, package = "frame-system", git = "https://github.com/paritytech/substrate.git", branch = "master" }
-frame-system-rpc-runtime-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+pallet-aura = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-grandpa = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-sudo = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-executive = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-offchain = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-session = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-version = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-scheduler = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
-pallet-aura = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-balances = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-grandpa = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-randomness-collective-flip = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-sudo = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-timestamp = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-transaction-payment = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-pallet-transaction-payment-rpc-runtime-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-
-sp-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-block-builder = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-consensus-aura = { version = "0.9.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-inherents = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
-sp-io = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-offchain = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-session = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-transaction-pool = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-version = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-
-pallet-scheduler = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
+# Used for the node template's RPCs
+frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
 # Contract
-pallet-contracts-primitives = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
-pallet-contracts = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
-pallet-contracts-rpc-runtime-api = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git",  branch = "master" }
-
-# EVM
-pallet-ethereum = { version = "0.1.0", default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
-pallet-evm = { version = "3.0.0", default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
-pallet-evm-precompile-simple = { version = "3.0.0", default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
-
-fp-rpc = { default-features = false, git = "https://github.com/Web3-Substrate-Game-World/frontier", branch = "sgc_v0.1" }
-
-# Orml packages
-orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
-orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
-orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
 # Used for runtime benchmarking
-# frame-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
-# frame-system-benchmarking = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", rev = "49a4103", optional = true }
+# frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false, optional = true }
+# frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false, optional = true }
 # hex-literal = { version = "0.3.1", optional = true }
+
+# EVM
+pallet-ethereum = { version = "0.1.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+pallet-evm = { version = "3.0.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+pallet-evm-precompile-simple = { version = "3.0.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+
+fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+
+# Orml packages
+orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
+orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
+orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
 
 primitives = { package = "web3games-primitives", path = "../primitives", default-features = false }
 precompile = { package = "pallet-evm-precompile", default-features = false, path = "../pallets/evm-precompile" }
 chain-extension = { package = "pallet-chain-extension", default-features = false, path = "../pallets/chain-extension" }
 
-#local pallet
+# local pallet
 pallet-erc1155 = { default-features = false, path = "../pallets/erc1155" }
 pallet-currency-token = { default-features = false, path = "../pallets/currency-token" }
 pallet-dex = { default-features = false, path = "../pallets/dex" }
 pallet-nft = { default-features = false, path = "../pallets/nft" }
 
 [build-dependencies]
-substrate-wasm-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+substrate-wasm-builder = { version = "4.0.0", git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
 
 [features]
 default = ["std"]
 std = [
 	"codec/std",
 	"serde",
-
 	"frame-executive/std",
 	"frame-support/std",
-	"frame-system-rpc-runtime-api/std",
-	"frame-system/std",
-	"fp-rpc/std",
-
-	"pallet-contracts/std",
-	"pallet-contracts-primitives/std",
-	"pallet-contracts-rpc-runtime-api/std",
-	"pallet-ethereum/std",
-	"pallet-evm/std",
 	"pallet-aura/std",
 	"pallet-balances/std",
 	"pallet-grandpa/std",
 	"pallet-randomness-collective-flip/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
-	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
-
+	"pallet-transaction-payment-rpc-runtime-api/std",
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-consensus-aura/std",
 	"sp-core/std",
 	"sp-inherents/std",
-	"sp-io/std",
 	"sp-offchain/std",
 	"sp-runtime/std",
 	"sp-session/std",
 	"sp-std/std",
 	"sp-transaction-pool/std",
 	"sp-version/std",
+	"pallet-scheduler/std",
+	"frame-system/std",
+	"frame-system-rpc-runtime-api/std",
+	"pallet-contracts/std",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts-rpc-runtime-api/std",
+	"orml-traits/std",
+	"orml-currencies/std",
+	"orml-tokens/std",
 
 	"precompile/std",
 	"chain-extension/std",
-
 	"pallet-erc1155/std",
 	"pallet-currency-token/std",
 	"pallet-dex/std",

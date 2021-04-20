@@ -260,13 +260,11 @@ fn testnet_genesis(
                 .collect(),
         },
         pallet_contracts: ContractsConfig {
-            current_schedule: pallet_contracts::Schedule {
-                enable_println, // this should only be enabled on development chains
-                ..Default::default()
-            },
+            // println should only be enabled on development chains
+            current_schedule: pallet_contracts::Schedule::default()
+                .enable_println(enable_println),
         },
         pallet_sudo: SudoConfig {
-            // Assign network admin rights.
             key: root_key,
         },
         pallet_evm: EVMConfig {

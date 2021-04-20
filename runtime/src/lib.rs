@@ -19,7 +19,7 @@ use sp_runtime::traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFo
 use sp_runtime::{
     create_runtime_str, generic, impl_opaque_keys,
     transaction_validity::{TransactionSource, TransactionValidity},
-    ApplyExtrinsicResult, ModuleId,
+    ApplyExtrinsicResult,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -29,7 +29,7 @@ use sp_version::RuntimeVersion;
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
-    construct_runtime, parameter_types,
+    construct_runtime, parameter_types, PalletId,
     traits::{FindAuthor, KeyOwnerProofSystem, Randomness},
     weights::{
         constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
@@ -189,6 +189,8 @@ impl frame_system::Config for Runtime {
     type SystemWeightInfo = ();
     /// This is used as an identifier of the chain. 42 is the generic substrate prefix.
     type SS58Prefix = SS58Prefix;
+    /// The set code logic, just the default since we're not a parachain.
+    type OnSetCode = ();
 }
 
 impl pallet_aura::Config for Runtime {
@@ -257,11 +259,11 @@ impl pallet_transaction_payment::Config for Runtime {
 }
 
 parameter_types! {
-    pub const TombstoneDeposit: Balance = deposit(
+    pub TombstoneDeposit: Balance = deposit(
         1,
-        sp_std::mem::size_of::<pallet_contracts::ContractInfo<Runtime>>() as u32
+        <pallet_contracts::Pallet<Runtime>>::contract_info_size(),
     );
-    pub const DepositPerContract: Balance = TombstoneDeposit::get();
+    pub DepositPerContract: Balance = TombstoneDeposit::get();
     pub const DepositPerStorageByte: Balance = deposit(0, 1);
     pub const DepositPerStorageItem: Balance = deposit(1, 0);
     pub RentFraction: Perbill = Perbill::from_rational(1u32, 30 * DAYS);
@@ -278,7 +280,7 @@ parameter_types! {
             <Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
             <Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
         )) / 5) as u32;
-    pub MaxCodeSize: u32 = 256 * 1024;
+    pub MaxCodeSize: u32 = 128 * 1024;
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -296,7 +298,7 @@ impl pallet_contracts::Config for Runtime {
     type SurchargeReward = SurchargeReward;
     type MaxDepth = MaxDepth;
     type MaxValueSize = MaxValueSize;
-    type WeightPrice = pallet_transaction_payment::Pallet<Self>;
+    type WeightPrice = pallet_transaction_payment::Module<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
     type ChainExtension = chain_extension::ExtChainExtension;
     type DeletionQueueDepth = DeletionQueueDepth;
@@ -321,6 +323,7 @@ impl FeeCalculator for FixedGasPrice {
 
 parameter_types! {
     pub const ChainId: u64 = 102;
+    pub BlockGasLimit: U256 = U256::from(u32::max_value());
 }
 
 impl pallet_evm::Config for Runtime {
@@ -334,6 +337,8 @@ impl pallet_evm::Config for Runtime {
     type Runner = pallet_evm::runner::stack::Runner<Self>;
     type Precompiles = precompile::Precompiles<Self>;
     type ChainId = ChainId;
+    type BlockGasLimit = BlockGasLimit;
+    type OnChargeTransaction = ();
 }
 
 pub struct EthereumFindAuthor<F>(PhantomData<F>);
@@ -350,15 +355,10 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for EthereumFindAuthor<F> {
     }
 }
 
-parameter_types! {
-    pub BlockGasLimit: U256 = U256::from(u32::max_value());
-}
-
 impl pallet_ethereum::Config for Runtime {
     type Event = Event;
     type FindAuthor = EthereumFindAuthor<Aura>;
     type StateRoot = pallet_ethereum::IntermediateStateRoot;
-    type BlockGasLimit = BlockGasLimit;
 }
 
 parameter_types! {
@@ -428,13 +428,13 @@ impl pallet_erc1155::Config for Runtime {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
+    pub const CurrencyTokenModuleId: PalletId = PalletId(*b"w3g/curr");
+    pub const DexModuleId: PalletId = PalletId(*b"w3g/dexm");
 }
 
 impl pallet_currency_token::Config for Runtime {
     type Event = Event;
-    type ModuleId = CurrencyTokenModuleId;
+    type PalletId = CurrencyTokenModuleId;
     type Currency = Currencies;
     type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
     type GetNativeCurrencyId = GetNativeCurrencyId;
@@ -442,7 +442,7 @@ impl pallet_currency_token::Config for Runtime {
 
 impl pallet_dex::Config for Runtime {
     type Event = Event;
-    type ModuleId = DexModuleId;
+    type PalletId = DexModuleId;
     type CreateExchangeDeposit = CreateExchangeDeposit;
     type Currency = Balances;
 }
@@ -788,6 +788,10 @@ impl_runtime_apis! {
                 Ethereum::current_receipts(),
                 Ethereum::current_transaction_statuses()
             )
+        }
+
+        fn current_block_gas_limit() -> U256 {
+            BlockGasLimit::get()
         }
     }
 

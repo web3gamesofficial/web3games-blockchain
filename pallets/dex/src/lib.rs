@@ -2,7 +2,7 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-    ensure,
+    ensure, PalletId,
     dispatch::{DispatchError, DispatchResult},
     traits::{Currency, Get, ReservableCurrency, ExistenceRequirement::AllowDeath},
 };
@@ -10,7 +10,7 @@ use primitives::{Balance, CurrencyId};
 use sp_core::U256;
 use sp_runtime::{
     traits::{AccountIdConversion, One, Zero},
-    ModuleId, RuntimeDebug,
+    RuntimeDebug,
 };
 use sp_std::{convert::TryInto, fmt::Debug, prelude::*};
 
@@ -37,7 +37,7 @@ pub mod pallet {
     pub trait Config: frame_system::Config + currency_token::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-        type ModuleId: Get<ModuleId>;
+        type PalletId: Get<PalletId>;
 
         /// The minimum balance to create exchange
         #[pallet::constant]
@@ -158,7 +158,7 @@ pub mod pallet {
                     Ok(current_id)
                 })?;
 
-            let fund_account = <T as Config>::ModuleId::get().into_sub_account(exchange_id);
+            let fund_account = <T as Config>::PalletId::get().into_sub_account(exchange_id);
 
             let deposit = T::CreateExchangeDeposit::get();
             <T as Config>::Currency::transfer(&who, &fund_account, deposit, AllowDeath)?;

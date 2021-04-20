@@ -5,20 +5,17 @@ authors = ["Web3Games Developers"]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1.0.101", optional = true }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+serde = { version = "1.0.124", optional = true }
 
-frame-support = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-frame-system = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-io = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-core = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-runtime = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-std = { version = "3.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "master"}
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
-# Orml packages
-orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
-orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
-orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/Web3-Substrate-Game-World/open-runtime-module-library", branch = "sgc_v0.1" }
+orml-traits = { version = "0.4.1-dev", default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 token = { package = "pallet-erc1155", path = "../erc1155", default-features = false }
@@ -26,16 +23,14 @@ token = { package = "pallet-erc1155", path = "../erc1155", default-features = fa
 [features]
 default = ["std"]
 std = [
-	"serde",
-	"codec/std",
-	"frame-support/std",
-	"frame-system/std",
-	"sp-io/std",
-	"sp-core/std",
-	"sp-runtime/std",
-	"sp-std/std",
-	"orml-currencies/std",
-    "orml-tokens/std",
+    "codec/std",
+    "serde/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-runtime/std",
+    "sp-io/std",
+    "sp-std/std",
+    "sp-core/std",
     "orml-traits/std",
 	"primitives/std",
 	"token/std",

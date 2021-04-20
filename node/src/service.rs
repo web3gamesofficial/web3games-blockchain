@@ -7,7 +7,7 @@ use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
 use sc_finality_grandpa::SharedVoterState;
 use sc_keystore::LocalKeystore;
-use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
+use sc_service::{error::Error as ServiceError, Configuration, TaskManager, BasePath};
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use web3games_runtime::{self, opaque::Block, RuntimeApi};
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
@@ -18,6 +18,7 @@ use std::{
     collections::{BTreeMap, HashMap},
     sync::{Arc, Mutex},
 };
+use sc_cli::SubstrateCli;
 
 // Our native executor instance.
 native_executor_instance!(
@@ -30,6 +31,24 @@ native_executor_instance!(
 type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
+
+
+pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
+	let config_dir = config.base_path.as_ref()
+		.map(|base_path| base_path.config_dir(config.chain_spec.id()))
+		.unwrap_or_else(|| {
+			BasePath::from_project("", "", &crate::cli::Cli::executable_name())
+				.config_dir(config.chain_spec.id())
+		});
+	let database_dir = config_dir.join("frontier").join("db");
+
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: fc_db::DatabaseSettingsSrc::RocksDb {
+			path: database_dir,
+			cache_size: 0,
+		}
+	})?))
+}
 
 pub fn new_partial(
     config: &Configuration,
@@ -59,6 +78,7 @@ pub fn new_partial(
             sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
             PendingTransactions,
             Option<FilterPool>,
+            Arc<fc_db::Backend<Block>>,
             Option<Telemetry>,
         ),
     >,
@@ -107,6 +127,8 @@ pub fn new_partial(
 
     let filter_pool: Option<FilterPool> = Some(Arc::new(Mutex::new(BTreeMap::new())));
 
+    let frontier_backend = open_frontier_backend(config)?;
+
     let (grandpa_block_import, grandpa_link) = sc_finality_grandpa::block_import(
         client.clone(),
         &(client.clone() as Arc<_>),
@@ -114,8 +136,11 @@ pub fn new_partial(
         telemetry.as_ref().map(|x| x.handle()),
     )?;
 
-    let frontier_block_import =
-        FrontierBlockImport::new(grandpa_block_import.clone(), client.clone(), true);
+    let frontier_block_import = FrontierBlockImport::new(
+        grandpa_block_import.clone(),
+        client.clone(),
+        frontier_backend.clone(),
+    );
 
     let aura_block_import = sc_consensus_aura::AuraBlockImport::<_, _, _, AuraPair>::new(
         frontier_block_import,
@@ -151,6 +176,7 @@ pub fn new_partial(
             grandpa_link,
             pending_transactions,
             filter_pool,
+            frontier_backend,
             telemetry,
         ),
     })
@@ -177,7 +203,7 @@ pub fn new_full(
         select_chain,
         transaction_pool,
         inherent_data_providers,
-        other: (block_import, grandpa_link, pending_transactions, filter_pool, mut telemetry),
+        other: (block_import, grandpa_link, pending_transactions, filter_pool, frontier_backend, mut telemetry),
     } = new_partial(&config)?;
 
     if let Some(url) = &config.keystore_remote {
@@ -233,16 +259,20 @@ pub fn new_full(
         let network = network.clone();
         let pending = pending_transactions.clone();
         let filter_pool = filter_pool.clone();
+        let frontier_backend = frontier_backend.clone();
+
         Box::new(move |deny_unsafe, _| {
             let deps = crate::rpc::FullDeps {
                 client: client.clone(),
                 pool: pool.clone(),
+                graph: pool.pool().clone(),
                 deny_unsafe,
                 is_authority,
                 enable_dev_signer,
                 network: network.clone(),
                 pending_transactions: pending.clone(),
                 filter_pool: filter_pool.clone(),
+                backend: frontier_backend.clone(),
             };
 
             crate::rpc::create_full(deps, subscription_task_executor.clone())

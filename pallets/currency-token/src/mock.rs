@@ -1,11 +1,10 @@
 use crate as pallet_currency_token;
-use frame_support::parameter_types;
+use frame_support::{parameter_types, PalletId};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
-    ModuleId,
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -54,13 +53,13 @@ impl system::Config for Test {
 }
 
 parameter_types! {
-    pub const CurrencyTokenModuleId: ModuleId = ModuleId(*b"w3g/curr");
-    pub const DexModuleId: ModuleId = ModuleId(*b"w3g/dexm");
+    pub const CurrencyTokenModuleId: PalletId = PalletId(*b"w3g/curr");
+    pub const DexModuleId: PalletId = PalletId(*b"w3g/dexm");
 }
 
 impl pallet_currency_token::Config for Test {
     type Event = Event;
-    type ModuleId = CurrencyTokenModuleId;
+    type PalletId = CurrencyTokenModuleId;
     type Currency = Currencies;
 }
 
