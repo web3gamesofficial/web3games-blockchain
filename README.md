@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="https://web3games.org/web3game-logo-horizontal-black.svg" width="350">
+  <img src="./logo/web3games-logo.svg" width="200">
 </p>
 
 <div align="center">
-
+<h1>Web3Games</h1>
 </div>
 
 <!-- TOC -->
