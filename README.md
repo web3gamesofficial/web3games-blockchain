@@ -1,9 +1,8 @@
 <p align="center">
-  <img src="https://web3games.blockspaper.com/static/web3game-logo-only.svg" width="130">
+  <img src="https://web3games.org/web3game-logo-horizontal-black.svg" width="130">
 </p>
 
 <div align="center">
-<h1>Web3Games</h1>
 
 </div>
 
@@ -17,6 +16,8 @@
 <!-- /TOC -->
 
 # 1. Introduction
+
+Web3Games is a new generation gaming ecosystem built on Substrate.
 
 # 2. Overview
 
