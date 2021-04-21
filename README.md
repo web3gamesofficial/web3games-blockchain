@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://web3games.org/web3game-logo-horizontal-black.svg" width="130">
+  <img src="https://web3games.org/web3game-logo-horizontal-black.svg" width="350">
 </p>
 
 <div align="center">
