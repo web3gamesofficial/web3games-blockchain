@@ -22,11 +22,11 @@ pub trait Config: pallet_evm::Config + pallet_tokens::Config {}
 pub type EthereumPrecompiles = (ECRecover, Sha256, Ripemd160, Identity);
 
 #[derive(Default)]
-pub struct Precompiles<T: Config> {
+pub struct Web3gamesPrecompiles<T: Config> {
     _marker: PhantomData<T>,
 }
 
-impl<T: Config> PrecompileSet for Precompiles<T> {
+impl<T: Config> PrecompileSet for Web3gamesPrecompiles<T> {
     fn execute(
         address: H160,
         input: &[u8],

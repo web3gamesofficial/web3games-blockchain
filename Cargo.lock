@@ -4188,21 +4188,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-chain-extension"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "hex",
- "log",
- "pallet-contracts",
- "pallet-tokens",
- "parity-scale-codec",
- "sp-runtime",
- "sp-std 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
- "web3games-primitives",
-]
-
-[[package]]
 name = "pallet-contracts"
 version = "3.0.0"
 source = "git+https://github.com/paritytech/substrate?branch=rococo-v1#68cfc326fa0e3d96d0d92509e4db1a104b9da9bb"
@@ -4365,22 +4350,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
-]
-
-[[package]]
-name = "pallet-evm-precompile"
-version = "0.1.0"
-dependencies = [
- "evm",
- "fp-evm",
- "frame-support",
- "log",
- "pallet-evm",
- "pallet-evm-precompile-simple",
- "pallet-tokens",
- "rustc-hex",
- "sp-core",
- "sp-std 3.0.0 (git+https://github.com/paritytech/substrate)",
 ]
 
 [[package]]
@@ -8977,6 +8946,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "web3games-extensions-ce"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "hex",
+ "log",
+ "pallet-contracts",
+ "pallet-tokens",
+ "parity-scale-codec",
+ "sp-runtime",
+ "sp-std 3.0.0 (git+https://github.com/paritytech/substrate?branch=rococo-v1)",
+ "web3games-primitives",
+]
+
+[[package]]
 name = "web3games-node"
 version = "0.0.1"
 dependencies = [
@@ -9029,6 +9013,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "web3games-precompiles"
+version = "0.1.0"
+dependencies = [
+ "evm",
+ "fp-evm",
+ "frame-support",
+ "log",
+ "pallet-evm",
+ "pallet-evm-precompile-simple",
+ "pallet-tokens",
+ "rustc-hex",
+ "sp-core",
+ "sp-std 3.0.0 (git+https://github.com/paritytech/substrate)",
+]
+
+[[package]]
 name = "web3games-primitives"
 version = "0.1.0"
 dependencies = [
@@ -9055,7 +9055,6 @@ dependencies = [
  "orml-traits",
  "pallet-aura",
  "pallet-balances",
- "pallet-chain-extension",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
@@ -9063,7 +9062,6 @@ dependencies = [
  "pallet-dex",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-evm-precompile",
  "pallet-evm-precompile-simple",
  "pallet-grandpa",
  "pallet-nft",
@@ -9088,6 +9086,8 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "web3games-extensions-ce",
+ "web3games-precompiles",
  "web3games-primitives",
 ]
 

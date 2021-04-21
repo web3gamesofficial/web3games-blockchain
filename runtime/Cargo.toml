@@ -62,8 +62,8 @@ orml-currencies = { version = '0.4.1-dev', default-features = false, git = "http
 orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
 
 primitives = { package = "web3games-primitives", path = "../primitives", default-features = false }
-precompile = { package = "pallet-evm-precompile", default-features = false, path = "../pallets/evm-precompile" }
-chain-extension = { package = "pallet-chain-extension", default-features = false, path = "../pallets/chain-extension" }
+precompiles = { package = "web3games-precompiles", path = "./precompiles", default-features = false }
+chain-extension = { package = "web3games-extensions-ce", path = "./extensions/ce", default-features = false }
 
 # local pallet
 pallet-tokens = { default-features = false, path = "../pallets/tokens" }
@@ -110,7 +110,7 @@ std = [
 	"orml-currencies/std",
 	"orml-tokens/std",
 
-	"precompile/std",
+	"precompiles/std",
 	"chain-extension/std",
 	"pallet-tokens/std",
 	"pallet-currency-token/std",

@@ -1,5 +1,5 @@
 [package]
-name = "pallet-chain-extension"
+name = "web3games-extensions-ce"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
@@ -15,8 +15,8 @@ sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1"
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
+primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
+pallet-tokens = { default-features = false, path = "../../../pallets/tokens" }
 
 [features]
 default = ["std"]

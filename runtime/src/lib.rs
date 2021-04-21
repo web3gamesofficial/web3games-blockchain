@@ -335,7 +335,7 @@ impl pallet_evm::Config for Runtime {
     type Currency = Balances;
     type Event = Event;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
-    type Precompiles = precompile::Precompiles<Self>;
+    type Precompiles = precompiles::Web3gamesPrecompiles<Self>;
     type ChainId = ChainId;
     type BlockGasLimit = BlockGasLimit;
     type OnChargeTransaction = ();
@@ -406,7 +406,7 @@ impl orml_currencies::Config for Runtime {
     type WeightInfo = ();
 }
 
-impl precompile::Config for Runtime {}
+impl precompiles::Config for Runtime {}
 
 impl chain_extension::Config for Runtime {
     type Randomness = RandomnessCollectiveFlip;
