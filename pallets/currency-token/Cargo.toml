@@ -18,7 +18,7 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1
 orml-traits = { version = "0.4.1-dev", default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-token = { package = "pallet-erc1155", path = "../erc1155", default-features = false }
+token = { package = "pallet-tokens", path = "../tokens", default-features = false }
 
 [features]
 default = ["std"]

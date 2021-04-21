@@ -400,7 +400,7 @@ parameter_types! {
 
 impl orml_currencies::Config for Runtime {
     type Event = Event;
-    type MultiCurrency = Tokens;
+    type MultiCurrency = OrmlTokens;
     type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
     type GetNativeCurrencyId = GetNativeCurrencyId;
     type WeightInfo = ();
@@ -419,7 +419,7 @@ parameter_types! {
     pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_erc1155::Config for Runtime {
+impl pallet_tokens::Config for Runtime {
     type Event = Event;
     type CreateInstanceDeposit = CreateInstanceDeposit;
     type Currency = Balances;
@@ -435,7 +435,7 @@ parameter_types! {
 impl pallet_currency_token::Config for Runtime {
     type Event = Event;
     type PalletId = CurrencyTokenModuleId;
-    type Currency = Currencies;
+    type Currency = OrmlCurrencies;
     type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
     type GetNativeCurrencyId = GetNativeCurrencyId;
 }
@@ -471,11 +471,11 @@ construct_runtime!(
         Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
         Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, ValidateUnsigned},
         EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>},
-        Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
-        Currencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
+        OrmlTokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
+        OrmlCurrencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
         // web3games pallets
-        Erc1155: pallet_erc1155::{Pallet, Call, Storage, Event<T>},
+        Tokens: pallet_tokens::{Pallet, Call, Storage, Event<T>},
         CurrencyToken: pallet_currency_token::{Pallet, Call, Storage, Event<T>, Config<T>},
         Dex: pallet_dex::{Pallet, Call, Storage, Event<T>},
         NFT: pallet_nft::{Pallet, Call, Storage, Event<T>},

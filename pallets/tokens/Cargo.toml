@@ -1,5 +1,5 @@
 [package]
-name = 'pallet-erc1155'
+name = 'pallet-tokens'
 version = '0.1.0'
 authors = ["Web3Games Developers"]
 edition = "2018"
@@ -17,9 +17,6 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-
-[dev-dependencies]
-serde = { version = "1.0.101" }
 
 [features]
 default = ['std']

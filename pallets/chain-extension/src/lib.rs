@@ -10,7 +10,7 @@ use primitives::Balance;
 use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::prelude::*;
 
-pub trait Config: pallet_contracts::Config + pallet_erc1155::Config {
+pub trait Config: pallet_contracts::Config + pallet_tokens::Config {
     type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 }
 
@@ -225,7 +225,7 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
                 let input: CreateInstanceInputParam = env.read_as()?;
 
                 let instance_id: u64 =
-                    pallet_erc1155::Pallet::<E::T>::do_create_instance(&caller, input.data)?.into();
+                    pallet_tokens::Pallet::<E::T>::do_create_instance(&caller, input.data)?.into();
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
@@ -259,14 +259,14 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
                 env.read_into(&mut &mut buffer[..])?;
 
                 let input: CreateTokenInputParam<
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_create_token(
+                pallet_tokens::Pallet::<E::T>::do_create_token(
                     &caller,
                     input.instance_id,
                     input.token_id,
@@ -290,13 +290,13 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: SetApprovalForAllInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_set_approval_for_all(
+                pallet_tokens::Pallet::<E::T>::do_set_approval_for_all(
                     &caller,
                     &input.operator,
                     input.instance_id,
@@ -320,15 +320,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: MintInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_mint(
+                pallet_tokens::Pallet::<E::T>::do_mint(
                     &caller,
                     &input.to,
                     input.instance_id,
@@ -353,15 +353,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BatchMintInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_batch_mint(
+                pallet_tokens::Pallet::<E::T>::do_batch_mint(
                     &caller,
                     &input.to,
                     input.instance_id,
@@ -386,15 +386,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BurnInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_burn(
+                pallet_tokens::Pallet::<E::T>::do_burn(
                     &caller,
                     &input.from,
                     input.instance_id,
@@ -419,15 +419,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BatchBurnInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_batch_burn(
+                pallet_tokens::Pallet::<E::T>::do_batch_burn(
                     &caller,
                     &input.from,
                     input.instance_id,
@@ -453,15 +453,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: TransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_transfer_from(
+                pallet_tokens::Pallet::<E::T>::do_transfer_from(
                     &caller,
                     &input.from,
                     &input.to,
@@ -488,15 +488,15 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BatchTransferFromInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                     Balance,
                 > = env.read_as()?;
 
                 let weight = 100_000;
                 env.charge_weight(weight)?;
 
-                pallet_erc1155::Pallet::<E::T>::do_batch_transfer_from(
+                pallet_tokens::Pallet::<E::T>::do_batch_transfer_from(
                     &caller,
                     &input.from,
                     &input.to,
@@ -512,10 +512,10 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: ApprovedOrOwnerInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
                 > = env.read_as()?;
 
-                let ret: bool = pallet_erc1155::Pallet::<E::T>::approved_or_owner(
+                let ret: bool = pallet_tokens::Pallet::<E::T>::approved_or_owner(
                     &caller,
                     &input.operator,
                     input.instance_id,
@@ -539,10 +539,10 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: IsApprovedForAllInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
                 > = env.read_as()?;
 
-                let ret: bool = pallet_erc1155::Pallet::<E::T>::is_approved_for_all(
+                let ret: bool = pallet_tokens::Pallet::<E::T>::is_approved_for_all(
                     &input.owner,
                     &input.operator,
                     input.instance_id,
@@ -566,11 +566,11 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BalanceOfInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                 > = env.read_as()?;
 
-                let balance: Balance = pallet_erc1155::Pallet::<E::T>::balance_of(
+                let balance: Balance = pallet_tokens::Pallet::<E::T>::balance_of(
                     &input.owner,
                     input.instance_id,
                     input.token_id,
@@ -594,11 +594,11 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BalanceOfBatchInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                 > = env.read_as()?;
 
-                let ret: Vec<Balance> = pallet_erc1155::Pallet::<E::T>::balance_of_batch(
+                let ret: Vec<Balance> = pallet_tokens::Pallet::<E::T>::balance_of_batch(
                     &input.owners,
                     input.instance_id,
                     input.token_ids,
@@ -625,11 +625,11 @@ impl<C: Config> ChainExtension<C> for ExtChainExtension {
 
                 let input: BalanceOfSingleOwnerBatchInputParam<
                     <E::T as SysConfig>::AccountId,
-                    <E::T as pallet_erc1155::Config>::InstanceId,
-                    <E::T as pallet_erc1155::Config>::TokenId,
+                    <E::T as pallet_tokens::Config>::InstanceId,
+                    <E::T as pallet_tokens::Config>::TokenId,
                 > = env.read_as()?;
 
-                let ret: Vec<Balance> = pallet_erc1155::Pallet::<E::T>::balance_of_single_owner_batch(
+                let ret: Vec<Balance> = pallet_tokens::Pallet::<E::T>::balance_of_single_owner_batch(
                     &input.owners,
                     input.instance_id,
                     input.token_ids,

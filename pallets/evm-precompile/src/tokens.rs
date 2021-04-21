@@ -4,11 +4,11 @@ use fp_evm::Precompile;
 use crate::Config;
 use sp_std::{marker::PhantomData, prelude::*, result};
 
-pub struct Erc1155Precompile<T: Config> {
+pub struct TokensPrecompile<T: Config> {
     _marker: PhantomData<T>,
 }
 
-impl<T> Precompile for Erc1155Precompile<T>
+impl<T> Precompile for TokensPrecompile<T>
 where
     T: pallet_evm::Config + Config,
 {
@@ -22,7 +22,7 @@ where
         let owner = T::AccountId::default();
         let instance_id = T::InstanceId::from(2u64);
         let token_id = T::TokenId::from(1u64);
-        let balance = pallet_erc1155::Pallet::<T>::balance_of(&owner, instance_id, token_id);
+        let balance = pallet_tokens::Pallet::<T>::balance_of(&owner, instance_id, token_id);
         log::debug!(target: "evm", "balance: {:?}", balance);
 
         Ok((ExitSucceed::Returned, [].to_vec(), 0))

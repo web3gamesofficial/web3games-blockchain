@@ -16,7 +16,7 @@ frame-support = { git = "https://github.com/paritytech/substrate", branch = "roc
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-pallet-erc1155 = { default-features = false, path = "../../pallets/erc1155" }
+pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
 
 [features]
 default = ["std"]
@@ -29,5 +29,5 @@ std = [
   "frame-support/std",
   "pallet-contracts/std",
   "primitives/std",
-  "pallet-erc1155/std",
+  "pallet-tokens/std",
 ]

@@ -17,7 +17,7 @@ pallet-evm-precompile-simple = { version = "3.0.0", default-features = false, gi
 log = { version = "0.4.14", default-features = false }
 
 evm = { version = "0.26.0", default-features = false, features = ["with-codec"] }
-pallet-erc1155 = { default-features = false, path = "../../pallets/erc1155" }
+pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
 
 [features]
 default = [ "std" ]
@@ -30,5 +30,5 @@ std = [
 	"pallet-evm-precompile-simple/std",
 	"log/std",
 	"evm/std",
-	"pallet-erc1155/std",
+	"pallet-tokens/std",
 ]

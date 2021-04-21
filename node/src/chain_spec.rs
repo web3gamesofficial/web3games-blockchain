@@ -5,7 +5,7 @@ use serde_json::json;
 use web3games_runtime::{
     AccountId, AuraConfig, Balance, BalancesConfig, ContractsConfig, CurrencyId, EVMConfig,
     EthereumConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, TokenSymbol,
-    TokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
+    OrmlTokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
@@ -271,7 +271,7 @@ fn testnet_genesis(
             accounts: evm_accounts,
         },
         pallet_ethereum: EthereumConfig {},
-        orml_tokens: TokensConfig {
+        orml_tokens: OrmlTokensConfig {
             endowed_accounts: endowed_accounts
                 .iter()
                 .flat_map(|x| {

@@ -163,7 +163,7 @@ pub mod pallet {
             let deposit = T::CreateExchangeDeposit::get();
             <T as Config>::Currency::transfer(&who, &fund_account, deposit, AllowDeath)?;
 
-            let lp_instance = token::Pallet::<T>::do_create_instance(&fund_account, [].to_vec())?;
+            let lp_instance = tokens::Pallet::<T>::do_create_instance(&fund_account, [].to_vec())?;
 
             let (currency_instance, currency_token) =
                 currency_token::Pallet::<T>::get_currency_token(currency_id)?;
@@ -288,7 +288,7 @@ pub struct Exchange<
 > {
     /// The creator of Exchange
     pub creator: AccountId,
-    /// The instance of the ERC-1155 token
+    /// The instance of the tokens
     pub token_instance: InstanceId,
     /// The instance of the currency
     pub currency_instance: InstanceId,
@@ -343,7 +343,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Transfer currency token to exchange vault
-        token::Pallet::<T>::do_transfer_from(
+        tokens::Pallet::<T>::do_transfer_from(
             who,
             who,
             &exchange.vault,
@@ -353,7 +353,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Send Tokens all tokens purchased
-        token::Pallet::<T>::do_batch_transfer_from(
+        tokens::Pallet::<T>::do_batch_transfer_from(
             &exchange.vault,
             &exchange.vault,
             &to,
@@ -420,7 +420,7 @@ impl<T: Config> Pallet<T> {
         ensure!(total_currency >= min_currency, Error::<T>::InsufficientCurrencyAmount);
 
         // Transfer the tokens to sell to exchange vault
-        token::Pallet::<T>::do_batch_transfer_from(
+        tokens::Pallet::<T>::do_batch_transfer_from(
             who,
             who,
             &exchange.vault,
@@ -430,7 +430,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Transfer currency here
-        token::Pallet::<T>::do_transfer_from(
+        tokens::Pallet::<T>::do_transfer_from(
             &exchange.vault,
             &exchange.vault,
             &to,
@@ -547,7 +547,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Transfer the tokens to add to the exchange liquidity pools
-        token::Pallet::<T>::do_batch_transfer_from(
+        tokens::Pallet::<T>::do_batch_transfer_from(
             who,
             who,
             &exchange.vault,
@@ -557,7 +557,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Mint liquidity pool tokens
-        token::Pallet::<T>::do_batch_mint(
+        tokens::Pallet::<T>::do_batch_mint(
             &exchange.vault,
             &to,
             exchange.lp_instance,
@@ -566,7 +566,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Transfer all currency to this contract
-        token::Pallet::<T>::do_transfer_from(
+        tokens::Pallet::<T>::do_transfer_from(
             &who,
             &who,
             &exchange.vault,
@@ -660,7 +660,7 @@ impl<T: Config> Pallet<T> {
         }
 
         // Transfer the liquidity pool tokens to burn to exchange vault
-        token::Pallet::<T>::do_batch_transfer_from(
+        tokens::Pallet::<T>::do_batch_transfer_from(
             who,
             who,
             &exchange.vault,
@@ -670,7 +670,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Burn liquidity pool tokens for offchain supplies
-        token::Pallet::<T>::do_batch_burn(
+        tokens::Pallet::<T>::do_batch_burn(
             &exchange.vault,
             &exchange.vault,
             exchange.lp_instance,
@@ -679,7 +679,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Transfer total currency
-        token::Pallet::<T>::do_transfer_from(
+        tokens::Pallet::<T>::do_transfer_from(
             &exchange.vault,
             &exchange.vault,
             &to,
@@ -689,7 +689,7 @@ impl<T: Config> Pallet<T> {
         )?;
 
         // Transfer all Tokens ids
-        token::Pallet::<T>::do_batch_transfer_from(
+        tokens::Pallet::<T>::do_batch_transfer_from(
             &exchange.vault,
             &exchange.vault,
             &to,
@@ -774,12 +774,12 @@ impl<T: Config> Pallet<T> {
 
         if n == 1 {
             let mut token_reserves = vec![Balance::from(0u128); n];
-            token_reserves[0] = token::Pallet::<T>::balance_of(vault, instance_id, token_ids[0]);
+            token_reserves[0] = tokens::Pallet::<T>::balance_of(vault, instance_id, token_ids[0]);
             token_reserves
         } else {
             let vaults = vec![vault.clone(); n];
             let token_reserves =
-                token::Pallet::<T>::balance_of_batch(&vaults, instance_id, token_ids).unwrap();
+                tokens::Pallet::<T>::balance_of_batch(&vaults, instance_id, token_ids).unwrap();
             token_reserves
         }
     }

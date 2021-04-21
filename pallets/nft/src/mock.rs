@@ -1,4 +1,4 @@
-// use crate as pallet_erc1155;
+use crate as pallet_nft;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;

@@ -17,7 +17,7 @@ pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-token = { package = "pallet-erc1155", path = "../erc1155", default-features = false }
+tokens = { package = "pallet-tokens", path = "../tokens", default-features = false }
 currency-token = { package = "pallet-currency-token", path = "../currency-token", default-features = false }
 
 [dev-dependencies]
@@ -38,6 +38,6 @@ std = [
     "pallet-timestamp/std",
     "sp-core/std",
     "primitives/std",
-    "token/std",
+    "tokens/std",
     "currency-token/std",
 ]
