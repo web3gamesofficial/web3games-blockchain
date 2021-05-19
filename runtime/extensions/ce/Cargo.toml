@@ -3,7 +3,6 @@ name = "web3games-extensions-ce"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
-license = 'GPL-3.0'
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }

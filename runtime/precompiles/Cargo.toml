@@ -3,7 +3,6 @@ name = "web3games-precompiles"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
-license = 'GPL-3.0'
 
 [dependencies]
 rustc-hex = { version = "2.0.1", default-features = false }

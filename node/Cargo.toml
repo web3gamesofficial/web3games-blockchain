@@ -3,7 +3,6 @@ name = "web3games-node"
 version = "0.0.1"
 authors = ["Web3Games Developers"]
 edition = "2018"
-license = 'GPL-3.0'
 build = "build.rs"
 
 [package.metadata.docs.rs]
