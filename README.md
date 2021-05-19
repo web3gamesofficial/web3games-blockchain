@@ -15,13 +15,13 @@
 
 <!-- /TOC -->
 
-# 1. Introduction
+## 1. Introduction
 
 Web3Games is a new generation gaming ecosystem built on Substrate.
 
-# 2. Overview
+## 2. Overview
 
-# 3. Building
+## 3. Building
 
 Install Rust:
 
@@ -41,7 +41,7 @@ Build Wasm and native code:
 cargo build --release
 ```
 
-# 4. Run
+## 4. Run
 
 ### Single Node Development Chain
 
@@ -91,3 +91,7 @@ cargo run -- \
   --telemetry-url 'wss://telemetry.polkadot.io/submit/ 0' \
   --validator
 ```
+
+## License
+
+Web3Games is released under the [MIT License](LICENSE).
