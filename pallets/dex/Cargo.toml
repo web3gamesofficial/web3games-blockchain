@@ -7,23 +7,23 @@ edition = "2018"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
 integer-sqrt = "0.1.2"
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 tokens = { package = "pallet-tokens", path = "../tokens", default-features = false }
 currency-token = { package = "pallet-currency-token", path = "../currency-token", default-features = false }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-orml-traits = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
-orml-currencies = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
-orml-tokens = { version = '0.4.1-dev', default-features = false, git = "https://github.com/open-web3-stack/open-runtime-module-library.git", branch = "master" }
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
+orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
+orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
+orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
 
 [features]
 default = ["std"]

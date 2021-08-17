@@ -9,10 +9,10 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 hex = { version = "0.4.2", optional = true }
 log = { version = "0.4.14", default-features = false }
 
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 pallet-tokens = { default-features = false, path = "../../../pallets/tokens" }

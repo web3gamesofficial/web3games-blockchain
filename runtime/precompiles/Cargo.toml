@@ -7,15 +7,15 @@ edition = "2018"
 [dependencies]
 rustc-hex = { version = "2.0.1", default-features = false }
 
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "master" }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", default-features = false }
-fp-evm = { version = "0.8.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-pallet-evm = { version = "3.0.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-pallet-evm-precompile-simple = { version = "3.0.0", default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
+fp-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 log = { version = "0.4.14", default-features = false }
 
-evm = { version = "0.26.0", default-features = false, features = ["with-codec"] }
+evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
 pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
 
 [features]

@@ -20,57 +20,57 @@ jsonrpc-core = "15.0.0"
 jsonrpc-pubsub = "15.0.0"
 hex-literal = "0.3.1"
 
-sc-cli = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", features = ["wasmtime"] }
-sp-core = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-executor = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", features = ["wasmtime"] }
-sc-service = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1", features = ["wasmtime"] }
-sc-telemetry = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-keystore = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-inherents = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-consensus-aura = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-consensus = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-network = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-transaction-graph = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-finality-grandpa = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-finality-grandpa = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
+sc-cli = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
+sp-core = { git = "https://github.com/paritytech/substrate" }
+sc-executor = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
+sc-service = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
+sc-telemetry = { git = "https://github.com/paritytech/substrate" }
+sc-keystore = { git = "https://github.com/paritytech/substrate" }
+sp-inherents = { git = "https://github.com/paritytech/substrate" }
+sc-transaction-pool = { git = "https://github.com/paritytech/substrate" }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate" }
+sc-consensus-aura = { git = "https://github.com/paritytech/substrate" }
+sp-consensus-aura = { git = "https://github.com/paritytech/substrate" }
+sp-consensus = { git = "https://github.com/paritytech/substrate" }
+sc-consensus = { git = "https://github.com/paritytech/substrate" }
+sc-network = { git = "https://github.com/paritytech/substrate" }
+# sc-transaction-graph = { git = "https://github.com/paritytech/substrate" }
+sc-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
+sp-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
+sc-client-api = { git = "https://github.com/paritytech/substrate" }
+sp-runtime = { git = "https://github.com/paritytech/substrate" }
 
 # These dependencies are used for the node template's RPCs
-sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-rpc-api = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sp-block-builder = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-sc-basic-authorship = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
+sc-rpc = { git = "https://github.com/paritytech/substrate" }
+sp-api = { git = "https://github.com/paritytech/substrate" }
+sc-rpc-api = { git = "https://github.com/paritytech/substrate" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate" }
+sp-block-builder = { git = "https://github.com/paritytech/substrate" }
+sc-basic-authorship = { git = "https://github.com/paritytech/substrate" }
+substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate" }
+pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate" }
 
-pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
+pallet-contracts = { git = "https://github.com/paritytech/substrate" }
+pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate" }
 
-pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
-fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
-fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.1" }
+fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
 # These dependencies are used for runtime benchmarking
-# frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
-# frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
+# frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
+# frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate" }
 
 web3games-runtime = { version = "0.0.1", path = "../runtime" }
 
 [build-dependencies]
-substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "rococo-v1" }
+substrate-build-script-utils = { git = "https://github.com/paritytech/substrate" }
 
 # [features]
 # default = []
