@@ -3,7 +3,7 @@
 mod tokens;
 
 pub use tokens::TokensPrecompile;
-use evm::{Context, ExitError, ExitSucceed};
+use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
 use fp_evm::{Precompile, PrecompileSet};
 use pallet_evm_precompile_simple::{ECRecover, Identity, Ripemd160, Sha256};
 use sp_core::H160;
@@ -32,7 +32,7 @@ impl<T: Config> PrecompileSet for Web3gamesPrecompiles<T> {
         input: &[u8],
         target_gas: Option<u64>,
         context: &Context,
-    ) -> Option<result::Result<(ExitSucceed, Vec<u8>, u64), ExitError>> {
+    ) -> Option<core::result::Result<PrecompileOutput, ExitError>> {
         EthereumPrecompiles::execute(address, input, target_gas, context).or_else(|| {
             let addr_tokens = H160::from_str("0000000000000000000000000000000000000401").unwrap();
 

@@ -1,4 +1,4 @@
-use evm::{Context, ExitError, ExitSucceed};
+use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
 use fp_evm::Precompile;
 // use pallet_evm::{AddressMapping, GasWeightMapping};
 use crate::Config;
@@ -16,7 +16,7 @@ where
         input: &[u8],
         _target_gas: Option<u64>,
         _context: &Context,
-    ) -> result::Result<(ExitSucceed, Vec<u8>, u64), ExitError> {
+    ) -> core::result::Result<PrecompileOutput, ExitError> {
         log::debug!(target: "evm", "input: {:?}", input);
 
         let owner = T::AccountId::default();
@@ -25,7 +25,14 @@ where
         let balance = pallet_tokens::Pallet::<T>::balance_of(&owner, instance_id, token_id);
         log::debug!(target: "evm", "balance: {:?}", balance);
 
-        Ok((ExitSucceed::Returned, [].to_vec(), 0))
+        let cost: u64 = 0;
+
+        Ok(PrecompileOutput {
+            exit_status: ExitSucceed::Returned,
+            cost,
+            output: Default::default(),
+            logs: Default::default(),
+        })
 
         // let input = Input::<Action, T::AccountId, AddressMapping<T::AccountId>>::new(input);
 

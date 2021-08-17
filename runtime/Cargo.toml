@@ -8,7 +8,8 @@ edition = "2018"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+static_assertions = "1.1.0"
+codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 serde = { version = "1.0.124", optional = true, default-features = false }
 
 pallet-aura = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -51,7 +52,8 @@ pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substr
 # EVM
 pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+# pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
 fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
@@ -62,7 +64,7 @@ orml-tokens = { default-features = false, git = "https://github.com/web3gamesoff
 
 primitives = { package = "web3games-primitives", path = "../primitives", default-features = false }
 precompiles = { package = "web3games-precompiles", path = "./precompiles", default-features = false }
-chain-extension = { package = "web3games-extensions-ce", path = "./extensions/ce", default-features = false }
+# chain-extension = { package = "web3games-extensions-ce", path = "./extensions/ce", default-features = false }
 
 # local pallet
 pallet-tokens = { default-features = false, path = "../pallets/tokens" }
@@ -108,9 +110,11 @@ std = [
 	"orml-traits/std",
 	"orml-currencies/std",
 	"orml-tokens/std",
-
+    "pallet-ethereum/std",
+	"pallet-evm/std",
+	"pallet-dynamic-fee/std",
 	"precompiles/std",
-	"chain-extension/std",
+	# "chain-extension/std",
 	"pallet-tokens/std",
 	"pallet-currency-token/std",
 	"pallet-dex/std",
