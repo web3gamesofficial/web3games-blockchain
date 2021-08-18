@@ -1,11 +1,15 @@
-use crate::cli::{Cli, Subcommand};
-use crate::{chain_spec, service};
+use crate::{
+	chain_spec,
+	cli::{Cli, Subcommand},
+	service::{self, frontier_database_dir},
+};
+use web3games_runtime::Block;
 use sc_cli::{ChainSpec, Role, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 
 impl SubstrateCli for Cli {
     fn impl_name() -> String {
-        "web3games".into()
+        "Web3Games Node".into()
     }
 
     fn impl_version() -> String {
@@ -25,7 +29,7 @@ impl SubstrateCli for Cli {
     }
 
     fn copyright_start_year() -> i32 {
-        2017
+        2021
     }
 
     fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
@@ -62,7 +66,7 @@ pub fn run() -> sc_cli::Result<()> {
                     task_manager,
                     import_queue,
                     ..
-                } = service::new_partial(&config)?;
+                } = service::new_partial(&config, &cli)?;
                 Ok((cmd.run(client, import_queue), task_manager))
             })
         }
@@ -73,7 +77,7 @@ pub fn run() -> sc_cli::Result<()> {
                     client,
                     task_manager,
                     ..
-                } = service::new_partial(&config)?;
+                } = service::new_partial(&config, &cli)?;
                 Ok((cmd.run(client, config.database), task_manager))
             })
         }
@@ -84,7 +88,7 @@ pub fn run() -> sc_cli::Result<()> {
                     client,
                     task_manager,
                     ..
-                } = service::new_partial(&config)?;
+                } = service::new_partial(&config, &cli)?;
                 Ok((cmd.run(client, config.chain_spec), task_manager))
             })
         }
@@ -96,13 +100,21 @@ pub fn run() -> sc_cli::Result<()> {
                     task_manager,
                     import_queue,
                     ..
-                } = service::new_partial(&config)?;
+                } = service::new_partial(&config, &cli)?;
                 Ok((cmd.run(client, import_queue), task_manager))
             })
         }
         Some(Subcommand::PurgeChain(cmd)) => {
             let runner = cli.create_runner(cmd)?;
-            runner.sync_run(|config| cmd.run(config.database))
+            runner.sync_run(|config| {
+                // Remove Frontier offchain db
+                let frontier_database_config = sc_service::DatabaseSource::RocksDb {
+                    path: frontier_database_dir(&config),
+                    cache_size: 0,
+                };
+                cmd.run(frontier_database_config)?;
+                cmd.run(config.database)
+            })
         }
         Some(Subcommand::Revert(cmd)) => {
             let runner = cli.create_runner(cmd)?;
@@ -112,26 +124,28 @@ pub fn run() -> sc_cli::Result<()> {
                     task_manager,
                     backend,
                     ..
-                } = service::new_partial(&config)?;
+                } = service::new_partial(&config, &cli)?;
                 Ok((cmd.run(client, backend), task_manager))
             })
         }
-        // Some(Subcommand::Benchmark(cmd)) => {
-        //     if cfg!(feature = "runtime-benchmarks") {
-        //         let runner = cli.create_runner(cmd)?;
+        Some(Subcommand::Benchmark(cmd)) => {
+            if cfg!(feature = "runtime-benchmarks") {
+                let runner = cli.create_runner(cmd)?;
 
-        //         runner.sync_run(|config| cmd.run::<Block, service::Executor>(config))
-        //     } else {
-        //         Err("Benchmarking wasn't enabled when building the node. \
-        //         You can enable it with `--features runtime-benchmarks`.".into())
-        //     }
-        // },
+                runner.sync_run(|config| cmd.run::<Block, service::Executor>(config))
+            } else {
+                Err(
+                    "Benchmarking wasn't enabled when building the node. You can enable it with `--features runtime-benchmarks`."
+                        .into(),
+                )
+            }
+        }
         None => {
             let runner = cli.create_runner(&cli.run.base)?;
             runner.run_node_until_exit(|config| async move {
                 match config.role {
                     Role::Light => service::new_light(config),
-                    _ => service::new_full(config, cli.run.enable_dev_signer),
+                    _ => service::new_full(config, &cli),
                 }
                 .map_err(sc_cli::Error::Service)
             })

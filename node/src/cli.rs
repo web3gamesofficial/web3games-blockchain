@@ -9,6 +9,14 @@ pub struct RunCmd {
 
     #[structopt(long = "enable-dev-signer")]
     pub enable_dev_signer: bool,
+
+    /// Maximum number of logs in a query.
+	#[structopt(long, default_value = "10000")]
+	pub max_past_logs: u32,
+
+	/// The dynamic-fee pallet target gas price set by block author
+	#[structopt(long, default_value = "1")]
+	pub target_gas_price: u64,
 }
 
 #[derive(Debug, StructOpt)]
@@ -44,7 +52,8 @@ pub enum Subcommand {
 
     /// Revert the chain to a previous state.
     Revert(sc_cli::RevertCmd),
-    // /// The custom benchmark subcommmand benchmarking runtime pallets.
-    // #[structopt(name = "benchmark", about = "Benchmark runtime pallets.")]
-    // Benchmark(frame_benchmarking_cli::BenchmarkCmd),
+
+	/// The custom benchmark subcommmand benchmarking runtime pallets.
+	#[structopt(name = "benchmark", about = "Benchmark runtime pallets.")]
+	Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 }

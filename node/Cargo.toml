@@ -16,8 +16,8 @@ futures = "0.3.4"
 serde = { version = "1.0.124", features = ["derive"] }
 serde_json = "1.0.64"
 structopt = "0.3.8"
-jsonrpc-core = "15.0.0"
-jsonrpc-pubsub = "15.0.0"
+jsonrpc-core = "18.0.0"
+jsonrpc-pubsub = "18.0.0"
 hex-literal = "0.3.1"
 
 sc-cli = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
@@ -28,17 +28,17 @@ sc-telemetry = { git = "https://github.com/paritytech/substrate" }
 sc-keystore = { git = "https://github.com/paritytech/substrate" }
 sp-inherents = { git = "https://github.com/paritytech/substrate" }
 sc-transaction-pool = { git = "https://github.com/paritytech/substrate" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate" }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate" }
 sc-consensus-aura = { git = "https://github.com/paritytech/substrate" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate" }
 sp-consensus = { git = "https://github.com/paritytech/substrate" }
 sc-consensus = { git = "https://github.com/paritytech/substrate" }
 sc-network = { git = "https://github.com/paritytech/substrate" }
-# sc-transaction-graph = { git = "https://github.com/paritytech/substrate" }
 sc-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
 sp-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
 sc-client-api = { git = "https://github.com/paritytech/substrate" }
 sp-runtime = { git = "https://github.com/paritytech/substrate" }
+sp-timestamp = { git = "https://github.com/paritytech/substrate" }
 
 # These dependencies are used for the node template's RPCs
 sc-rpc = { git = "https://github.com/paritytech/substrate" }
@@ -53,21 +53,23 @@ pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrat
 pallet-contracts = { git = "https://github.com/paritytech/substrate" }
 pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate" }
 
-pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+# These dependencies are used for runtime benchmarking
+frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
+frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate" }
 
 fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
-# These dependencies are used for runtime benchmarking
-# frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
-# frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate" }
+pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-dynamic-fee = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
-web3games-runtime = { version = "0.0.1", path = "../runtime" }
+web3games-runtime = { path = "../runtime", default-features = false, features = ["std"] }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate" }

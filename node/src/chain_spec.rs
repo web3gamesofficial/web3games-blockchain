@@ -3,9 +3,8 @@ use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use web3games_runtime::{
-    AccountId, AuraConfig, Balance, BalancesConfig, ContractsConfig, CurrencyId, EVMConfig,
-    EthereumConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, TokenSymbol,
-    OrmlTokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
+    AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig,
+    EthereumConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig, SystemConfig, TokenSymbol, OrmlTokensConfig, CurrencyTokenConfig, DOLLARS, WASM_BINARY,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
@@ -237,12 +236,12 @@ fn testnet_genesis(
     const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
 
     GenesisConfig {
-        frame_system: SystemConfig {
+        system: SystemConfig {
             // Add Wasm runtime to storage.
             code: wasm_binary.to_vec(),
             changes_trie_config: Default::default(),
         },
-        pallet_balances: BalancesConfig {
+        balances: BalancesConfig {
             // Configure endowed accounts with initial balance of 1 << 60.
             balances: endowed_accounts
                 .iter()
@@ -250,29 +249,31 @@ fn testnet_genesis(
                 .map(|k| (k, ENDOWMENT))
                 .collect(),
         },
-        pallet_aura: AuraConfig {
+        aura: AuraConfig {
             authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
         },
-        pallet_grandpa: GrandpaConfig {
+        grandpa: GrandpaConfig {
             authorities: initial_authorities
                 .iter()
                 .map(|x| (x.1.clone(), 1))
                 .collect(),
         },
-        pallet_contracts: ContractsConfig {
-            // println should only be enabled on development chains
-            current_schedule: pallet_contracts::Schedule::default()
-                .enable_println(enable_println),
-        },
-        pallet_sudo: SudoConfig {
+        // pallet_contracts: ContractsConfig {
+        //     // println should only be enabled on development chains
+        //     current_schedule: pallet_contracts::Schedule::default()
+        //         .enable_println(enable_println),
+        // },
+        sudo: SudoConfig {
             key: root_key,
         },
-        pallet_evm: EVMConfig {
+        evm: EVMConfig {
             accounts: evm_accounts,
         },
-        pallet_ethereum: EthereumConfig {},
+        ethereum: EthereumConfig {},
+        // dynamic_fee: DynamicFeeConfig {},
+        dynamic_fee: Default::default(),
         orml_tokens: OrmlTokensConfig {
-            endowed_accounts: endowed_accounts
+            balances: endowed_accounts
                 .iter()
                 .flat_map(|x| {
                     vec![
@@ -295,7 +296,7 @@ fn testnet_genesis(
                 })
                 .collect(),
         },
-        pallet_currency_token: CurrencyTokenConfig {
+        currency_token: CurrencyTokenConfig {
             instance: (
                 get_account_id_from_seed::<sr25519::Public>("Alice"),
                 "currency token instance".as_bytes().to_vec(),
