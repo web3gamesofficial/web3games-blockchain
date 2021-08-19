@@ -1,17 +1,19 @@
 [package]
-name = "web3games-extensions-ce"
+name = "chain-extensions"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
+serde = { version = "1.0.124", features = ["derive"], optional = true }
 hex = { version = "0.4.2", optional = true }
 log = { version = "0.4.14", default-features = false }
 
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
+randomness = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
@@ -21,11 +23,12 @@ pallet-tokens = { default-features = false, path = "../../../pallets/tokens" }
 default = ["std"]
 std = [
   "codec/std",
-  "hex",
+  "serde/std",
   "log/std",
   "sp-runtime/std",
   "sp-std/std",
   "frame-support/std",
+  "randomness/std",
   "pallet-contracts/std",
   "primitives/std",
   "pallet-tokens/std",

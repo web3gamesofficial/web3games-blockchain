@@ -1,0 +1,37 @@
+[package]
+name = "precompile-utils"
+version = "0.1.0"
+authors = ["Web3Games Developers"]
+edition = "2018"
+
+[dependencies]
+log = "0.4.14"
+num_enum = { version = "0.5.3", default-features = false }
+
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
+
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
+
+precompile-utils-macro = { path = "macro" }
+
+[dev-dependencies]
+sha3 = "0.9"
+
+[features]
+default = ["std"]
+std = [
+    "codec/std",
+    "sp-std/std",
+    "sp-core/std",
+    "sp-io/std",
+    "frame-support/std",
+    "frame-system/std",
+    "pallet-evm/std",
+    "evm/std",
+]

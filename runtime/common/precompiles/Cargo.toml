@@ -1,33 +1,46 @@
 [package]
-name = "web3games-precompiles"
+name = "precompiles"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
 
 [dependencies]
+codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
+log = { version = "0.4.14", default-features = false }
 rustc-hex = { version = "2.0.1", default-features = false }
+num_enum = { version = "0.5.3", default-features = false }
 
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "master" }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 fp-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm-precompile-bn128 = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-log = { version = "0.4.14", default-features = false }
-
 evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
-pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
+
+pallet-tokens = { path = "../../../pallets/tokens", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
+precompile-utils = { path = "./utils", default-features = false }
 
 [features]
 default = [ "std" ]
 std = [
+	"codec/std",
+	"log/std",
+	"frame-system/std",
 	"frame-support/std",
 	"sp-std/std",
 	"sp-core/std",
 	"fp-evm/std",
 	"pallet-evm/std",
+	"pallet-evm-precompile-modexp/std",
+	"pallet-evm-precompile-bn128/std",
 	"pallet-evm-precompile-simple/std",
-	"log/std",
 	"evm/std",
 	"pallet-tokens/std",
+	"primitives/std",
+	"precompile-utils/std",
 ]

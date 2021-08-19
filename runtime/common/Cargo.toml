@@ -1,0 +1,16 @@
+[package]
+name = "runtime-common"
+version = "0.1.0"
+authors = ["Web3Games Developers"]
+edition = "2018"
+
+[dependencies]
+chain-extensions = { path = "./chain-extensions", default-features = false }
+precompiles = { path = "./precompiles", default-features = false }
+
+[features]
+default = [ "std" ]
+std = [
+	"chain-extensions/std",
+	"precompiles/std",
+]

@@ -312,7 +312,7 @@ impl pallet_contracts::Config for Runtime {
     type CallStack = [pallet_contracts::Frame<Self>; 31];
     type WeightPrice = pallet_transaction_payment::Pallet<Self>;
     type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-    type ChainExtension = ();
+    type ChainExtension = runtime_common::Web3gamesExtensions<Self>;
     type DeletionQueueDepth = DeletionQueueDepth;
     type DeletionWeightLimit = DeletionWeightLimit;
     type Schedule = Schedule;
@@ -352,7 +352,7 @@ impl pallet_evm::Config for Runtime {
     type Currency = Balances;
     type Event = Event;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
-    type Precompiles = precompiles::Web3gamesPrecompiles<Self>;
+    type Precompiles = runtime_common::Web3gamesPrecompiles<Self>;
     type ChainId = ChainId;
     type BlockGasLimit = BlockGasLimit;
     type OnChargeTransaction = ();
@@ -420,12 +420,6 @@ impl orml_currencies::Config for Runtime {
     type GetNativeCurrencyId = GetNativeCurrencyId;
     type WeightInfo = ();
 }
-
-impl precompiles::Config for Runtime {}
-
-// impl chain_extension::Config for Runtime {
-//     type Randomness = RandomnessCollectiveFlip;
-// }
 
 parameter_types! {
     pub const CreateInstanceDeposit: Balance = 500 * MILLICENTS;

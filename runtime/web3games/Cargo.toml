@@ -53,7 +53,6 @@ pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substr
 pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-# pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
 fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
@@ -62,15 +61,14 @@ orml-traits = { default-features = false, git = "https://github.com/web3gamesoff
 orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
 orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
 
-primitives = { package = "web3games-primitives", path = "../primitives", default-features = false }
-precompiles = { package = "web3games-precompiles", path = "./precompiles", default-features = false }
-# chain-extension = { package = "web3games-extensions-ce", path = "./extensions/ce", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
+runtime-common = { path = "../common", default-features = false }
 
 # local pallet
-pallet-tokens = { default-features = false, path = "../pallets/tokens" }
-pallet-currency-token = { default-features = false, path = "../pallets/currency-token" }
-pallet-dex = { default-features = false, path = "../pallets/dex" }
-pallet-nft = { default-features = false, path = "../pallets/nft" }
+pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
+pallet-currency-token = { default-features = false, path = "../../pallets/currency-token" }
+pallet-dex = { default-features = false, path = "../../pallets/dex" }
+pallet-nft = { default-features = false, path = "../../pallets/nft" }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
@@ -113,7 +111,9 @@ std = [
     "pallet-ethereum/std",
 	"pallet-evm/std",
 	"pallet-dynamic-fee/std",
-	"precompiles/std",
+	"primitives/std",
+	"runtime-common/std",
+	# "precompiles/std",
 	# "chain-extension/std",
 	"pallet-tokens/std",
 	"pallet-currency-token/std",

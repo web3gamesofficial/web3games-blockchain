@@ -3,7 +3,10 @@ members = [
     "node",
     "pallets/*",
     "primitives",
-    "runtime",
+    "runtime/common",
+    "runtime/common/chain-extensions",
+    "runtime/common/precompiles",
+    "runtime/web3games",
 ]
 
 [profile.release]
