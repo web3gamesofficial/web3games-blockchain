@@ -74,8 +74,8 @@ web3games-runtime = { path = "../runtime/web3games", default-features = false, f
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate" }
 
-# [features]
-# default = []
-# runtime-benchmarks = [
-# 	"web3games-runtime/runtime-benchmarks",
-# ]
+[features]
+default = []
+runtime-benchmarks = [
+	"web3games-runtime/runtime-benchmarks",
+]
