@@ -3,14 +3,14 @@ use structopt::StructOpt;
 #[allow(missing_docs)]
 #[derive(Debug, StructOpt)]
 pub struct RunCmd {
-    #[allow(missing_docs)]
-    #[structopt(flatten)]
-    pub base: sc_cli::RunCmd,
+	#[allow(missing_docs)]
+	#[structopt(flatten)]
+	pub base: sc_cli::RunCmd,
 
-    #[structopt(long = "enable-dev-signer")]
-    pub enable_dev_signer: bool,
+	#[structopt(long = "enable-dev-signer")]
+	pub enable_dev_signer: bool,
 
-    /// Maximum number of logs in a query.
+	/// Maximum number of logs in a query.
 	#[structopt(long, default_value = "10000")]
 	pub max_past_logs: u32,
 
@@ -21,37 +21,37 @@ pub struct RunCmd {
 
 #[derive(Debug, StructOpt)]
 pub struct Cli {
-    #[structopt(subcommand)]
-    pub subcommand: Option<Subcommand>,
+	#[structopt(subcommand)]
+	pub subcommand: Option<Subcommand>,
 
-    #[structopt(flatten)]
-    pub run: RunCmd,
+	#[structopt(flatten)]
+	pub run: RunCmd,
 }
 
 #[derive(Debug, StructOpt)]
 pub enum Subcommand {
-    /// Key management cli utilities
-    Key(sc_cli::KeySubcommand),
-    /// Build a chain specification.
-    BuildSpec(sc_cli::BuildSpecCmd),
+	/// Key management cli utilities
+	Key(sc_cli::KeySubcommand),
+	/// Build a chain specification.
+	BuildSpec(sc_cli::BuildSpecCmd),
 
-    /// Validate blocks.
-    CheckBlock(sc_cli::CheckBlockCmd),
+	/// Validate blocks.
+	CheckBlock(sc_cli::CheckBlockCmd),
 
-    /// Export blocks.
-    ExportBlocks(sc_cli::ExportBlocksCmd),
+	/// Export blocks.
+	ExportBlocks(sc_cli::ExportBlocksCmd),
 
-    /// Export the state of a given block into a chain spec.
-    ExportState(sc_cli::ExportStateCmd),
+	/// Export the state of a given block into a chain spec.
+	ExportState(sc_cli::ExportStateCmd),
 
-    /// Import blocks.
-    ImportBlocks(sc_cli::ImportBlocksCmd),
+	/// Import blocks.
+	ImportBlocks(sc_cli::ImportBlocksCmd),
 
-    /// Remove the whole chain.
-    PurgeChain(sc_cli::PurgeChainCmd),
+	/// Remove the whole chain.
+	PurgeChain(sc_cli::PurgeChainCmd),
 
-    /// Revert the chain to a previous state.
-    Revert(sc_cli::RevertCmd),
+	/// Revert the chain to a previous state.
+	Revert(sc_cli::RevertCmd),
 
 	/// The custom benchmark subcommmand benchmarking runtime pallets.
 	#[structopt(name = "benchmark", about = "Benchmark runtime pallets.")]

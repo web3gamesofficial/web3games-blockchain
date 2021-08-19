@@ -2,8 +2,8 @@
 
 use codec::Decode;
 use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
-use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use fp_evm::{Precompile, PrecompileSet};
+use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
@@ -19,19 +19,19 @@ pub struct Web3gamesPrecompiles<R>(PhantomData<R>);
 
 impl<R> PrecompileSet for Web3gamesPrecompiles<R>
 where
-    R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
-    <R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
-    R: pallet_evm::Config + pallet_tokens::Config,
-    // R::AccountId: From<H160>,
-    R::Call: From<pallet_tokens::Call<R>>,
+	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
+	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
+	R: pallet_evm::Config + pallet_tokens::Config,
+	// R::AccountId: From<H160>,
+	R::Call: From<pallet_tokens::Call<R>>,
 {
-    fn execute(
-        address: H160,
-        input: &[u8],
-        target_gas: Option<u64>,
-        context: &Context,
-    ) -> Option<core::result::Result<PrecompileOutput, ExitError>> {
-        match address {
+	fn execute(
+		address: H160,
+		input: &[u8],
+		target_gas: Option<u64>,
+		context: &Context,
+	) -> Option<core::result::Result<PrecompileOutput, ExitError>> {
+		match address {
 			// Ethereum precompiles
 			a if a == hash(1) => Some(ECRecover::execute(input, target_gas, context)),
 			a if a == hash(2) => Some(Sha256::execute(input, target_gas, context)),
@@ -41,14 +41,16 @@ where
 			a if a == hash(6) => Some(Bn128Add::execute(input, target_gas, context)),
 			a if a == hash(7) => Some(Bn128Mul::execute(input, target_gas, context)),
 			a if a == hash(8) => Some(Bn128Pairing::execute(input, target_gas, context)),
-            // Non-standard precompiles
+			// Non-standard precompiles
 
-            // Web3games precompiles
-            a if a == hash(10001) => Some(TokensPrecompile::<R>::execute(input, target_gas, context)),
-            // Not support
-            _ => None,
-        }
-    }
+			// Web3games precompiles
+			a if a == hash(10001) => {
+				Some(TokensPrecompile::<R>::execute(input, target_gas, context))
+			}
+			// Not support
+			_ => None,
+		}
+	}
 }
 
 fn hash(a: u64) -> H160 {
