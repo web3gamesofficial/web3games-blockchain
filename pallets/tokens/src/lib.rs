@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, HasCompact};
+use codec::{Decode, Encode, HasCompact, MaxEncodedLen};
 use frame_support::{
     ensure,
     dispatch::{DispatchError, DispatchResult},
@@ -61,13 +61,21 @@ pub mod pallet {
 
         type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
-        type TokenId: Member + Parameter + Default + Copy + HasCompact + From<u64> + Into<u64>;
+        type TokenId: Member
+            + Parameter
+            + Default
+            + Copy
+            + HasCompact
+            + MaxEncodedLen
+            + From<u64>
+            + Into<u64>;
 
         type InstanceId: Member
             + Parameter
             + AtLeast32BitUnsigned
             + Default
             + Copy
+            + MaxEncodedLen
             + From<u64>
             + Into<u64>;
     }
