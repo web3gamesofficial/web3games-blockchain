@@ -259,17 +259,11 @@ fn testnet_genesis(
 				.map(|x| (x.1.clone(), 1))
 				.collect(),
 		},
-		// pallet_contracts: ContractsConfig {
-		//     // println should only be enabled on development chains
-		//     current_schedule: pallet_contracts::Schedule::default()
-		//         .enable_println(enable_println),
-		// },
 		sudo: SudoConfig { key: root_key },
 		evm: EVMConfig {
 			accounts: evm_accounts,
 		},
 		ethereum: EthereumConfig {},
-		// dynamic_fee: DynamicFeeConfig {},
 		dynamic_fee: Default::default(),
 		orml_tokens: OrmlTokensConfig {
 			balances: endowed_accounts
