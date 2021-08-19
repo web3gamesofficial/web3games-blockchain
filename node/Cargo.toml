@@ -69,7 +69,7 @@ pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "
 pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-dynamic-fee = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 
-web3games-runtime = { path = "../runtime", default-features = false, features = ["std"] }
+web3games-runtime = { path = "../runtime/web3games", default-features = false, features = ["std"] }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate" }
