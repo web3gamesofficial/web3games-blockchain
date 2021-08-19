@@ -94,4 +94,4 @@ cargo run -- \
 
 ## License
 
-Web3Games is released under the [MIT License](LICENSE).
+Web3Games is released under the [GPL v3.0 License](LICENSE).
