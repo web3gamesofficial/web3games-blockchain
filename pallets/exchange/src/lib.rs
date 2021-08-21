@@ -747,7 +747,7 @@ impl<T: Config> Pallet<T> {
 	/// - `amount_out`: Amount of Tokens being bought.
 	/// - `reserve_in`: Amount of currency tokens in exchange reserves.
 	/// - `reserve_out`: Amount of Tokens in exchange reserves.
-	/// Return the price Amount of currency tokens to send to dex.
+	/// Return the price Amount of currency tokens to send to exchange.
 	pub fn get_buy_price(
 		amount_out: Balance,
 		reserve_in: Balance,
@@ -773,7 +773,7 @@ impl<T: Config> Pallet<T> {
 	/// - `amount_in`: Amount of Tokens being sold.
 	/// - `reserve_in`: Amount of Tokens in exchange reserves.
 	/// - `reserve_out`: Amount of currency tokens in exchange reserves.
-	/// Return the price Amount of currency tokens to receive from dex.
+	/// Return the price Amount of currency tokens to receive from exchange.
 	pub fn get_sell_price(
 		amount_in: Balance,
 		reserve_in: Balance,

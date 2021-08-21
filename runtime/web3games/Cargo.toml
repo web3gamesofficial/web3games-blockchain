@@ -67,7 +67,7 @@ runtime-common = { path = "../common", default-features = false }
 # local pallet
 pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
 pallet-wrap-currency = { default-features = false, path = "../../pallets/wrap-currency" }
-pallet-dex = { default-features = false, path = "../../pallets/dex" }
+pallet-exchange = { default-features = false, path = "../../pallets/exchange" }
 pallet-nft = { default-features = false, path = "../../pallets/nft" }
 
 [build-dependencies]
@@ -117,7 +117,7 @@ std = [
 	"runtime-common/std",
 	"pallet-tokens/std",
 	"pallet-wrap-currency/std",
-	"pallet-dex/std",
+	"pallet-exchange/std",
 	"pallet-nft/std",
 ]
 runtime-benchmarks = [
