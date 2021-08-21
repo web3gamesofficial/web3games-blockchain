@@ -16,7 +16,7 @@ pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-fe
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-tokens = { package = "pallet-tokens", path = "../tokens", default-features = false }
+token = { package = "pallet-token", path = "../token", default-features = false }
 wrap-currency = { package = "pallet-wrap-currency", path = "../wrap-currency", default-features = false }
 
 [dev-dependencies]
@@ -37,6 +37,6 @@ std = [
     "pallet-timestamp/std",
     "sp-core/std",
     "primitives/std",
-    "tokens/std",
+    "token/std",
     "wrap-currency/std",
 ]

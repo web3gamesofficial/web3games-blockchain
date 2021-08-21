@@ -747,7 +747,7 @@ dependencies = [
  "log",
  "pallet-contracts",
  "pallet-randomness-collective-flip",
- "pallet-tokens",
+ "pallet-token",
  "parity-scale-codec",
  "serde",
  "sp-runtime",
@@ -4417,7 +4417,7 @@ dependencies = [
  "orml-traits",
  "pallet-balances",
  "pallet-timestamp",
- "pallet-tokens",
+ "pallet-token",
  "pallet-wrap-currency",
  "parity-scale-codec",
  "sp-core",
@@ -4555,7 +4555,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-tokens"
+name = "pallet-token"
 version = "0.1.0"
 dependencies = [
  "frame-support",
@@ -4620,7 +4620,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "orml-traits",
- "pallet-tokens",
+ "pallet-token",
  "parity-scale-codec",
  "serde",
  "sp-core",
@@ -5060,7 +5060,7 @@ dependencies = [
  "pallet-evm-precompile-bn128",
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-simple",
- "pallet-tokens",
+ "pallet-token",
  "parity-scale-codec",
  "precompile-utils",
  "rustc-hex",
@@ -8831,7 +8831,7 @@ dependencies = [
  "pallet-scheduler",
  "pallet-sudo",
  "pallet-timestamp",
- "pallet-tokens",
+ "pallet-token",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-wrap-currency",

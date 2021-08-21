@@ -21,9 +21,9 @@ impl<R> PrecompileSet for Web3gamesPrecompiles<R>
 where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
-	R: pallet_evm::Config + pallet_tokens::Config,
+	R: pallet_evm::Config + pallet_token::Config,
 	// R::AccountId: From<H160>,
-	R::Call: From<pallet_tokens::Call<R>>,
+	R::Call: From<pallet_token::Call<R>>,
 {
 	fn execute(
 		address: H160,

@@ -18,7 +18,7 @@ sp-core = { git = "https://github.com/paritytech/substrate", default-features = 
 orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-token = { package = "pallet-tokens", path = "../tokens", default-features = false }
+token = { package = "pallet-token", path = "../token", default-features = false }
 
 [features]
 default = ["std"]

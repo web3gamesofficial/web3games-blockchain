@@ -1,4 +1,4 @@
-use crate as pallet_tokens;
+use crate as pallet_token;
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
@@ -18,7 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Tokens: pallet_tokens::{Pallet, Call, Storage, Event<T>},
+		Tokens: pallet_token::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -52,7 +52,7 @@ impl system::Config for Test {
 	type SS58Prefix = SS58Prefix;
 }
 
-impl pallet_tokens::Config for Test {
+impl pallet_token::Config for Test {
 	type Event = Event;
 	// type TokenBalance = u128;
 	type TokenId = u64;

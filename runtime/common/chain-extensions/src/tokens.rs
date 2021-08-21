@@ -9,7 +9,7 @@ use sp_std::{marker::PhantomData, vec, vec::Vec};
 
 pub struct TokensExtension;
 
-impl<C: pallet_contracts::Config + pallet_tokens::Config> ChainExtension<C> for TokensExtension {
+impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C> for TokensExtension {
 	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>
 	where
 		E: Ext<T = C>,
@@ -25,11 +25,11 @@ impl<C: pallet_contracts::Config + pallet_tokens::Config> ChainExtension<C> for 
 				let mut env = env.buf_in_buf_out();
 
 				let owner: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let instance_id: <E::T as pallet_tokens::Config>::InstanceId = env.read_as()?;
-				let token_id: <E::T as pallet_tokens::Config>::TokenId = env.read_as()?;
+				let instance_id: <E::T as pallet_token::Config>::InstanceId = env.read_as()?;
+				let token_id: <E::T as pallet_token::Config>::TokenId = env.read_as()?;
 
 				let balance: Balance =
-					pallet_tokens::Pallet::<E::T>::balance_of(&owner, instance_id, token_id);
+					pallet_token::Pallet::<E::T>::balance_of(&owner, instance_id, token_id);
 
 				let balance_slice = balance.encode();
 
@@ -60,8 +60,8 @@ impl<C: pallet_contracts::Config + pallet_tokens::Config> ChainExtension<C> for 
 				// let mut buffer = vec![0u8; in_len as usize];
 				// env.read_into(&mut &mut buffer[..])?;
 
-				let instance_id: <E::T as pallet_tokens::Config>::InstanceId = env.read_as()?;
-				let token_id: <E::T as pallet_tokens::Config>::TokenId = env.read_as()?;
+				let instance_id: <E::T as pallet_token::Config>::InstanceId = env.read_as()?;
+				let token_id: <E::T as pallet_token::Config>::TokenId = env.read_as()?;
 				let is_nf: bool = env.read_as()?;
 				// let uri: Vec<u8> = env.read_as()?;
 				let uri: Vec<u8> = vec![];
@@ -69,7 +69,7 @@ impl<C: pallet_contracts::Config + pallet_tokens::Config> ChainExtension<C> for 
 				let weight = 100_000;
 				env.charge_weight(weight)?;
 
-				pallet_tokens::Pallet::<E::T>::do_create_token(
+				pallet_token::Pallet::<E::T>::do_create_token(
 					&caller,
 					instance_id,
 					token_id,

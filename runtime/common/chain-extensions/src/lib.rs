@@ -14,7 +14,7 @@ pub use tokens::TokensExtension;
 
 pub struct Web3gamesExtensions<C>(PhantomData<C>);
 
-impl<C: pallet_contracts::Config + pallet_tokens::Config> ChainExtension<C>
+impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C>
 	for Web3gamesExtensions<C>
 {
 	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>

@@ -428,7 +428,7 @@ parameter_types! {
 	pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_tokens::Config for Runtime {
+impl pallet_token::Config for Runtime {
 	type Event = Event;
 	type CreateInstanceDeposit = CreateInstanceDeposit;
 	type Currency = Balances;
@@ -485,7 +485,7 @@ construct_runtime!(
 		OrmlCurrencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
 		// web3games pallets
-		Tokens: pallet_tokens::{Pallet, Call, Storage, Event<T>},
+		Tokens: pallet_token::{Pallet, Call, Storage, Event<T>},
 		CurrencyToken: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Dex: pallet_exchange::{Pallet, Call, Storage, Event<T>},
 		NFT: pallet_nft::{Pallet, Call, Storage, Event<T>},

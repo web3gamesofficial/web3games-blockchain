@@ -19,11 +19,11 @@ pub struct TokensPrecompile<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> Precompile for TokensPrecompile<Runtime>
 where
-	Runtime: pallet_tokens::Config + pallet_evm::Config,
+	Runtime: pallet_token::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_tokens::Call<Runtime>>,
+	Runtime::Call: From<pallet_token::Call<Runtime>>,
 {
 	fn execute(
 		input: &[u8], // reminder this is big-endian
@@ -56,11 +56,11 @@ where
 
 impl<Runtime> TokensPrecompile<Runtime>
 where
-	Runtime: pallet_tokens::Config + pallet_evm::Config,
+	Runtime: pallet_token::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_tokens::Call<Runtime>>,
+	Runtime::Call: From<pallet_token::Call<Runtime>>,
 {
 	fn balance_of(
 		mut input: EvmDataReader,
@@ -78,7 +78,7 @@ where
 
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		let balance: u128 = pallet_tokens::Pallet::<Runtime>::balance_of(
+		let balance: u128 = pallet_token::Pallet::<Runtime>::balance_of(
 			&account,
 			instance_id.into(),
 			token_id.into(),
@@ -98,7 +98,7 @@ where
 	) -> Result<
 		(
 			<Runtime::Call as Dispatchable>::Origin,
-			pallet_tokens::Call<Runtime>,
+			pallet_token::Call<Runtime>,
 		),
 		ExitError,
 	> {
@@ -112,7 +112,7 @@ where
 		let uri = input.read()?;
 
 		let origin = Runtime::AddressMapping::into_account_id(context.caller);
-		let call = pallet_tokens::Call::<Runtime>::create_token(
+		let call = pallet_token::Call::<Runtime>::create_token(
 			instance_id.into(),
 			token_id.into(),
 			is_nf,

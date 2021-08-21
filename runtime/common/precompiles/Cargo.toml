@@ -21,7 +21,7 @@ pallet-evm-precompile-bn128 = { default-features = false, git = "https://github.
 pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
 
-pallet-tokens = { path = "../../../pallets/tokens", default-features = false }
+pallet-token = { path = "../../../pallets/token", default-features = false }
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 precompile-utils = { path = "./utils", default-features = false }
 
@@ -40,7 +40,7 @@ std = [
 	"pallet-evm-precompile-bn128/std",
 	"pallet-evm-precompile-simple/std",
 	"evm/std",
-	"pallet-tokens/std",
+	"pallet-token/std",
 	"primitives/std",
 	"precompile-utils/std",
 ]

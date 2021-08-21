@@ -65,7 +65,7 @@ primitives = { package = "web3games-primitives", path = "../../primitives", defa
 runtime-common = { path = "../common", default-features = false }
 
 # local pallet
-pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
+pallet-token = { default-features = false, path = "../../pallets/token" }
 pallet-wrap-currency = { default-features = false, path = "../../pallets/wrap-currency" }
 pallet-exchange = { default-features = false, path = "../../pallets/exchange" }
 pallet-nft = { default-features = false, path = "../../pallets/nft" }
@@ -115,7 +115,7 @@ std = [
 	"pallet-dynamic-fee/std",
 	"primitives/std",
 	"runtime-common/std",
-	"pallet-tokens/std",
+	"pallet-token/std",
 	"pallet-wrap-currency/std",
 	"pallet-exchange/std",
 	"pallet-nft/std",
