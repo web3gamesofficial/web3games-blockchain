@@ -10,7 +10,7 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, CurrencyTokenConfig, EVMConfig,
+	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, WrapCurrencyConfig, EVMConfig,
 	EthereumConfig, GenesisConfig, GrandpaConfig, OrmlTokensConfig, Signature, SudoConfig,
 	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
 };
@@ -289,7 +289,7 @@ fn testnet_genesis(
 				})
 				.collect(),
 		},
-		currency_token: CurrencyTokenConfig {
+		wrap_currency: WrapCurrencyConfig {
 			instance: (
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				"currency token instance".as_bytes().to_vec(),

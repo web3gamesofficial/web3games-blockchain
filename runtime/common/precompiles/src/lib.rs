@@ -10,9 +10,9 @@ use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripe
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*, result, str::FromStr};
 
-pub mod tokens;
+pub mod token;
 
-pub use tokens::TokensPrecompile;
+pub use token::TokenPrecompile;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Web3gamesPrecompiles<R>(PhantomData<R>);
@@ -45,7 +45,7 @@ where
 
 			// Web3games precompiles
 			a if a == hash(10001) => {
-				Some(TokensPrecompile::<R>::execute(input, target_gas, context))
+				Some(TokenPrecompile::<R>::execute(input, target_gas, context))
 			}
 			// Not support
 			_ => None,

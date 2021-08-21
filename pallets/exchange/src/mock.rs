@@ -144,7 +144,7 @@ construct_runtime!(
 		Currencies: orml_currencies::{Pallet, Call, Event<T>},
 		Dex: pallet_dex::{Pallet, Call, Storage, Event<T>},
 		Token: token::{Pallet, Call, Storage, Event<T>},
-		CurrencyToken: currency_token::{Pallet, Call, Storage, Event<T>},
+		WrapCurrency: currency_token::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

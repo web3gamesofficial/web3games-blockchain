@@ -8,9 +8,9 @@ use pallet_contracts::chain_extension::{
 use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::{marker::PhantomData, vec::Vec};
 
-mod tokens;
+mod token;
 
-pub use tokens::TokensExtension;
+pub use token::TokenExtension;
 
 pub struct Web3gamesExtensions<C>(PhantomData<C>);
 
@@ -39,7 +39,7 @@ impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C>
 				Ok(RetVal::Converging(0))
 			}
 			// 0x800 - 0x880
-			id if id >= 2048 && id < 2176 => TokensExtension::call(func_id, env),
+			id if id >= 2048 && id < 2176 => TokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));

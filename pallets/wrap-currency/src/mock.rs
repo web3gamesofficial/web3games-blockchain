@@ -18,7 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		CurrencyToken: pallet_currency_token::{Pallet, Call, Storage, Event<T>},
+		WrapCurrency: pallet_currency_token::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

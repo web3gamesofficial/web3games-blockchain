@@ -10,7 +10,7 @@ fn last_event() -> mock::Event {
 }
 
 pub fn before_exchange() {
-	assert_ok!(CurrencyToken::mint(Origin::signed(1), W3G, 500 * CENTS));
+	assert_ok!(WrapCurrency::mint(Origin::signed(1), W3G, 500 * CENTS));
 
 	assert_ok!(Token::create_instance(Origin::signed(1), [0].to_vec()));
 	assert_ok!(Token::create_token(

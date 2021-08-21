@@ -7,9 +7,9 @@ use primitives::Balance;
 use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::{marker::PhantomData, vec, vec::Vec};
 
-pub struct TokensExtension;
+pub struct TokenExtension;
 
-impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C> for TokensExtension {
+impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C> for TokenExtension {
 	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>
 	where
 		E: Ext<T = C>,
