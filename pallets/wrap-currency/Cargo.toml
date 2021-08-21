@@ -1,5 +1,5 @@
 [package]
-name = "pallet-currency-token"
+name = "pallet-wrap-currency"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"

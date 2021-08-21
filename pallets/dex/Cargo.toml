@@ -17,7 +17,7 @@ sp-core = { git = "https://github.com/paritytech/substrate", default-features = 
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 tokens = { package = "pallet-tokens", path = "../tokens", default-features = false }
-currency-token = { package = "pallet-currency-token", path = "../currency-token", default-features = false }
+wrap-currency = { package = "pallet-wrap-currency", path = "../wrap-currency", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate" }
@@ -38,5 +38,5 @@ std = [
     "sp-core/std",
     "primitives/std",
     "tokens/std",
-    "currency-token/std",
+    "wrap-currency/std",
 ]

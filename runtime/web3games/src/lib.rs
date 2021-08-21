@@ -441,7 +441,7 @@ parameter_types! {
 	pub const DexModuleId: PalletId = PalletId(*b"w3g/dexm");
 }
 
-impl pallet_currency_token::Config for Runtime {
+impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = CurrencyTokenModuleId;
 	type Currency = OrmlCurrencies;
@@ -486,7 +486,7 @@ construct_runtime!(
 
 		// web3games pallets
 		Tokens: pallet_tokens::{Pallet, Call, Storage, Event<T>},
-		CurrencyToken: pallet_currency_token::{Pallet, Call, Storage, Event<T>, Config<T>},
+		CurrencyToken: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>, Config<T>},
 		Dex: pallet_dex::{Pallet, Call, Storage, Event<T>},
 		NFT: pallet_nft::{Pallet, Call, Storage, Event<T>},
 	}

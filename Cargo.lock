@@ -4298,23 +4298,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-currency-token"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "orml-traits",
- "pallet-tokens",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
- "web3games-primitives",
-]
-
-[[package]]
 name = "pallet-dex"
 version = "0.1.0"
 dependencies = [
@@ -4325,9 +4308,9 @@ dependencies = [
  "orml-tokens",
  "orml-traits",
  "pallet-balances",
- "pallet-currency-token",
  "pallet-timestamp",
  "pallet-tokens",
+ "pallet-wrap-currency",
  "parity-scale-codec",
  "sp-core",
  "sp-io",
@@ -4628,6 +4611,23 @@ dependencies = [
  "parity-scale-codec",
  "sp-api",
  "sp-runtime",
+]
+
+[[package]]
+name = "pallet-wrap-currency"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "orml-traits",
+ "pallet-tokens",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
+ "web3games-primitives",
 ]
 
 [[package]]
@@ -8821,7 +8821,6 @@ dependencies = [
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
- "pallet-currency-token",
  "pallet-dex",
  "pallet-dynamic-fee",
  "pallet-ethereum",
@@ -8835,6 +8834,7 @@ dependencies = [
  "pallet-tokens",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-wrap-currency",
  "parity-scale-codec",
  "runtime-common",
  "serde",

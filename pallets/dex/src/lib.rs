@@ -35,7 +35,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + currency_token::Config {
+	pub trait Config: frame_system::Config + wrap_currency::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		type PalletId: Get<PalletId>;
@@ -166,14 +166,14 @@ pub mod pallet {
 
 			let lp_instance = tokens::Pallet::<T>::do_create_instance(&fund_account, [].to_vec())?;
 
-			let (currency_instance, currency_token) =
-				currency_token::Pallet::<T>::get_currency_token(currency_id)?;
+			let (currency_instance, wrap_currency) =
+				wrap_currency::Pallet::<T>::get_currency_token(currency_id)?;
 
 			let new_exchange = Exchange {
 				creator: who.clone(),
 				token_instance,
 				currency_instance,
-				currency_token,
+				wrap_currency,
 				lp_instance,
 				vault: fund_account,
 			};
@@ -294,7 +294,7 @@ pub struct Exchange<
 	/// The instance of the currency
 	pub currency_instance: InstanceId,
 	/// The token of the currency instance
-	pub currency_token: TokenId,
+	pub wrap_currency: TokenId,
 	/// The instance of exchange liquidity pool
 	pub lp_instance: InstanceId,
 	/// The fund account of exchange
@@ -356,7 +356,7 @@ impl<T: Config> Pallet<T> {
 			who,
 			&exchange.vault,
 			exchange.currency_instance,
-			exchange.currency_token,
+			exchange.wrap_currency,
 			total_currency,
 		)?;
 
@@ -450,7 +450,7 @@ impl<T: Config> Pallet<T> {
 			&exchange.vault,
 			&to,
 			exchange.currency_instance,
-			exchange.currency_token,
+			exchange.wrap_currency,
 			total_currency,
 		)?;
 
@@ -497,7 +497,7 @@ impl<T: Config> Pallet<T> {
 
 			if exchange.currency_instance == exchange.token_instance {
 				ensure!(
-					exchange.currency_token != token_id,
+					exchange.wrap_currency != token_id,
 					Error::<T>::SameCurrencyAndToken
 				);
 			}
@@ -596,7 +596,7 @@ impl<T: Config> Pallet<T> {
 			&who,
 			&exchange.vault,
 			exchange.currency_instance,
-			exchange.currency_token,
+			exchange.wrap_currency,
 			total_currency,
 		)?;
 
@@ -717,7 +717,7 @@ impl<T: Config> Pallet<T> {
 			&exchange.vault,
 			&to,
 			exchange.currency_instance,
-			exchange.currency_token,
+			exchange.wrap_currency,
 			total_currency,
 		)?;
 

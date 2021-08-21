@@ -66,7 +66,7 @@ runtime-common = { path = "../common", default-features = false }
 
 # local pallet
 pallet-tokens = { default-features = false, path = "../../pallets/tokens" }
-pallet-currency-token = { default-features = false, path = "../../pallets/currency-token" }
+pallet-wrap-currency = { default-features = false, path = "../../pallets/wrap-currency" }
 pallet-dex = { default-features = false, path = "../../pallets/dex" }
 pallet-nft = { default-features = false, path = "../../pallets/nft" }
 
@@ -116,7 +116,7 @@ std = [
 	"primitives/std",
 	"runtime-common/std",
 	"pallet-tokens/std",
-	"pallet-currency-token/std",
+	"pallet-wrap-currency/std",
 	"pallet-dex/std",
 	"pallet-nft/std",
 ]
