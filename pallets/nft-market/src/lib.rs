@@ -28,8 +28,8 @@ pub type CollectionId = u64;
 
 #[derive(Encode, Decode, Copy, Clone, PartialEq, Eq, RuntimeDebug)]
 pub enum NftType {
-	ERC721,
-	ERC1155,
+	NonFungibleToken,
+	MultiToken,
 }
 
 /// Collection info
