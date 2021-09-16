@@ -271,8 +271,6 @@ impl<T: Config> Pallet<T> {
 		token_account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		Self::maybe_check_token_owner(who, token_account, token_id)?;
-
 		Balances::<T>::mutate(token_account, who, |balance| *balance -= 1);
 		Owners::<T>::remove(token_account, token_id);
 

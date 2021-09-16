@@ -117,6 +117,7 @@ pub mod pallet {
 		NumOverflow,
 		LengthMismatch,
 		NoPermission,
+		NotOwner,
 		TokenNotFound,
 		InvalidTokenAccount,
 	}
@@ -215,13 +216,13 @@ pub mod pallet {
 		pub fn burn(
 			origin: OriginFor<T>,
 			token_account: T::AccountId,
-			from: T::AccountId,
+			account: T::AccountId,
 			id: TokenId,
 			amount: Balance,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
-			Self::do_burn(&who, &token_account, &from, id, amount)?;
+			Self::do_burn(&who, &token_account, &account, id, amount)?;
 
 			Ok(().into())
 		}
@@ -230,13 +231,13 @@ pub mod pallet {
 		pub fn batch_burn(
 			origin: OriginFor<T>,
 			token_account: T::AccountId,
-			from: T::AccountId,
+			account: T::AccountId,
 			ids: Vec<TokenId>,
 			amounts: Vec<Balance>,
 		) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 
-			Self::do_batch_burn(&who, &token_account, &from, ids, amounts)?;
+			Self::do_batch_burn(&who, &token_account, &account, ids, amounts)?;
 
 			Ok(().into())
 		}
@@ -355,15 +356,15 @@ impl<T: Config> Pallet<T> {
 	pub fn do_burn(
 		who: &T::AccountId,
 		token_account: &T::AccountId,
-		from: &T::AccountId,
+		account: &T::AccountId,
 		id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::maybe_check_owner(who, token_account)?;
+		ensure!(who == account, Error::<T>::NotOwner);
 
-		Self::remove_balance_from(token_account, from, id, amount)?;
+		Self::remove_balance_from(token_account, account, id, amount)?;
 
-		Self::deposit_event(Event::Burn(token_account.clone(), from.clone(), id, amount));
+		Self::deposit_event(Event::Burn(token_account.clone(), account.clone(), id, amount));
 
 		Ok(())
 	}
@@ -371,11 +372,11 @@ impl<T: Config> Pallet<T> {
 	pub fn do_batch_burn(
 		who: &T::AccountId,
 		token_account: &T::AccountId,
-		from: &T::AccountId,
+		account: &T::AccountId,
 		ids: Vec<TokenId>,
 		amounts: Vec<Balance>,
 	) -> DispatchResult {
-		Self::maybe_check_owner(who, token_account)?;
+		ensure!(who == account, Error::<T>::NotOwner);
 		ensure!(ids.len() == amounts.len(), Error::<T>::LengthMismatch);
 
 		let n = ids.len();
@@ -383,12 +384,12 @@ impl<T: Config> Pallet<T> {
 			let id = ids[i];
 			let amount = amounts[i];
 
-			Self::remove_balance_from(token_account, from, id, amount)?;
+			Self::remove_balance_from(token_account, account, id, amount)?;
 		}
 
 		Self::deposit_event(Event::BatchBurn(
 			token_account.clone(),
-			from.clone(),
+			account.clone(),
 			ids,
 			amounts,
 		));
