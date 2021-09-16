@@ -1,42 +1,32 @@
 [package]
-name = "pallet-exchange"
+name = "pallet-nft-market"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-integer-sqrt = "0.1.2"
+
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
-sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false}
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-token = { package = "pallet-token", path = "../token", default-features = false }
-wrap-currency = { package = "pallet-wrap-currency", path = "../wrap-currency", default-features = false }
-
-[dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate" }
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
-orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
-orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
 
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "frame-support/std",
-    "frame-system/std",
+	"codec/std",
+	"frame-support/std",
+	"frame-system/std",
     "sp-std/std",
     "sp-io/std",
     "sp-runtime/std",
     "pallet-timestamp/std",
     "sp-core/std",
     "primitives/std",
-    "token/std",
-    "wrap-currency/std",
 ]

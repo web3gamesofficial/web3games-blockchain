@@ -8,13 +8,13 @@ use pallet_contracts::chain_extension::{
 use sp_runtime::{DispatchError, RuntimeDebug};
 use sp_std::{marker::PhantomData, vec::Vec};
 
-mod token;
+mod token_multi;
 
-pub use token::TokenExtension;
+pub use token_multi::TokenExtension;
 
 pub struct Web3gamesExtensions<C>(PhantomData<C>);
 
-impl<C: pallet_contracts::Config + pallet_token::Config> ChainExtension<C>
+impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 	for Web3gamesExtensions<C>
 {
 	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>

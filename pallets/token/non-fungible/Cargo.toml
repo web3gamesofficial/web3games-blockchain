@@ -1,6 +1,6 @@
 [package]
-name = 'pallet-token'
-version = '0.1.0'
+name = "pallet-token-non-fungible"
+version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
 
@@ -15,18 +15,18 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 
 [features]
-default = ['std']
+default = ["std"]
 std = [
-    'serde/std',
-    'codec/std',
-    'frame-support/std',
-    'frame-system/std',
-    'sp-std/std',
-    'sp-io/std',
-    'sp-runtime/std',
-    'primitives/std',
-    'sp-core/std',
+    "serde/std",
+    "codec/std",
+    "frame-support/std",
+    "frame-system/std",
+    "sp-std/std",
+    "sp-io/std",
+    "sp-runtime/std",
+    "primitives/std",
+    "sp-core/std",
 ]

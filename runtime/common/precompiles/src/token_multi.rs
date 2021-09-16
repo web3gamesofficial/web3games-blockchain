@@ -5,25 +5,26 @@ use pallet_evm::AddressMapping;
 use precompile_utils::{
 	error, Address, EvmData, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper,
 };
+use primitives::{Balance, TokenId};
 use sp_core::H160;
 use sp_std::{convert::TryInto, fmt::Debug, marker::PhantomData, prelude::*};
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
 enum Action {
-	BalanceOf = "balance_of(address,uint256,uint256)",
-	CreateToken = "create_token(address,uint256,uint256,bool,bytes)",
+	BalanceOf = "balance_of(address,address,uint256)",
+	CreateToken = "create_token(address,bytes)",
 }
 
 pub struct TokenPrecompile<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> Precompile for TokenPrecompile<Runtime>
 where
-	Runtime: pallet_token::Config + pallet_evm::Config,
+	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token::Call<Runtime>>,
+	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 {
 	fn execute(
 		input: &[u8], // reminder this is big-endian
@@ -56,11 +57,11 @@ where
 
 impl<Runtime> TokenPrecompile<Runtime>
 where
-	Runtime: pallet_token::Config + pallet_evm::Config,
+	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token::Call<Runtime>>,
+	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 {
 	fn balance_of(
 		mut input: EvmDataReader,
@@ -70,19 +71,17 @@ where
 
 		input.expect_arguments(3)?;
 		// let account: Runtime::AccountId = input.read::<Address>()?.0.into();
+		let token_account: Runtime::AccountId =
+			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
 		let account: Runtime::AccountId =
 			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
 
-		let instance_id = input.read::<u64>()?;
-		let token_id = input.read::<u64>()?;
+		let id = input.read::<TokenId>()?;
 
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		let balance: u128 = pallet_token::Pallet::<Runtime>::balance_of(
-			&account,
-			instance_id.into(),
-			token_id.into(),
-		);
+		let balance: Balance =
+			pallet_token_multi::Pallet::<Runtime>::balance_of(&token_account, &account, id.into());
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -98,26 +97,15 @@ where
 	) -> Result<
 		(
 			<Runtime::Call as Dispatchable>::Origin,
-			pallet_token::Call<Runtime>,
+			pallet_token_multi::Call<Runtime>,
 		),
 		ExitError,
 	> {
-		input.expect_arguments(5)?;
-		// let account: Runtime::AccountId = input.read::<Address>()?.0.into();
-		let account: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let instance_id = input.read::<u64>()?;
-		let token_id = input.read::<u64>()?;
-		let is_nf = input.read()?;
+		input.expect_arguments(1)?;
 		let uri = input.read()?;
 
 		let origin = Runtime::AddressMapping::into_account_id(context.caller);
-		let call = pallet_token::Call::<Runtime>::create_token(
-			instance_id.into(),
-			token_id.into(),
-			is_nf,
-			uri,
-		);
+		let call = pallet_token_multi::Call::<Runtime>::create_token(uri);
 
 		Ok((Some(origin).into(), call))
 	}

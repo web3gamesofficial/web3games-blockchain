@@ -56,8 +56,8 @@ pub type BlockId = generic::BlockId<Block>;
 /// Signed version of Balance
 pub type Amount = i128;
 
-///Currency ID
-// pub type CurrencyId = u64;
+/// Token ID
+pub type TokenId = u64;
 
 #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]

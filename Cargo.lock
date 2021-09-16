@@ -747,7 +747,7 @@ dependencies = [
  "log",
  "pallet-contracts",
  "pallet-randomness-collective-flip",
- "pallet-token",
+ "pallet-token-multi",
  "parity-scale-codec",
  "serde",
  "sp-runtime",
@@ -4406,19 +4406,35 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange"
+name = "pallet-exchange-nft-pool"
 version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
  "integer-sqrt",
- "orml-currencies",
- "orml-tokens",
- "orml-traits",
+ "log",
  "pallet-balances",
  "pallet-timestamp",
- "pallet-token",
- "pallet-wrap-currency",
+ "pallet-token-fungible",
+ "pallet-token-multi",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
+ "web3games-primitives",
+]
+
+[[package]]
+name = "pallet-exchange-pool"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "integer-sqrt",
+ "log",
+ "pallet-timestamp",
+ "pallet-token-fungible",
  "parity-scale-codec",
  "sp-core",
  "sp-io",
@@ -4450,7 +4466,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-nft"
+name = "pallet-nft-market"
 version = "0.1.0"
 dependencies = [
  "frame-support",
@@ -4461,6 +4477,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
+ "web3games-primitives",
 ]
 
 [[package]]
@@ -4525,19 +4542,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-template"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
-]
-
-[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate#44ee839d5b2a224da099d367df8313077776b736"
@@ -4555,7 +4559,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-token"
+name = "pallet-token-fungible"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
+ "web3games-primitives",
+]
+
+[[package]]
+name = "pallet-token-multi"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std 4.0.0-dev (git+https://github.com/paritytech/substrate)",
+ "web3games-primitives",
+]
+
+[[package]]
+name = "pallet-token-non-fungible"
 version = "0.1.0"
 dependencies = [
  "frame-support",
@@ -4620,7 +4654,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "orml-traits",
- "pallet-token",
+ "pallet-token-fungible",
  "parity-scale-codec",
  "serde",
  "sp-core",
@@ -5060,7 +5094,7 @@ dependencies = [
  "pallet-evm-precompile-bn128",
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-simple",
- "pallet-token",
+ "pallet-token-multi",
  "parity-scale-codec",
  "precompile-utils",
  "rustc-hex",
@@ -8824,14 +8858,17 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-exchange",
+ "pallet-exchange-nft-pool",
+ "pallet-exchange-pool",
  "pallet-grandpa",
- "pallet-nft",
+ "pallet-nft-market",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
  "pallet-timestamp",
- "pallet-token",
+ "pallet-token-fungible",
+ "pallet-token-multi",
+ "pallet-token-non-fungible",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-wrap-currency",

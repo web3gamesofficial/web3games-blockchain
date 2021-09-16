@@ -1,7 +1,10 @@
 [workspace]
 members = [
     "node",
-    "pallets/*",
+    "pallets/token/*",
+    "pallets/exchange/*",
+    "pallets/wrap-currency",
+    "pallets/nft-market",
     "primitives",
     "runtime/common",
     "runtime/common/chain-extensions",

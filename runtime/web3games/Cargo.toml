@@ -65,10 +65,13 @@ primitives = { package = "web3games-primitives", path = "../../primitives", defa
 runtime-common = { path = "../common", default-features = false }
 
 # local pallet
-pallet-token = { default-features = false, path = "../../pallets/token" }
-pallet-wrap-currency = { default-features = false, path = "../../pallets/wrap-currency" }
-pallet-exchange = { default-features = false, path = "../../pallets/exchange" }
-pallet-nft = { default-features = false, path = "../../pallets/nft" }
+pallet-token-fungible = { path = "../../pallets/token/fungible", default-features = false }
+pallet-token-non-fungible = { path = "../../pallets/token/non-fungible", default-features = false }
+pallet-token-multi = { path = "../../pallets/token/multi", default-features = false }
+pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
+pallet-exchange-pool = { path = "../../pallets/exchange/pool", default-features = false }
+pallet-exchange-nft-pool = { path = "../../pallets/exchange/nft-pool", default-features = false }
+pallet-nft-market = { path = "../../pallets/nft-market", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
@@ -115,10 +118,13 @@ std = [
 	"pallet-dynamic-fee/std",
 	"primitives/std",
 	"runtime-common/std",
-	"pallet-token/std",
+	"pallet-token-fungible/std",
+	"pallet-token-non-fungible/std",
+	"pallet-token-multi/std",
 	"pallet-wrap-currency/std",
-	"pallet-exchange/std",
-	"pallet-nft/std",
+	"pallet-exchange-pool/std",
+	"pallet-exchange-nft-pool/std",
+	"pallet-nft-market/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

@@ -422,41 +422,65 @@ impl orml_currencies::Config for Runtime {
 }
 
 parameter_types! {
-	pub const CreateInstanceDeposit: Balance = 500 * MILLICENTS;
-	pub const CreateExchangeDeposit: Balance = 500 * MILLICENTS;
+	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
+	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
 	pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token::Config for Runtime {
-	type Event = Event;
-	type CreateInstanceDeposit = CreateInstanceDeposit;
-	type Currency = Balances;
-	type TokenId = u64;
-	type InstanceId = u64;
+parameter_types! {
+	pub const TokenFungibleModuleId: PalletId = PalletId(*b"w3g/tofm");
+	pub const TokenNonFungibleModuleId: PalletId = PalletId(*b"w3g/tonf");
+	pub const TokenMultiModuleId: PalletId = PalletId(*b"w3g/tomm");
+	pub const WrapCurrencyModuleId: PalletId = PalletId(*b"w3g/wrap");
+	pub const PoolModuleId: PalletId = PalletId(*b"w3g/pool");
+	pub const NftPoolModuleId: PalletId = PalletId(*b"w3g/nftp");
 }
 
-parameter_types! {
-	pub const CurrencyTokenModuleId: PalletId = PalletId(*b"w3g/curr");
-	pub const ExchangeModuleId: PalletId = PalletId(*b"w3g/exch");
+impl pallet_token_fungible::Config for Runtime {
+	type Event = Event;
+	type PalletId = TokenFungibleModuleId;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
+}
+
+impl pallet_token_non_fungible::Config for Runtime {
+	type Event = Event;
+	type PalletId = TokenNonFungibleModuleId;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
+}
+
+impl pallet_token_multi::Config for Runtime {
+	type Event = Event;
+	type PalletId = TokenMultiModuleId;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
 }
 
 impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
-	type PalletId = CurrencyTokenModuleId;
+	type PalletId = WrapCurrencyModuleId;
 	type Currency = OrmlCurrencies;
-	type CreateCurrencyInstanceDeposit = CreateCurrencyInstanceDeposit;
+	type CreateWrapTokenDeposit = CreateCurrencyInstanceDeposit;
 	type GetNativeCurrencyId = GetNativeCurrencyId;
 }
 
-impl pallet_exchange::Config for Runtime {
+impl pallet_exchange_pool::Config for Runtime {
 	type Event = Event;
-	type PalletId = ExchangeModuleId;
-	type CreateExchangeDeposit = CreateExchangeDeposit;
+	type PalletId = PoolModuleId;
+	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
 
-impl pallet_nft::Config for Runtime {
+impl pallet_exchange_nft_pool::Config for Runtime {
+	type Event = Event;
+	type PalletId = NftPoolModuleId;
+	type CreatePoolDeposit = CreatePoolDeposit;
+	type Currency = Balances;
+}
+
+impl pallet_nft_market::Config for Runtime {
 	type Event = Event;
 	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
@@ -485,10 +509,13 @@ construct_runtime!(
 		OrmlCurrencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
 		// web3games pallets
-		Token: pallet_token::{Pallet, Call, Storage, Event<T>},
-		WrapCurrency: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>, Config<T>},
-		Exchange: pallet_exchange::{Pallet, Call, Storage, Event<T>},
-		NFT: pallet_nft::{Pallet, Call, Storage, Event<T>},
+		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
+		TokenNonFungible: pallet_token_non_fungible::{Pallet, Call, Storage, Event<T>},
+		TokenMulti: pallet_token_multi::{Pallet, Call, Storage, Event<T>},
+		WrapCurrency: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>},
+		ExchangePool: pallet_exchange_pool::{Pallet, Call, Storage, Event<T>},
+		ExchangeNftPool: pallet_exchange_nft_pool::{Pallet, Call, Storage, Event<T>},
+		NftMarket: pallet_nft_market::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

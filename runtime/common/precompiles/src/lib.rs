@@ -10,9 +10,9 @@ use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripe
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*, result, str::FromStr};
 
-pub mod token;
+pub mod token_multi;
 
-pub use token::TokenPrecompile;
+pub use token_multi::TokenPrecompile;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Web3gamesPrecompiles<R>(PhantomData<R>);
@@ -21,9 +21,9 @@ impl<R> PrecompileSet for Web3gamesPrecompiles<R>
 where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
-	R: pallet_evm::Config + pallet_token::Config,
+	R: pallet_evm::Config + pallet_token_multi::Config,
 	// R::AccountId: From<H160>,
-	R::Call: From<pallet_token::Call<R>>,
+	R::Call: From<pallet_token_multi::Call<R>>,
 {
 	fn execute(
 		address: H160,
