@@ -2,14 +2,13 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-	dispatch::{DispatchError, DispatchResult},
 	traits::Get,
 	PalletId,
 };
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
-use primitives::{Balance, CurrencyId, TokenId};
+use primitives::{Balance, CurrencyId};
 use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
-use sp_std::{fmt::Debug, prelude::*};
+use sp_std::{prelude::*};
 
 pub use pallet::*;
 
@@ -83,7 +82,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
 		pub fn create_wrap_token(origin: OriginFor<T>, currency_id: CurrencyId) -> DispatchResult {
-			let who = ensure_signed(origin)?;
+			let _who = ensure_signed(origin)?;
 
 			let vault_account = Self::account_id();
 

@@ -7,13 +7,13 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, CurrencyId, TokenId};
+use primitives::{Balance, TokenId};
 use sp_core::U256;
 use sp_runtime::{
 	traits::{AccountIdConversion, One, Zero},
 	RuntimeDebug,
 };
-use sp_std::{convert::TryInto, fmt::Debug, prelude::*};
+use sp_std::{convert::TryInto, prelude::*};
 
 pub use pallet::*;
 

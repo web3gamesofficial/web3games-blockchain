@@ -3,11 +3,10 @@ use fp_evm::Precompile;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
 use precompile_utils::{
-	error, Address, EvmData, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper,
+	Address, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper,
 };
 use primitives::{Balance, TokenId};
-use sp_core::H160;
-use sp_std::{convert::TryInto, fmt::Debug, marker::PhantomData, prelude::*};
+use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]

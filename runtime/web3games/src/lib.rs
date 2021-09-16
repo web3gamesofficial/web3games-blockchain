@@ -392,7 +392,7 @@ impl pallet_scheduler::Config for Runtime {
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Zero::zero()
 	};
 }

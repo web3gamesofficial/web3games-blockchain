@@ -220,7 +220,7 @@ fn testnet_genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	enable_println: bool,
+	_enable_println: bool,
 ) -> GenesisConfig {
 	let built_in_evm_account = H160::from_str("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b").unwrap();
 	let mut evm_accounts = BTreeMap::new();
