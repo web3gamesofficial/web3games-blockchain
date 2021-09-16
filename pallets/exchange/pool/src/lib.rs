@@ -426,7 +426,7 @@ impl<T: Config> Pallet<T> {
 
 		let liquidity: Balance;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token);
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token)?;
 		if total_supply == Zero::zero() {
 			liquidity =
 				((amount_a * amount_b) * (amount_a * amount_b)) - Balance::from(MINIMUM_LIQUIDITY);
@@ -471,7 +471,7 @@ impl<T: Config> Pallet<T> {
 		let liquidity =
 			pallet_token_fungible::Pallet::<T>::balance_of(&pool.lp_token, &vault_account);
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token);
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token)?;
 
 		let amount_a = liquidity * balance_a / total_supply;
 		let amount_b = liquidity * balance_b / total_supply;

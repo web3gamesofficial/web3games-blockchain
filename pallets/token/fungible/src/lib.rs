@@ -100,11 +100,17 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		TokenCreated(T::AccountId, T::AccountId),
+		TokenTransferred(T::AccountId, T::AccountId, T::AccountId, Balance),
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
+		Unknown,
 		NumOverflow,
+		NoPermission,
+		NotOwner,
+		InvalidTokenAccount,
+		AmountExceedAllowance,
 	}
 
 	#[pallet::hooks]
@@ -125,12 +131,88 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::weight(10_000)]
+		pub fn transfer(
+			origin: OriginFor<T>,
+			token_account: T::AccountId,
+			recipient: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_transfer(&who, &token_account, &recipient, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn approve(
+			origin: OriginFor<T>,
+			token_account: T::AccountId,
+			spender: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_approve(&who, &token_account, &spender, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn transfer_from(
+			origin: OriginFor<T>,
+			token_account: T::AccountId,
+			sender: T::AccountId,
+			recipient: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_transfer_from(&who, &token_account, &sender, &recipient, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			token_account: T::AccountId,
+			account: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_mint(&who, &token_account, &account, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn burn(
+			origin: OriginFor<T>,
+			token_account: T::AccountId,
+			account: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_burn(&who, &token_account, &account, amount)?;
+
+			Ok(())
+		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
 	pub fn exists(token_account: &T::AccountId) -> bool {
 		Tokens::<T>::contains_key(token_account)
+	}
+
+	pub fn total_supply(token_account: &T::AccountId) -> Result<Balance, DispatchError> {
+		let token = Tokens::<T>::get(token_account).ok_or(Error::<T>::InvalidTokenAccount)?;
+		Ok(token.total_supply)
 	}
 
 	pub fn do_create_token(
@@ -168,13 +250,39 @@ impl<T: Config> Pallet<T> {
 		Ok(token_account)
 	}
 
+	pub fn do_transfer(
+		who: &T::AccountId,
+		token_account: &T::AccountId,
+		recipient: &T::AccountId,
+		amount: Balance,
+	) -> DispatchResult {
+
+		Self::decrease_balance(token_account, who, amount)?;
+		Self::increase_balance(token_account, recipient, amount)?;
+
+		Self::deposit_event(Event::TokenTransferred(token_account.clone(), who.clone(), recipient.clone(), amount));
+
+		Ok(())
+	}
+
 	pub fn do_transfer_from(
 		who: &T::AccountId,
 		token_account: &T::AccountId,
-		from: &T::AccountId,
-		to: &T::AccountId,
+		sender: &T::AccountId,
+		recipient: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
+		let key = ApprovalKey {
+			owner: sender.clone(),
+			operator: who.clone(),
+		};
+
+		Allowances::<T>::try_mutate(token_account, &key, |allowance| -> DispatchResult {
+			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+			Ok(())
+		})?;
+
+		Self::do_transfer(sender, token_account, recipient, amount)?;
 		Ok(())
 	}
 
@@ -184,6 +292,16 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
+		Tokens::<T>::try_mutate(token_account, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+			ensure!(who == &token.owner, Error::<T>::NoPermission);
+
+			let new_total_supply = token.total_supply.saturating_add(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
+		Self::increase_balance(token_account, account, amount)?;
+
 		Ok(())
 	}
 
@@ -193,10 +311,61 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
+		ensure!(who == account, Error::<T>::NotOwner);
+
+		Self::decrease_balance(token_account, account, amount)?;
+
+		Tokens::<T>::try_mutate(token_account, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+			let new_total_supply = token.total_supply.saturating_sub(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
+
 		Ok(())
 	}
 
-	pub fn total_supply(token_account: &T::AccountId) -> Balance {
-		Balance::default()
+	pub fn do_approve(
+		who: &T::AccountId,
+		token_account: &T::AccountId,
+		spender: &T::AccountId,
+		amount: Balance,
+	) -> DispatchResult {
+		let key = ApprovalKey {
+			owner: who.clone(),
+			operator: spender.clone(),
+		};
+
+		Allowances::<T>::try_mutate(token_account, &key, |allowance| -> DispatchResult {
+			*allowance = amount;
+			Ok(())
+		})?;
+		Ok(())
+	}
+
+	fn increase_balance(
+		token_account: &T::AccountId,
+		to: &T::AccountId,
+		amount: Balance,
+	) -> DispatchResult {
+		Balances::<T>::try_mutate(token_account, to, |balance| -> DispatchResult {
+			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+			Ok(())
+		})?;
+
+		Ok(())
+	}
+
+	fn decrease_balance(
+		token_account: &T::AccountId,
+		from: &T::AccountId,
+		amount: Balance,
+	) -> DispatchResult {
+		Balances::<T>::try_mutate(token_account, from, |balance| -> DispatchResult {
+			*balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+			Ok(())
+		})?;
+
+		Ok(())
 	}
 }
