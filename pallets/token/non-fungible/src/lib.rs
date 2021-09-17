@@ -7,7 +7,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, TokenId};
+use primitives::{Balance, TokenId, TokenIndex};
 use sp_runtime::{
 	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
 	RuntimeDebug,
@@ -24,8 +24,6 @@ mod tests;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-
-pub type TokenIndex = u32;
 
 #[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug)]
 pub struct Token<AccountId> {
@@ -212,9 +210,13 @@ impl<T: Config> Pallet<T> {
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
-		let index = Self::token_count();
+		let token_id = TokenCount::<T>::try_mutate(|count| -> Result<TokenIndex, DispatchError> {
+			let new_count = count.checked_add(One::one()).ok_or(Error::<T>::NumOverflow)?;
+			*count = new_count;
+			Ok(new_count)
+		})?;
 
-		let token_account: T::AccountId = <T as Config>::PalletId::get().into_sub_account(index);
+		let token_account: T::AccountId = <T as Config>::PalletId::get().into_sub_account(token_id);
 
 		let token = Token {
 			owner: who.clone(),
@@ -224,13 +226,6 @@ impl<T: Config> Pallet<T> {
 		};
 
 		Tokens::<T>::insert(&token_account, token);
-
-		TokenCount::<T>::try_mutate(|count| -> DispatchResult {
-			*count = count
-				.checked_add(One::one())
-				.ok_or(Error::<T>::NumOverflow)?;
-			Ok(())
-		})?;
 
 		Self::deposit_event(Event::TokenCreated(token_account.clone(), who.clone()));
 

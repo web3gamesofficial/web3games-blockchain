@@ -59,6 +59,12 @@ pub type Amount = i128;
 /// Token ID
 pub type TokenId = u64;
 
+/// Index of token created
+pub type TokenIndex = u32;
+
+// Index of pool created
+pub type PoolIndex = u32;
+
 #[derive(Encode, Decode, Eq, PartialEq, Copy, Clone, RuntimeDebug, PartialOrd, Ord)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum TokenSymbol {

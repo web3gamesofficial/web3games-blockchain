@@ -7,7 +7,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, TokenId};
+use primitives::{Balance, TokenId, TokenIndex};
 use sp_runtime::{
 	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
 	RuntimeDebug,
@@ -66,7 +66,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn token_count)]
-	pub(super) type TokenCount<T> = StorageValue<_, u64, ValueQuery>;
+	pub(super) type TokenCount<T> = StorageValue<_, TokenIndex, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn balances)]
@@ -256,9 +256,13 @@ impl<T: Config> Pallet<T> {
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
-		let index = Self::token_count();
+		let token_id = TokenCount::<T>::try_mutate(|count| -> Result<TokenIndex, DispatchError> {
+			let new_count = count.checked_add(One::one()).ok_or(Error::<T>::NumOverflow)?;
+			*count = new_count;
+			Ok(new_count)
+		})?;
 
-		let token_account: T::AccountId = <T as Config>::PalletId::get().into_sub_account(index);
+		let token_account: T::AccountId = <T as Config>::PalletId::get().into_sub_account(token_id);
 
 		let token = Token {
 			owner: who.clone(),
@@ -266,13 +270,6 @@ impl<T: Config> Pallet<T> {
 		};
 
 		Tokens::<T>::insert(&token_account, token);
-
-		TokenCount::<T>::try_mutate(|count| -> DispatchResult {
-			*count = count
-				.checked_add(One::one())
-				.ok_or(Error::<T>::NumOverflow)?;
-			Ok(())
-		})?;
 
 		Self::deposit_event(Event::TokenCreated(token_account.clone(), who.clone()));
 
