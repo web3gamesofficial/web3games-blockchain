@@ -516,6 +516,7 @@ construct_runtime!(
 		ExchangePool: pallet_exchange_pool::{Pallet, Call, Storage, Event<T>},
 		ExchangeNftPool: pallet_exchange_nft_pool::{Pallet, Call, Storage, Event<T>},
 		NftMarket: pallet_nft_market::{Pallet, Call, Storage, Event<T>},
+
 	}
 );
 

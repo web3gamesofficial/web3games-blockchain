@@ -72,6 +72,7 @@ pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features 
 pallet-exchange-pool = { path = "../../pallets/exchange/pool", default-features = false }
 pallet-exchange-nft-pool = { path = "../../pallets/exchange/nft-pool", default-features = false }
 pallet-nft-market = { path = "../../pallets/nft-market", default-features = false }
+pallet-offchain-worker = { path = "../../pallets/offchain-worker", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
@@ -125,6 +126,7 @@ std = [
 	"pallet-exchange-pool/std",
 	"pallet-exchange-nft-pool/std",
 	"pallet-nft-market/std",
+	"pallet-offchain-worker/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",
