@@ -481,7 +481,6 @@ impl<T: Config> Pallet<T> {
 		pallet_token_fungible::Pallet::<T>::do_burn(
 			&vault_account,
 			&pool.lp_token,
-			&vault_account,
 			liquidity,
 		).expect("do_burn fail");
 		pallet_token_fungible::Pallet::<T>::do_transfer_from(

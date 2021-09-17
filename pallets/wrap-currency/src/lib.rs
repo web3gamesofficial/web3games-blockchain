@@ -158,9 +158,8 @@ pub mod pallet {
 				<T as Config>::Currency::transfer(currency_id, &vault_account, &who, amount)?;
 
 				pallet_token_fungible::Pallet::<T>::do_burn(
-					&vault_account,
-					&token.token_account,
 					&who,
+					&token.token_account,
 					amount,
 				)?;
 

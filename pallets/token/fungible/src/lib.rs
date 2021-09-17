@@ -100,7 +100,8 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		TokenCreated(T::AccountId, T::AccountId),
-		TokenTransferred(T::AccountId, T::AccountId, T::AccountId, Balance),
+		Transfer(T::AccountId, T::AccountId, T::AccountId, Balance),
+		Approval(T::AccountId, T::AccountId, T::AccountId, Balance),
 	}
 
 	#[pallet::error]
@@ -193,12 +194,11 @@ pub mod pallet {
 		pub fn burn(
 			origin: OriginFor<T>,
 			token_account: T::AccountId,
-			account: T::AccountId,
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_burn(&who, &token_account, &account, amount)?;
+			Self::do_burn(&who, &token_account, amount)?;
 
 			Ok(())
 		}
@@ -257,7 +257,7 @@ impl<T: Config> Pallet<T> {
 		Self::decrease_balance(token_account, who, amount)?;
 		Self::increase_balance(token_account, recipient, amount)?;
 
-		Self::deposit_event(Event::TokenTransferred(token_account.clone(), who.clone(), recipient.clone(), amount));
+		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), recipient.clone(), amount));
 
 		Ok(())
 	}
@@ -299,18 +299,17 @@ impl<T: Config> Pallet<T> {
 		})?;
 		Self::increase_balance(token_account, account, amount)?;
 
+		Self::deposit_event(Event::Transfer(token_account.clone(), T::AccountId::default(), account.clone(), amount));
+
 		Ok(())
 	}
 
 	pub fn do_burn(
 		who: &T::AccountId,
 		token_account: &T::AccountId,
-		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		ensure!(who == account, Error::<T>::NotOwner);
-
-		Self::decrease_balance(token_account, account, amount)?;
+		Self::decrease_balance(token_account, who, amount)?;
 
 		Tokens::<T>::try_mutate(token_account, |maybe_token| -> DispatchResult {
 			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
@@ -318,6 +317,8 @@ impl<T: Config> Pallet<T> {
 			token.total_supply = new_total_supply;
 			Ok(())
 		})?;
+
+		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), T::AccountId::default(), amount));
 
 		Ok(())
 	}
@@ -334,9 +335,11 @@ impl<T: Config> Pallet<T> {
 		};
 
 		Allowances::<T>::try_mutate(token_account, &key, |allowance| -> DispatchResult {
-			*allowance = amount;
+			*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
+
+		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), spender.clone(), amount));
 		Ok(())
 	}
 
