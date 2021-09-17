@@ -6,9 +6,9 @@ use frame_support::{
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
 };
-use primitives::{Balance, CurrencyId, TokenId};
+use primitives::{Balance,TokenId};
 use sp_runtime::{
-	traits::{One, Zero},
+	traits::{One},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
@@ -48,7 +48,7 @@ pub struct Collection<AccountId> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
+	use frame_support::{pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
@@ -228,43 +228,43 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_add_sale(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		token_id: TokenId,
-		price: Balance,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
+		_token_id: TokenId,
+		_price: Balance,
 	) -> DispatchResult {
 		Ok(())
 	}
 
 	pub fn do_remove_sale(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		token_id: TokenId,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
+		_token_id: TokenId,
 	) -> DispatchResult {
 		Ok(())
 	}
 
 	pub fn do_update_price(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		token_id: TokenId,
-		price: Balance,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
+		_token_id: TokenId,
+		_price: Balance,
 	) -> DispatchResult {
 		Ok(())
 	}
 
 	pub fn do_offer(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		token_id: TokenId,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
+		_token_id: TokenId,
 	) -> DispatchResult {
 		Ok(())
 	}
 
 	pub fn do_accept_offer(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		token_id: TokenId,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
+		_token_id: TokenId,
 	) -> DispatchResult {
 		Ok(())
 	}

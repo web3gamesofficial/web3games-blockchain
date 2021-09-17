@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, HasCompact, MaxEncodedLen};
+use codec::{Decode, Encode};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
@@ -9,7 +9,7 @@ use frame_support::{
 };
 use primitives::{Balance, TokenId, TokenIndex};
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
+	traits::{AccountIdConversion, One},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
@@ -233,11 +233,11 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_transfer_from(
-		who: &T::AccountId,
-		token_account: &T::AccountId,
-		from: &T::AccountId,
-		to: &T::AccountId,
-		token_id: TokenId,
+		_who: &T::AccountId,
+		_token_account: &T::AccountId,
+		_from: &T::AccountId,
+		_to: &T::AccountId,
+		_token_id: TokenId,
 	) -> DispatchResult {
 		Ok(())
 	}

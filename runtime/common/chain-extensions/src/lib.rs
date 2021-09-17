@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{Encode};
 use frame_support::traits::Randomness;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
-use sp_runtime::{DispatchError, RuntimeDebug};
-use sp_std::{marker::PhantomData, vec::Vec};
+use sp_runtime::{DispatchError};
+use sp_std::{marker::PhantomData};
 
 mod token_multi;
 
@@ -17,7 +17,7 @@ pub struct Web3gamesExtensions<C>(PhantomData<C>);
 impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 	for Web3gamesExtensions<C>
 {
-	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>
+	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
 		E: Ext<T = C>,
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,

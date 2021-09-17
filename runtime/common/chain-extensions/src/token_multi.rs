@@ -1,18 +1,17 @@
-use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::traits::Randomness;
+use codec::{Encode};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::{Balance, TokenId};
-use sp_runtime::{DispatchError, RuntimeDebug};
-use sp_std::{marker::PhantomData, vec, vec::Vec};
+use sp_runtime::{DispatchError};
+use sp_std::{vec,vec::Vec};
 
 pub struct TokenExtension;
 
 impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 	for TokenExtension
 {
-	fn call<E>(func_id: u32, mut env: Environment<E, InitState>) -> Result<RetVal>
+	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
 		E: Ext<T = C>,
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,

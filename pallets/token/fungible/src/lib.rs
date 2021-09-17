@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, HasCompact, MaxEncodedLen};
+use codec::{Decode, Encode};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
@@ -9,7 +9,7 @@ use frame_support::{
 };
 use primitives::{Balance, TokenIndex};
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
+	traits::{AccountIdConversion, One},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
