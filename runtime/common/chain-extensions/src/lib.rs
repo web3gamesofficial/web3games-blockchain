@@ -10,7 +10,7 @@ use sp_std::{marker::PhantomData};
 
 mod token_multi;
 
-pub use token_multi::TokenExtension;
+pub use token_multi::MultiTokenExtension;
 
 pub struct Web3gamesExtensions<C>(PhantomData<C>);
 
@@ -23,6 +23,7 @@ impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
 	{
 		match func_id {
+			// 0x00-0x1000(0-4096): substrate pallet
 			1024 => {
 				let mut env = env.buf_in_buf_out();
 				let random_slice = <E::T as pallet_contracts::Config>::Randomness::random_seed()
@@ -38,8 +39,12 @@ impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 
 				Ok(RetVal::Converging(0))
 			}
-			// 0x800 - 0x880
-			id if id >= 2048 && id < 2176 => TokenExtension::call(func_id, env),
+			// 0x1000-0x1040: token-fungible
+
+			// 0x1040-0x1080: token-non-fungible
+
+			// 0x1080-0x10c0(4224-4288): token-multi
+			id if id >= 4224 && id < 4288 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));

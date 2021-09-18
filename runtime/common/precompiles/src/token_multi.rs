@@ -15,9 +15,9 @@ enum Action {
 	CreateToken = "create_token(address,bytes)",
 }
 
-pub struct TokenPrecompile<Runtime>(PhantomData<Runtime>);
+pub struct MultiTokenExtension<Runtime>(PhantomData<Runtime>);
 
-impl<Runtime> Precompile for TokenPrecompile<Runtime>
+impl<Runtime> Precompile for MultiTokenExtension<Runtime>
 where
 	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,
@@ -54,7 +54,7 @@ where
 	}
 }
 
-impl<Runtime> TokenPrecompile<Runtime>
+impl<Runtime> MultiTokenExtension<Runtime>
 where
 	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	// Runtime::AccountId: From<H160>,

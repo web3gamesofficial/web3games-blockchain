@@ -6,10 +6,10 @@ use primitives::{Balance, TokenId};
 use sp_runtime::{DispatchError};
 use sp_std::{vec,vec::Vec};
 
-pub struct TokenExtension;
+pub struct MultiTokenExtension;
 
 impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
-	for TokenExtension
+	for MultiTokenExtension
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
@@ -17,7 +17,7 @@ impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
 	{
 		match func_id {
-			2048 => {
+			4224 => {
 				// fn balance_of(
 				//     token_account: &T::AccountId,
 				//     account: &T::AccountId,
@@ -44,7 +44,7 @@ impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
 			}
-			2049 => {
+			4225 => {
 				// do_create_token(
 				//     who: &T::AccountId,
 				//     uri: Vec<u8>,
@@ -60,7 +60,8 @@ impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
 				let weight = 100_000;
 				env.charge_weight(weight)?;
 
-				pallet_token_multi::Pallet::<E::T>::do_create_token(&caller, uri)?;
+				// pallet_token_multi::Pallet::<E::T>::do_create_token(&caller, uri)?;
+				pallet_token_multi::Call::<E::T>::create_token(uri);
 			}
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);

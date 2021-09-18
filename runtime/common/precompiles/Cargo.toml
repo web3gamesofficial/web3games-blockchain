@@ -19,6 +19,8 @@ pallet-evm = { default-features = false, git = "https://github.com/web3gamesoffi
 pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm-precompile-bn128 = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm-precompile-dispatch = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
 evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
 
 pallet-token-multi = { path = "../../../pallets/token/multi", default-features = false }
@@ -39,6 +41,8 @@ std = [
 	"pallet-evm-precompile-modexp/std",
 	"pallet-evm-precompile-bn128/std",
 	"pallet-evm-precompile-simple/std",
+	"pallet-evm-precompile-sha3fips/std",
+	"pallet-evm-precompile-dispatch/std",
 	"evm/std",
 	"pallet-token-multi/std",
 	"primitives/std",
