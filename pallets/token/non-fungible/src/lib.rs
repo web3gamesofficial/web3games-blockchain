@@ -355,11 +355,11 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_transfer_from(
-		_who: &T::AccountId,
-		_token_account: &T::AccountId,
-		_from: &T::AccountId,
-		_to: &T::AccountId,
-		_token_id: TokenId,
+		who: &T::AccountId,
+		token_account: &T::AccountId,
+		from: &T::AccountId,
+		to: &T::AccountId,
+		token_id: TokenId,
 	) -> DispatchResult {
 		ensure!(Self::is_approved_or_owner(token_account, who, token_id), Error::<T>::NotOwnerOrApproved);
 		
