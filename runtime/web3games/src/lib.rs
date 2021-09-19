@@ -18,6 +18,7 @@ use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
 use sp_runtime::traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor, Zero};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
+	traits::{AccountIdConversion},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult,
 };
@@ -31,7 +32,9 @@ use static_assertions::const_assert;
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Everything, FindAuthor, KeyOwnerProofSystem, Nothing, Randomness},
+	traits::{
+		Contains, Everything, FindAuthor, KeyOwnerProofSystem, Nothing, Randomness,
+	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		DispatchClass, IdentityFee, Weight,
@@ -52,7 +55,8 @@ use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 pub use pallet_timestamp::Call as TimestampCall;
-use pallet_transaction_payment::CurrencyAdapter;
+pub use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
+use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
@@ -196,9 +200,14 @@ impl frame_system::Config for Runtime {
 	type OnSetCode = ();
 }
 
+parameter_types! {
+	pub const MaxAuthorities: u32 = 32;
+}
+
 impl pallet_aura::Config for Runtime {
 	type AuthorityId = AuraId;
 	type DisabledValidators = ();
+	type MaxAuthorities = MaxAuthorities;
 }
 
 impl pallet_grandpa::Config for Runtime {
@@ -265,16 +274,10 @@ impl pallet_transaction_payment::Config for Runtime {
 }
 
 parameter_types! {
-	pub TombstoneDeposit: Balance = deposit(
+	pub ContractDeposit: Balance = deposit(
 		1,
 		<pallet_contracts::Pallet<Runtime>>::contract_info_size(),
 	);
-	pub DepositPerContract: Balance = TombstoneDeposit::get();
-	pub const DepositPerStorageByte: Balance = deposit(0, 1);
-	pub const DepositPerStorageItem: Balance = deposit(1, 0);
-	pub RentFraction: Perbill = Perbill::from_rational(1u32, 30 * DAYS);
-	pub const SurchargeReward: Balance = 150 * MILLICENTS;
-	pub const SignedClaimHandicap: u32 = 2;
 	pub const MaxValueSize: u32 = 16 * 1024;
 	// The lazy deletion runs inside on_initialize.
 	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
@@ -301,18 +304,11 @@ impl pallet_contracts::Config for Runtime {
 	/// change because that would break already deployed contracts. The `Call` structure itself
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = Nothing;
-	type RentPayment = ();
-	type SignedClaimHandicap = SignedClaimHandicap;
-	type TombstoneDeposit = TombstoneDeposit;
-	type DepositPerContract = DepositPerContract;
-	type DepositPerStorageByte = DepositPerStorageByte;
-	type DepositPerStorageItem = DepositPerStorageItem;
-	type RentFraction = RentFraction;
-	type SurchargeReward = SurchargeReward;
+	type ContractDeposit = ContractDeposit;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-	type ChainExtension = runtime_common::Web3gamesExtensions<Self>;
+	type ChainExtension = ();
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
@@ -391,6 +387,13 @@ impl pallet_scheduler::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+pub struct DustRemovalWhitelist;
+impl Contains<AccountId> for DustRemovalWhitelist {
+	fn contains(a: &AccountId) -> bool {
+		get_all_pallet_accounts().contains(a)
+	}
+}
+
 parameter_type_with_key! {
 	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Zero::zero()
@@ -406,7 +409,7 @@ impl orml_tokens::Config for Runtime {
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
 	type MaxLocks = MaxLocks;
-	type DustRemovalWhitelist = ();
+	type DustRemovalWhitelist = DustRemovalWhitelist;
 }
 
 parameter_types! {
@@ -428,39 +431,52 @@ parameter_types! {
 	pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
+pub fn get_all_pallet_accounts() -> Vec<AccountId> {
+	vec![
+		TokenFungiblePalletId::get().into_account(),
+		TokenNonFungiblePalletId::get().into_account(),
+		TokenMultiPalletId::get().into_account(),
+		WrapCurrencyPalletId::get().into_account(),
+		PoolPalletId::get().into_account(),
+		NftPoolPalletId::get().into_account(),
+		ZeroAccountId::get(),
+	]
+}
+
 parameter_types! {
-	pub const TokenFungibleModuleId: PalletId = PalletId(*b"w3g/tofm");
-	pub const TokenNonFungibleModuleId: PalletId = PalletId(*b"w3g/tonf");
-	pub const TokenMultiModuleId: PalletId = PalletId(*b"w3g/tomm");
-	pub const WrapCurrencyModuleId: PalletId = PalletId(*b"w3g/wrap");
-	pub const PoolModuleId: PalletId = PalletId(*b"w3g/pool");
-	pub const NftPoolModuleId: PalletId = PalletId(*b"w3g/nftp");
+	pub const TokenFungiblePalletId: PalletId = PalletId(*b"w3g/tofm");
+	pub const TokenNonFungiblePalletId: PalletId = PalletId(*b"w3g/tonf");
+	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tomm");
+	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
+	pub const PoolPalletId: PalletId = PalletId(*b"w3g/pool");
+	pub const NftPoolPalletId: PalletId = PalletId(*b"w3g/nftp");
+	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 }
 
 impl pallet_token_fungible::Config for Runtime {
 	type Event = Event;
-	type PalletId = TokenFungibleModuleId;
+	type PalletId = TokenFungiblePalletId;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
 
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
-	type PalletId = TokenNonFungibleModuleId;
+	type PalletId = TokenNonFungiblePalletId;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
 
 impl pallet_token_multi::Config for Runtime {
 	type Event = Event;
-	type PalletId = TokenMultiModuleId;
+	type PalletId = TokenMultiPalletId;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
 
 impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
-	type PalletId = WrapCurrencyModuleId;
+	type PalletId = WrapCurrencyPalletId;
 	type Currency = OrmlCurrencies;
 	type CreateWrapTokenDeposit = CreateCurrencyInstanceDeposit;
 	type GetNativeCurrencyId = GetNativeCurrencyId;
@@ -468,14 +484,14 @@ impl pallet_wrap_currency::Config for Runtime {
 
 impl pallet_exchange_pool::Config for Runtime {
 	type Event = Event;
-	type PalletId = PoolModuleId;
+	type PalletId = PoolPalletId;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
 
 impl pallet_exchange_nft_pool::Config for Runtime {
 	type Event = Event;
-	type PalletId = NftPoolModuleId;
+	type PalletId = NftPoolPalletId;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
@@ -640,7 +656,7 @@ impl_runtime_apis! {
 		}
 
 		fn authorities() -> Vec<AuraId> {
-			Aura::authorities()
+			Aura::authorities().into_inner()
 		}
 	}
 
@@ -714,9 +730,9 @@ impl_runtime_apis! {
 			code: pallet_contracts_primitives::Code<Hash>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, BlockNumber>
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId>
 		{
-			Contracts::bare_instantiate(origin, endowment, gas_limit, code, data, salt, true, true)
+			Contracts::bare_instantiate(origin, endowment, gas_limit, code, data, salt, true)
 		}
 
 		fn get_storage(
@@ -724,12 +740,6 @@ impl_runtime_apis! {
 			key: [u8; 32],
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
-		}
-
-		fn rent_projection(
-			address: AccountId,
-		) -> pallet_contracts_primitives::RentProjectionResult<BlockNumber> {
-			Contracts::rent_projection(address)
 		}
 	}
 
@@ -856,17 +866,10 @@ impl_runtime_apis! {
 		Block,
 		Balance,
 	> for Runtime {
-		fn query_info(
-			uxt: <Block as BlockT>::Extrinsic,
-			len: u32
-		) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+		fn query_info(uxt: <Block as BlockT>::Extrinsic, len: u32) -> RuntimeDispatchInfo<Balance> {
 			TransactionPayment::query_info(uxt, len)
 		}
-
-		fn query_fee_details(
-			uxt: <Block as BlockT>::Extrinsic,
-			len: u32,
-		) -> pallet_transaction_payment::FeeDetails<Balance> {
+		fn query_fee_details(uxt: <Block as BlockT>::Extrinsic, len: u32) -> FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
 		}
 	}
