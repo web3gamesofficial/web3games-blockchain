@@ -7,7 +7,7 @@ use frame_support::{
 	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, TokenId, PoolIndex};
+use primitives::{Balance, PoolIndex, TokenId};
 use sp_core::U256;
 use sp_runtime::{
 	traits::{AccountIdConversion, One, Zero},
@@ -174,11 +174,12 @@ pub mod pallet {
 				Error::<T>::TokenAccountNotFound
 			);
 
-			let pool_id = PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
-				let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
-				*count = new_count;
-				Ok(new_count)
-			})?;
+			let pool_id =
+				PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
+					let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
+					*count = new_count;
+					Ok(new_count)
+				})?;
 
 			let pool_account = Self::pool_account_id(pool_id);
 

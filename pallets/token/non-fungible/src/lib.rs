@@ -2,8 +2,9 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
+	debug,
 	dispatch::{DispatchError, DispatchResult},
-	ensure, debug,
+	ensure,
 	traits::{Currency, Get, ReservableCurrency},
 	PalletId,
 };
@@ -115,13 +116,8 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn total_supply)]
-	pub(super) type TotalSupply<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::AccountId,
-		u32,
-		ValueQuery,
-	>;
+	pub(super) type TotalSupply<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, u32, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn token_by_index)]
@@ -327,15 +323,26 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 	) -> DispatchResult {
 		let owner = Self::owner_of(token_account, token_id);
-		ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+		ensure!(
+			owner != T::AccountId::default(),
+			Error::<T>::TokenNonExistent
+		);
 
 		ensure!(*to != owner, Error::<T>::ApproveToCurrentOwner);
-		ensure!(*who == owner || Self::is_approved_for_all(token_account, (&owner, who)), Error::<T>::NotOwnerOrApproved);
+		ensure!(
+			*who == owner || Self::is_approved_for_all(token_account, (&owner, who)),
+			Error::<T>::NotOwnerOrApproved
+		);
 
 		TokenApprovals::<T>::insert(token_account, token_id, to);
 
-		Self::deposit_event(Event::Approval(token_account.clone(), owner.clone(), to.clone(), token_id));
-		
+		Self::deposit_event(Event::Approval(
+			token_account.clone(),
+			owner.clone(),
+			to.clone(),
+			token_id,
+		));
+
 		Ok(())
 	}
 
@@ -349,7 +356,12 @@ impl<T: Config> Pallet<T> {
 
 		OperatorApprovals::<T>::insert(token_account, (who, operator), approved);
 
-		Self::deposit_event(Event::ApprovalForAll(token_account.clone(), who.clone(), operator.clone(), approved));
+		Self::deposit_event(Event::ApprovalForAll(
+			token_account.clone(),
+			who.clone(),
+			operator.clone(),
+			approved,
+		));
 
 		Ok(())
 	}
@@ -361,24 +373,30 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(Self::is_approved_or_owner(token_account, who, token_id), Error::<T>::NotOwnerOrApproved);
-		
+		ensure!(
+			Self::is_approved_or_owner(token_account, who, token_id),
+			Error::<T>::NotOwnerOrApproved
+		);
+
 		let owner = Self::owner_of(token_account, token_id);
-		ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+		ensure!(
+			owner != T::AccountId::default(),
+			Error::<T>::TokenNonExistent
+		);
 		ensure!(owner == *from, Error::<T>::NotTokenOwner);
 
 		let balance_from = Self::balance_of(token_account, from);
 		let balance_to = Self::balance_of(token_account, to);
 
 		let new_balance_from = match balance_from.checked_sub(1) {
-            Some (c) => c,
-            None => return Err(Error::<T>::Underflow.into()),
-        };
+			Some(c) => c,
+			None => return Err(Error::<T>::Underflow.into()),
+		};
 
-        let new_balance_to = match balance_to.checked_add(1) {
-            Some(c) => c,
-            None => return Err(Error::<T>::Overflow.into()),
-        };
+		let new_balance_to = match balance_to.checked_add(1) {
+			Some(c) => c,
+			None => return Err(Error::<T>::Overflow.into()),
+		};
 
 		Self::remove_token_from_owner_enumeration(token_account, from, token_id)?;
 		Self::add_token_to_owner_enumeration(token_account, to, token_id)?;
@@ -389,7 +407,12 @@ impl<T: Config> Pallet<T> {
 		Balances::<T>::insert(token_account, to, new_balance_to);
 		Owners::<T>::insert(token_account, token_id, to);
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), from.clone(), to.clone(), token_id));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			from.clone(),
+			to.clone(),
+			token_id,
+		));
 
 		Ok(())
 	}
@@ -401,14 +424,17 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 	) -> DispatchResult {
 		Self::maybe_check_permission(who, token_account)?;
-		ensure!(!Self::exists(token_account, token_id), Error::<T>::TokenAlreadyMinted);
+		ensure!(
+			!Self::exists(token_account, token_id),
+			Error::<T>::TokenAlreadyMinted
+		);
 
 		let balance = Self::balance_of(token_account, to);
 
 		let new_balance = match balance.checked_add(One::one()) {
-            Some(c) => c,
-            None => return Err(Error::<T>::Overflow.into()),
-        };
+			Some(c) => c,
+			None => return Err(Error::<T>::Overflow.into()),
+		};
 
 		Self::add_token_to_all_tokens_enumeration(token_account, token_id)?;
 		Self::add_token_to_owner_enumeration(token_account, to, token_id)?;
@@ -416,7 +442,12 @@ impl<T: Config> Pallet<T> {
 		Balances::<T>::insert(token_account, to, new_balance);
 		Owners::<T>::insert(token_account, token_id, to);
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), T::AccountId::default(), to.clone(), token_id));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			T::AccountId::default(),
+			to.clone(),
+			token_id,
+		));
 
 		Ok(())
 	}
@@ -427,25 +458,33 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 	) -> DispatchResult {
 		let owner = Self::owner_of(token_account, token_id);
-		ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+		ensure!(
+			owner != T::AccountId::default(),
+			Error::<T>::TokenNonExistent
+		);
 		ensure!(*who == owner, Error::<T>::NotTokenOwner);
 
 		let balance = Self::balance_of(token_account, &owner);
 
 		let new_balance = match balance.checked_sub(One::one()) {
-            Some(c) => c,
-            None => return Err(Error::<T>::Underflow.into()),
-        };
+			Some(c) => c,
+			None => return Err(Error::<T>::Underflow.into()),
+		};
 
 		Self::remove_token_from_all_tokens_enumeration(token_account, token_id)?;
 		Self::remove_token_from_owner_enumeration(token_account, &owner, token_id)?;
-		
+
 		Self::clear_approval(token_account, token_id)?;
 
 		Balances::<T>::insert(token_account, &owner, new_balance);
 		Owners::<T>::remove(token_account, token_id);
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), owner.clone(), T::AccountId::default(), token_id));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			owner.clone(),
+			T::AccountId::default(),
+			token_id,
+		));
 
 		Ok(())
 	}
@@ -457,9 +496,9 @@ impl<T: Config> Pallet<T> {
 	) -> bool {
 		let owner = Self::owner_of(token_account, token_id);
 
-		*spender == owner ||
-		Self::get_approved(token_account, token_id) == *spender ||
-		Self::is_approved_for_all(token_account, (&owner, spender))
+		*spender == owner
+			|| Self::get_approved(token_account, token_id) == *spender
+			|| Self::is_approved_for_all(token_account, (&owner, spender))
 	}
 
 	fn maybe_check_permission(who: &T::AccountId, token_account: &T::AccountId) -> DispatchResult {
@@ -474,26 +513,28 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-    fn add_token_to_owner_enumeration(
+	fn add_token_to_owner_enumeration(
 		token_account: &T::AccountId,
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-        let new_token_index = Self::balance_of(token_account, to);
+		let new_token_index = Self::balance_of(token_account, to);
 
-        OwnedTokensIndex::<T>::insert(token_account, token_id, new_token_index);
-        OwnedTokens::<T>::insert(token_account, (to, new_token_index), token_id);
+		OwnedTokensIndex::<T>::insert(token_account, token_id, new_token_index);
+		OwnedTokens::<T>::insert(token_account, (to, new_token_index), token_id);
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    fn add_token_to_all_tokens_enumeration(
+	fn add_token_to_all_tokens_enumeration(
 		token_account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
 		TotalSupply::<T>::try_mutate(token_account, |total_supply| -> DispatchResult {
 			let new_token_index = *total_supply;
-			*total_supply = total_supply.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
+			*total_supply = total_supply
+				.checked_add(One::one())
+				.ok_or(Error::<T>::Overflow)?;
 
 			AllTokensIndex::<T>::insert(token_account, token_id, new_token_index);
 			AllTokens::<T>::insert(token_account, new_token_index, token_id);
@@ -501,60 +542,60 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    fn remove_token_from_owner_enumeration(
+	fn remove_token_from_owner_enumeration(
 		token_account: &T::AccountId,
 		from: &T::AccountId,
-		token_id: TokenId
+		token_id: TokenId,
 	) -> DispatchResult {
-        let balance_of_from = Self::balance_of(token_account, from);
+		let balance_of_from = Self::balance_of(token_account, from);
 
-        let last_token_index = match balance_of_from.checked_sub(One::one()) {
-            Some (c) => c,
-            None => return Err(Error::<T>::Overflow.into()),
-        };
+		let last_token_index = match balance_of_from.checked_sub(One::one()) {
+			Some(c) => c,
+			None => return Err(Error::<T>::Overflow.into()),
+		};
 
-        let token_index = OwnedTokensIndex::<T>::get(token_account, token_id);
+		let token_index = OwnedTokensIndex::<T>::get(token_account, token_id);
 
-        if token_index != last_token_index {
-            let last_token_id = OwnedTokens::<T>::get(token_account, (from, last_token_index));
-            OwnedTokens::<T>::insert(token_account, (from, token_index), last_token_id);
-            OwnedTokensIndex::<T>::insert(token_account, last_token_id, token_index);
-        }
+		if token_index != last_token_index {
+			let last_token_id = OwnedTokens::<T>::get(token_account, (from, last_token_index));
+			OwnedTokens::<T>::insert(token_account, (from, token_index), last_token_id);
+			OwnedTokensIndex::<T>::insert(token_account, last_token_id, token_index);
+		}
 
-        OwnedTokensIndex::<T>::remove(token_account, token_id);
+		OwnedTokensIndex::<T>::remove(token_account, token_id);
 		OwnedTokens::<T>::remove(token_account, (from, last_token_index));
 
-        Ok(())
-    }
+		Ok(())
+	}
 
-    fn remove_token_from_all_tokens_enumeration(
+	fn remove_token_from_all_tokens_enumeration(
 		token_account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-        let total_supply = Self::total_supply(token_account);
+		let total_supply = Self::total_supply(token_account);
 
-        let new_total_supply = match total_supply.checked_sub(One::one()) {
-            Some(c) => c,
-            None => return Err(Error::<T>::Overflow.into()),
-        };
+		let new_total_supply = match total_supply.checked_sub(One::one()) {
+			Some(c) => c,
+			None => return Err(Error::<T>::Overflow.into()),
+		};
 
-        let last_token_index = new_total_supply;
+		let last_token_index = new_total_supply;
 
-        let token_index = AllTokensIndex::<T>::get(token_account, token_id);
+		let token_index = AllTokensIndex::<T>::get(token_account, token_id);
 
-        let last_token_id = AllTokens::<T>::get(token_account, last_token_index);
+		let last_token_id = AllTokens::<T>::get(token_account, last_token_index);
 
-        AllTokens::<T>::insert(token_account, token_index, last_token_id);
-        AllTokensIndex::<T>::insert(token_account, last_token_id, token_index);
+		AllTokens::<T>::insert(token_account, token_index, last_token_id);
+		AllTokensIndex::<T>::insert(token_account, last_token_id, token_index);
 
-        AllTokens::<T>::remove(token_account, last_token_index);
-        AllTokensIndex::<T>::remove(token_account, token_id);
+		AllTokens::<T>::remove(token_account, last_token_index);
+		AllTokensIndex::<T>::remove(token_account, token_id);
 
-        TotalSupply::<T>::insert(token_account, new_total_supply);
+		TotalSupply::<T>::insert(token_account, new_total_supply);
 
-        Ok(())
-    }
+		Ok(())
+	}
 }

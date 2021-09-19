@@ -2,9 +2,7 @@ use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
 use fp_evm::Precompile;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
-use precompile_utils::{
-	Address, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper,
-};
+use precompile_utils::{Address, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
 use primitives::{Balance, TokenId};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 

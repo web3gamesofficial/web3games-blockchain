@@ -225,7 +225,9 @@ impl<T: Config> Pallet<T> {
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let token_id = TokenCount::<T>::try_mutate(|count| -> Result<TokenIndex, DispatchError> {
-			let new_count = count.checked_add(One::one()).ok_or(Error::<T>::NumOverflow)?;
+			let new_count = count
+				.checked_add(One::one())
+				.ok_or(Error::<T>::NumOverflow)?;
 			*count = new_count;
 			Ok(new_count)
 		})?;
@@ -253,11 +255,15 @@ impl<T: Config> Pallet<T> {
 		recipient: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-
 		Self::decrease_balance(token_account, who, amount)?;
 		Self::increase_balance(token_account, recipient, amount)?;
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), recipient.clone(), amount));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			who.clone(),
+			recipient.clone(),
+			amount,
+		));
 
 		Ok(())
 	}
@@ -275,7 +281,9 @@ impl<T: Config> Pallet<T> {
 		};
 
 		Allowances::<T>::try_mutate(token_account, &key, |allowance| -> DispatchResult {
-			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+			*allowance = allowance
+				.checked_sub(amount)
+				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
 
@@ -299,7 +307,12 @@ impl<T: Config> Pallet<T> {
 		})?;
 		Self::increase_balance(token_account, account, amount)?;
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), T::AccountId::default(), account.clone(), amount));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			T::AccountId::default(),
+			account.clone(),
+			amount,
+		));
 
 		Ok(())
 	}
@@ -318,7 +331,12 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), T::AccountId::default(), amount));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			who.clone(),
+			T::AccountId::default(),
+			amount,
+		));
 
 		Ok(())
 	}
@@ -335,11 +353,18 @@ impl<T: Config> Pallet<T> {
 		};
 
 		Allowances::<T>::try_mutate(token_account, &key, |allowance| -> DispatchResult {
-			*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+			*allowance = allowance
+				.checked_add(amount)
+				.ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(token_account.clone(), who.clone(), spender.clone(), amount));
+		Self::deposit_event(Event::Transfer(
+			token_account.clone(),
+			who.clone(),
+			spender.clone(),
+			amount,
+		));
 		Ok(())
 	}
 

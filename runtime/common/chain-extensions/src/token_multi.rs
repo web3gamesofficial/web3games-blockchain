@@ -1,10 +1,10 @@
-use codec::{Encode};
+use codec::Encode;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::{Balance, TokenId};
-use sp_runtime::{DispatchError};
-use sp_std::{vec,vec::Vec};
+use sp_runtime::DispatchError;
+use sp_std::{vec, vec::Vec};
 
 pub struct MultiTokenExtension;
 

@@ -257,7 +257,9 @@ impl<T: Config> Pallet<T> {
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let token_id = TokenCount::<T>::try_mutate(|count| -> Result<TokenIndex, DispatchError> {
-			let new_count = count.checked_add(One::one()).ok_or(Error::<T>::NumOverflow)?;
+			let new_count = count
+				.checked_add(One::one())
+				.ok_or(Error::<T>::NumOverflow)?;
 			*count = new_count;
 			Ok(new_count)
 		})?;
@@ -361,7 +363,12 @@ impl<T: Config> Pallet<T> {
 
 		Self::remove_balance_from(token_account, account, id, amount)?;
 
-		Self::deposit_event(Event::Burn(token_account.clone(), account.clone(), id, amount));
+		Self::deposit_event(Event::Burn(
+			token_account.clone(),
+			account.clone(),
+			id,
+			amount,
+		));
 
 		Ok(())
 	}

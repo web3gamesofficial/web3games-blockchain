@@ -120,11 +120,12 @@ pub mod pallet {
 				Error::<T>::TokenAccountNotFound
 			);
 
-			let pool_id = PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
-				let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
-				*count = new_count;
-				Ok(new_count)
-			})?;
+			let pool_id =
+				PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
+					let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
+					*count = new_count;
+					Ok(new_count)
+				})?;
 
 			let pool_account = Self::pool_account_id(pool_id);
 
@@ -186,14 +187,16 @@ pub mod pallet {
 				&who,
 				&Self::account_id(),
 				amount_a,
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 			pallet_token_fungible::Pallet::<T>::do_transfer_from(
 				&who,
 				&token_b,
 				&who,
 				&Self::account_id(),
 				amount_b,
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 			let _liquidity = Self::mint(&who, &pool_account, &to)?;
 
 			Ok(())
@@ -220,7 +223,8 @@ pub mod pallet {
 				&who,
 				&Self::account_id(),
 				liquidity,
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 			let (amount_0, amount_1) = Self::burn(&who, &pool_account, &to)?;
 			let (token_0, _token_1) = Self::sort_tokens(&token_a, &token_b);
 			let (amount_a, amount_b) = if token_a == token_0 {
@@ -260,7 +264,8 @@ pub mod pallet {
 				&who,
 				&Self::account_id(),
 				amounts[0],
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 			Self::do_swap(&who, &pool_account, amounts, &path, &to).expect("swap fail");
 
 			Ok(())
@@ -291,7 +296,8 @@ pub mod pallet {
 				&who,
 				&Self::account_id(),
 				amounts[0],
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 			Self::do_swap(&who, &pool_account, amounts, &path, &to).expect("swap fail");
 
 			Ok(())
@@ -364,7 +370,8 @@ impl<T: Config> Pallet<T> {
 				&vault_account,
 				to,
 				amount_0_out,
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 		}
 		if amount_1_out > Zero::zero() {
 			pallet_token_fungible::Pallet::<T>::do_transfer_from(
@@ -373,7 +380,8 @@ impl<T: Config> Pallet<T> {
 				&vault_account,
 				to,
 				amount_1_out,
-			).expect("do_transfer_from fail");
+			)
+			.expect("do_transfer_from fail");
 		}
 
 		let balance_0 =
@@ -399,7 +407,8 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::AdjustedError
 		);
 
-		Self::do_update(pool_account, balance_0, balance_1, reserve_0, reserve_1).expect("do update fail");
+		Self::do_update(pool_account, balance_0, balance_1, reserve_0, reserve_1)
+			.expect("do update fail");
 
 		Ok(())
 	}
@@ -433,7 +442,8 @@ impl<T: Config> Pallet<T> {
 				&pool.lp_token,
 				&T::AccountId::default(),
 				Balance::from(MINIMUM_LIQUIDITY),
-			).expect("do mint fail"); // permanently lock the first MINIMUM_LIQUIDITY tokens
+			)
+			.expect("do mint fail"); // permanently lock the first MINIMUM_LIQUIDITY tokens
 		} else {
 			liquidity = cmp::min(
 				amount_a * total_supply / reserve_a,
@@ -444,9 +454,11 @@ impl<T: Config> Pallet<T> {
 			liquidity >= Zero::zero(),
 			Error::<T>::InsufficientLiquidityMinted
 		);
-		pallet_token_fungible::Pallet::<T>::do_mint(&vault_account, &pool.lp_token, to, liquidity).expect("do mint fail");
+		pallet_token_fungible::Pallet::<T>::do_mint(&vault_account, &pool.lp_token, to, liquidity)
+			.expect("do mint fail");
 
-		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b).expect("update fail");
+		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b)
+			.expect("update fail");
 
 		Ok(liquidity)
 	}
@@ -478,30 +490,30 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientLiquidityBurned
 		);
 
-		pallet_token_fungible::Pallet::<T>::do_burn(
-			&vault_account,
-			&pool.lp_token,
-			liquidity,
-		).expect("do_burn fail");
+		pallet_token_fungible::Pallet::<T>::do_burn(&vault_account, &pool.lp_token, liquidity)
+			.expect("do_burn fail");
 		pallet_token_fungible::Pallet::<T>::do_transfer_from(
 			&vault_account,
 			&pool.token_0,
 			&vault_account,
 			to,
 			amount_a,
-		).expect("do_transfer_from fail");
+		)
+		.expect("do_transfer_from fail");
 		pallet_token_fungible::Pallet::<T>::do_transfer_from(
 			&vault_account,
 			&pool.token_1,
 			&vault_account,
 			to,
 			amount_b,
-		).expect("do_transfer_from fail");
+		)
+		.expect("do_transfer_from fail");
 
 		balance_a = pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_0, &vault_account);
 		balance_b = pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_1, &vault_account);
 
-		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b).expect("update fail");
+		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b)
+			.expect("update fail");
 
 		Ok((amount_a, amount_b))
 	}
@@ -532,7 +544,8 @@ impl<T: Config> Pallet<T> {
 				to.clone()
 			};
 
-			Self::swap(who, pool_account, amount_0_out, amount_1_out, &receiver).expect("swap fail");
+			Self::swap(who, pool_account, amount_0_out, amount_1_out, &receiver)
+				.expect("swap fail");
 		}
 
 		Ok(())

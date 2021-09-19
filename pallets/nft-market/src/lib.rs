@@ -6,11 +6,8 @@ use frame_support::{
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
 };
-use primitives::{Balance,TokenId};
-use sp_runtime::{
-	traits::{One},
-	RuntimeDebug,
-};
+use primitives::{Balance, TokenId};
+use sp_runtime::{traits::One, RuntimeDebug};
 use sp_std::prelude::*;
 
 pub use pallet::*;
@@ -48,7 +45,7 @@ pub struct Collection<AccountId> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{pallet_prelude::*};
+	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]

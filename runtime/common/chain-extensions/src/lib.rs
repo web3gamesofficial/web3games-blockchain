@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Encode};
+use codec::Encode;
 use frame_support::traits::Randomness;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
-use sp_runtime::{DispatchError};
-use sp_std::{marker::PhantomData};
+use sp_runtime::DispatchError;
+use sp_std::marker::PhantomData;
 
 mod token_multi;
 

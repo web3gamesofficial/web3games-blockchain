@@ -1,14 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use frame_support::{
-	traits::Get,
-	PalletId,
-};
+use frame_support::{traits::Get, PalletId};
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
 use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
-use sp_std::{prelude::*};
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
@@ -157,11 +154,7 @@ pub mod pallet {
 
 				<T as Config>::Currency::transfer(currency_id, &vault_account, &who, amount)?;
 
-				pallet_token_fungible::Pallet::<T>::do_burn(
-					&who,
-					&token.token_account,
-					amount,
-				)?;
+				pallet_token_fungible::Pallet::<T>::do_burn(&who, &token.token_account, amount)?;
 
 				token.total_supply = token
 					.total_supply
