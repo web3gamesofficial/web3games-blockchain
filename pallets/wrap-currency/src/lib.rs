@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{traits::Get, PalletId};
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
@@ -15,9 +15,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct WrapToken<AccountId> {
-	token_account: AccountId,
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+pub struct WrapToken<FungibleTokenId> {
+	token_id: FungibleTokenId,
 	total_supply: Balance,
 }
 
@@ -53,7 +53,7 @@ pub mod pallet {
 
 	#[pallet::storage]
 	pub(super) type WrapTokens<T: Config> =
-		StorageMap<_, Blake2_128Concat, CurrencyId, WrapToken<T::AccountId>>;
+		StorageMap<_, Blake2_128Concat, CurrencyId, WrapToken<T::FungibleTokenId>>;
 
 	#[pallet::event]
 	#[pallet::metadata(T::AccountId = "AccountId")]
@@ -83,7 +83,7 @@ pub mod pallet {
 
 			let vault_account = Self::account_id();
 
-			let token_account = pallet_token_fungible::Pallet::<T>::do_create_token(
+			let token_id = pallet_token_fungible::Pallet::<T>::do_create_token(
 				&vault_account,
 				[].to_vec(),
 				[].to_vec(),
@@ -91,7 +91,7 @@ pub mod pallet {
 			)?;
 
 			let wrap_token = WrapToken {
-				token_account,
+				token_id,
 				total_supply: Default::default(),
 			};
 
@@ -121,8 +121,7 @@ pub mod pallet {
 				let token = wrap_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
 				pallet_token_fungible::Pallet::<T>::do_mint(
-					&vault_account,
-					&token.token_account,
+					token.token_id,
 					&who,
 					amount,
 				)?;
@@ -154,7 +153,7 @@ pub mod pallet {
 
 				<T as Config>::Currency::transfer(currency_id, &vault_account, &who, amount)?;
 
-				pallet_token_fungible::Pallet::<T>::do_burn(&who, &token.token_account, amount)?;
+				pallet_token_fungible::Pallet::<T>::do_burn(token.token_id, &who, amount)?;
 
 				token.total_supply = token
 					.total_supply

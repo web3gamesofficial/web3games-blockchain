@@ -1,7 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Encode;
-use frame_support::traits::Randomness;
+use frame_support::{
+	traits::Randomness,
+};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
@@ -14,8 +16,11 @@ pub use token_multi::MultiTokenExtension;
 
 pub struct Web3gamesExtensions<C>(PhantomData<C>);
 
-impl<C: pallet_contracts::Config + pallet_token_multi::Config> ChainExtension<C>
+impl<C> ChainExtension<C>
 	for Web3gamesExtensions<C>
+where
+	C: pallet_contracts::Config + pallet_token_multi::Config,
+	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
