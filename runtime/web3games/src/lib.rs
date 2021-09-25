@@ -32,7 +32,7 @@ use static_assertions::const_assert;
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Contains, Everything, FindAuthor, KeyOwnerProofSystem, Nothing, Randomness},
+	traits::{Contains, FindAuthor, KeyOwnerProofSystem, Nothing, Everything, Randomness},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		DispatchClass, IdentityFee, Weight,
@@ -449,11 +449,14 @@ parameter_types! {
 	pub const PoolPalletId: PalletId = PalletId(*b"w3g/pool");
 	pub const NftPoolPalletId: PalletId = PalletId(*b"w3g/nftp");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
+	pub const StringLimit: u32 = 50;
 }
 
 impl pallet_token_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
+	type FungibleTokenId = u32;
+	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
@@ -461,6 +464,8 @@ impl pallet_token_fungible::Config for Runtime {
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
+	type NonFungibleTokenId = u32;
+	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
@@ -468,6 +473,8 @@ impl pallet_token_non_fungible::Config for Runtime {
 impl pallet_token_multi::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
+	type MultiTokenId = u32;
+	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
@@ -483,6 +490,7 @@ impl pallet_wrap_currency::Config for Runtime {
 impl pallet_exchange_pool::Config for Runtime {
 	type Event = Event;
 	type PalletId = PoolPalletId;
+	type PoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
@@ -490,6 +498,7 @@ impl pallet_exchange_pool::Config for Runtime {
 impl pallet_exchange_nft_pool::Config for Runtime {
 	type Event = Event;
 	type PalletId = NftPoolPalletId;
+	type NftPoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }

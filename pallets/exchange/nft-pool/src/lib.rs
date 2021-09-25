@@ -1,16 +1,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, PoolIndex, TokenId};
+use primitives::{Balance, TokenId};
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, One, Zero},
+	traits::{AtLeast32BitUnsigned, AccountIdConversion, One, Zero, CheckedAdd},
 	RuntimeDebug,
 };
 use sp_std::{convert::TryInto, prelude::*};
@@ -26,16 +26,16 @@ mod tests;
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Pool<AccountId> {
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+pub struct Pool<AccountId, FungibleTokenId, MultiTokenId> {
 	/// The owner of pool
 	pub owner: AccountId,
 	/// The account of the currency
-	pub currency: AccountId,
+	pub currency: FungibleTokenId,
 	/// The account of the token
-	pub token: AccountId,
+	pub token: MultiTokenId,
 	/// The account of liquidity pool token
-	pub lp_token: AccountId,
+	pub lp_token: MultiTokenId,
 	/// The account of pool
 	pub vault: AccountId,
 }
@@ -54,6 +54,8 @@ pub mod pallet {
 
 		type PalletId: Get<PalletId>;
 
+		type NftPoolId: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
+
 		/// The minimum balance to create pool
 		#[pallet::constant]
 		type CreatePoolDeposit: Get<BalanceOf<Self>>;
@@ -66,18 +68,28 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Pools<T: Config> = StorageMap<_, Blake2_128, T::AccountId, Pool<T::AccountId>>;
+	pub(super) type Pools<T: Config> = StorageMap<_, Blake2_128, T::NftPoolId, Pool<T::AccountId, T::FungibleTokenId, T::MultiTokenId>>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn pool_count)]
-	pub(super) type PoolCount<T> = StorageValue<_, PoolIndex, ValueQuery>;
+	#[pallet::getter(fn next_pool_id)]
+	pub(super) type NextPoolId<T: Config> = StorageValue<_, T::NftPoolId, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_pool)]
+	pub(super) type GetPool<T: Config> = StorageMap<
+		_,
+		Blake2_128,
+		(T::FungibleTokenId, T::MultiTokenId),
+		T::NftPoolId,
+		ValueQuery
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn total_supplies)]
 	pub(super) type TotalSupplies<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId,
+		T::NftPoolId,
 		Blake2_128Concat,
 		TokenId,
 		Balance,
@@ -89,7 +101,7 @@ pub mod pallet {
 	pub(super) type CurrencyReserves<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId,
+		T::NftPoolId,
 		Blake2_128Concat,
 		TokenId,
 		Balance,
@@ -100,32 +112,30 @@ pub mod pallet {
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		PoolCreated(T::AccountId, T::AccountId),
+		PoolCreated(T::NftPoolId, T::AccountId),
 		SwapCurrencyToToken(
-			T::AccountId,
+			T::NftPoolId,
 			T::AccountId,
 			Vec<TokenId>,
 			Vec<Balance>,
 			Balance,
-			T::AccountId,
 		),
 		SwapTokenToCurrency(
-			T::AccountId,
+			T::NftPoolId,
 			T::AccountId,
 			Vec<TokenId>,
 			Vec<Balance>,
 			Balance,
-			T::AccountId,
 		),
 		LiquidityAdded(
-			T::AccountId,
+			T::NftPoolId,
 			T::AccountId,
 			Vec<TokenId>,
 			Vec<Balance>,
 			Vec<Balance>,
 		),
 		LiquidityRemoved(
-			T::AccountId,
+			T::NftPoolId,
 			T::AccountId,
 			Vec<TokenId>,
 			Vec<Balance>,
@@ -150,6 +160,8 @@ pub mod pallet {
 		NullTokensSold,
 		EmptyReserve,
 		UnsortedOrDuplicateTokenIds,
+		PoolAlreadyCreated,
+		NoAvailablePoolId,
 	}
 
 	#[pallet::hooks]
@@ -160,47 +172,12 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn create_pool(
 			origin: OriginFor<T>,
-			currency: T::AccountId, // fungible-token token account
-			token: T::AccountId,    // multi-token token account
+			currency: T::FungibleTokenId,
+			token: T::MultiTokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(
-				pallet_token_fungible::Pallet::<T>::exists(&currency),
-				Error::<T>::CurrencyAccountNotFound
-			);
-			ensure!(
-				pallet_token_multi::Pallet::<T>::exists(&token),
-				Error::<T>::TokenAccountNotFound
-			);
-
-			let pool_id =
-				PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
-					let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
-					*count = new_count;
-					Ok(new_count)
-				})?;
-
-			let pool_account = Self::pool_account_id(pool_id);
-
-			let vault = Self::account_id();
-
-			let deposit = T::CreatePoolDeposit::get();
-			<T as Config>::Currency::transfer(&who, &vault, deposit, AllowDeath)?;
-
-			let lp_token = pallet_token_multi::Pallet::<T>::do_create_token(&vault, [].to_vec())?;
-
-			let pool = Pool {
-				owner: who.clone(),
-				currency,
-				token,
-				lp_token,
-				vault,
-			};
-
-			Pools::<T>::insert(&pool_account, pool);
-
-			Self::deposit_event(Event::PoolCreated(pool_account, who));
+			Self::do_create_pool(&who, currency, token)?;
 
 			Ok(())
 		}
@@ -208,21 +185,19 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_currency_to_token(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::NftPoolId,
 			token_ids: Vec<TokenId>,
 			token_amounts_out: Vec<Balance>,
 			max_currency: Balance,
-			to: T::AccountId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_swap_currency_to_token(
+				id,
 				&who,
-				&pool_account,
 				token_ids,
 				token_amounts_out,
 				max_currency,
-				&to,
 			)?;
 
 			Ok(())
@@ -231,21 +206,19 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_token_to_currency(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::NftPoolId,
 			token_ids: Vec<TokenId>,
 			token_amounts_in: Vec<Balance>,
 			min_currency: Balance,
-			to: T::AccountId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_swap_token_to_currency(
+				id,
 				&who,
-				&pool_account,
 				token_ids,
 				token_amounts_in,
 				min_currency,
-				&to,
 			)?;
 
 			Ok(())
@@ -254,7 +227,7 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn add_liquidity(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::NftPoolId,
 			token_ids: Vec<TokenId>,
 			token_amounts: Vec<Balance>,
 			max_currencies: Vec<Balance>,
@@ -262,8 +235,8 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_add_liquidity(
+				id,
 				&who,
-				&pool_account,
 				token_ids,
 				token_amounts,
 				max_currencies,
@@ -275,7 +248,7 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn remove_liquidity(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::NftPoolId,
 			token_ids: Vec<TokenId>,
 			liquidities: Vec<Balance>,
 			min_currencies: Vec<Balance>,
@@ -284,8 +257,8 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_remove_liquidity(
+				id,
 				&who,
-				&pool_account,
 				token_ids,
 				liquidities,
 				min_currencies,
@@ -299,29 +272,70 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	// The account ID of the vault
-	pub fn account_id() -> T::AccountId {
+	fn account_id() -> T::AccountId {
 		<T as Config>::PalletId::get().into_account()
 	}
 
-	// The account ID of a pool account
-	pub fn pool_account_id(id: PoolIndex) -> T::AccountId {
-		<T as Config>::PalletId::get().into_sub_account(id)
+	pub fn do_create_pool(
+		who: &T::AccountId,
+		currency: T::FungibleTokenId,
+		token: T::MultiTokenId,
+	) -> Result<T::NftPoolId, DispatchError> {
+		ensure!(
+			pallet_token_fungible::Pallet::<T>::exists(currency),
+			Error::<T>::CurrencyAccountNotFound
+		);
+		ensure!(
+			pallet_token_multi::Pallet::<T>::exists(token),
+			Error::<T>::TokenAccountNotFound
+		);
+
+		ensure!(
+			!GetPool::<T>::contains_key((currency, token)),
+			Error::<T>::PoolAlreadyCreated
+		);
+
+		let id = NextPoolId::<T>::try_mutate(|id| -> Result<T::NftPoolId, DispatchError> {
+			let current_id = *id;
+			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailablePoolId)?;
+			Ok(current_id)
+		})?;
+
+		let vault = Self::account_id();
+
+		let deposit = T::CreatePoolDeposit::get();
+		<T as Config>::Currency::transfer(who, &vault, deposit, AllowDeath)?;
+
+		let lp_token = pallet_token_multi::Pallet::<T>::do_create_token(&vault, [].to_vec())?;
+
+		let pool = Pool {
+			owner: who.clone(),
+			currency,
+			token,
+			lp_token,
+			vault,
+		};
+
+		Pools::<T>::insert(id, pool);
+		GetPool::<T>::insert((currency, token), id);
+
+		Self::deposit_event(Event::PoolCreated(id, who.clone()));
+
+		Ok(id)
 	}
 
 	pub fn do_swap_currency_to_token(
+		id: T::NftPoolId,
 		who: &T::AccountId,
-		pool_account: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		token_amounts_out: Vec<Balance>,
 		max_currency: Balance,
-		to: &T::AccountId,
 	) -> Result<Vec<Balance>, DispatchError> {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::InvalidPoolAccount)?;
 
 		// Transfer max currency token to vault account
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
-			who,
-			&pool.currency,
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.currency,
 			who,
 			&pool.vault,
 			max_currency,
@@ -331,7 +345,7 @@ impl<T: Config> Pallet<T> {
 		let mut currency_amounts_in = vec![Balance::from(0u128); n];
 		let mut total_refund_currency = max_currency;
 
-		let token_reserves = Self::get_token_reserves(&pool.vault, &pool.token, token_ids.clone())?;
+		let token_reserves = Self::get_token_reserves(pool.token, &pool.vault, token_ids.clone())?;
 
 		for i in 0..n {
 			let token_id = token_ids[i];
@@ -343,7 +357,7 @@ impl<T: Config> Pallet<T> {
 				Error::<T>::NullTokensBought
 			);
 
-			let currency_reserve = Self::currency_reserves(pool_account, token_id);
+			let currency_reserve = Self::currency_reserves(id, token_id);
 			let currency_amount =
 				Self::get_buy_price(token_amount_out, currency_reserve, token_reserve)?;
 
@@ -353,7 +367,7 @@ impl<T: Config> Pallet<T> {
 
 			// Update individual currency reserve amount
 			CurrencyReserves::<T>::try_mutate(
-				pool_account,
+				id,
 				token_id,
 				|currency_reserve| -> DispatchResult {
 					*currency_reserve = currency_reserve
@@ -366,9 +380,8 @@ impl<T: Config> Pallet<T> {
 
 		// Refund currency token if any
 		if total_refund_currency > 0 {
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&pool.vault,
-				&pool.currency,
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.currency,
 				&pool.vault,
 				who,
 				total_refund_currency,
@@ -377,40 +390,36 @@ impl<T: Config> Pallet<T> {
 
 		// Send Tokens all tokens purchased
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			pool.token,
 			&pool.vault,
-			&pool.token,
-			&pool.vault,
-			to,
+			who,
 			token_ids.clone(),
 			token_amounts_out.clone(),
 		)?;
 
 		Self::deposit_event(Event::SwapCurrencyToToken(
+			id,
 			who.clone(),
-			pool_account.clone(),
 			token_ids,
 			token_amounts_out,
 			max_currency.saturating_sub(total_refund_currency),
-			to.clone(),
 		));
 
 		Ok(currency_amounts_in)
 	}
 
 	pub fn do_swap_token_to_currency(
+		id: T::NftPoolId,
 		who: &T::AccountId,
-		pool_account: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		token_amounts_in: Vec<Balance>,
 		min_currency: Balance,
-		to: &T::AccountId,
 	) -> Result<Vec<Balance>, DispatchError> {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::InvalidPoolAccount)?;
 
 		// Transfer the tokens to vault account
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
-			who,
-			&pool.token,
+			pool.token,
 			who,
 			&pool.vault,
 			token_ids.clone(),
@@ -421,7 +430,7 @@ impl<T: Config> Pallet<T> {
 		let mut total_currency = Balance::from(0u128);
 		let mut currency_amounts_out = vec![Balance::from(0u128); n];
 
-		let token_reserves = Self::get_token_reserves(&pool.vault, &pool.token, token_ids.clone())?;
+		let token_reserves = Self::get_token_reserves(pool.token, &pool.vault, token_ids.clone())?;
 
 		for i in 0..n {
 			let token_id = token_ids[i];
@@ -430,7 +439,7 @@ impl<T: Config> Pallet<T> {
 
 			ensure!(token_amount_in > Zero::zero(), Error::<T>::NullTokensSold);
 
-			let currency_reserve = Self::currency_reserves(pool_account, token_id);
+			let currency_reserve = Self::currency_reserves(id, token_id);
 			let currency_amount = Self::get_sell_price(
 				token_amount_in,
 				token_reserve.saturating_sub(token_amount_in),
@@ -441,7 +450,7 @@ impl<T: Config> Pallet<T> {
 
 			// Update individual currency reserve amount
 			CurrencyReserves::<T>::try_mutate(
-				pool_account,
+				id,
 				token_id,
 				|currency_reserve| -> DispatchResult {
 					*currency_reserve = currency_reserve
@@ -461,40 +470,37 @@ impl<T: Config> Pallet<T> {
 		);
 
 		// Transfer currency here
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.currency,
 			&pool.vault,
-			&pool.currency,
-			&pool.vault,
-			to,
+			who,
 			total_currency,
 		)?;
 
 		Self::deposit_event(Event::SwapTokenToCurrency(
+			id,
 			who.clone(),
-			pool_account.clone(),
 			token_ids,
 			token_amounts_in,
 			total_currency,
-			to.clone(),
 		));
 
 		Ok(currency_amounts_out)
 	}
 
 	pub fn do_add_liquidity(
-		who: &T::AccountId,
-		pool_account: &T::AccountId,
+		id: T::NftPoolId,
+		provider: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		token_amounts: Vec<Balance>,
 		max_currencies: Vec<Balance>,
 	) -> DispatchResult {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::InvalidPoolAccount)?;
 
 		// Transfer all tokens to this contract
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
-			who,
-			&pool.token,
-			who,
+			pool.token,
+			provider,
 			&pool.vault,
 			token_ids.clone(),
 			token_amounts.clone(),
@@ -505,7 +511,7 @@ impl<T: Config> Pallet<T> {
 		let mut liquidities_to_mint = vec![Balance::from(0u128); n];
 		let mut currency_amounts = vec![Balance::from(0u128); n];
 
-		let token_reserves = Self::get_token_reserves(&pool.vault, &pool.token, token_ids.clone())?;
+		let token_reserves = Self::get_token_reserves(pool.token, &pool.vault, token_ids.clone())?;
 
 		for i in 0..n {
 			let token_id = token_ids[i];
@@ -517,10 +523,10 @@ impl<T: Config> Pallet<T> {
 			);
 			ensure!(amount > Zero::zero(), Error::<T>::NullTokensAmount);
 
-			let total_liquidity = Self::total_supplies(pool_account, token_id);
+			let total_liquidity = Self::total_supplies(id, token_id);
 
 			if total_liquidity > Zero::zero() {
-				let currency_reserve = Self::currency_reserves(pool_account, token_id);
+				let currency_reserve = Self::currency_reserves(id, token_id);
 				let token_reserve = token_reserves[i];
 
 				let (currency_amount, rounded) = Self::div_round(
@@ -534,7 +540,7 @@ impl<T: Config> Pallet<T> {
 
 				// Update currency reserve size for Token id before transfer
 				CurrencyReserves::<T>::try_mutate(
-					pool_account,
+					id,
 					token_id,
 					|currency_reserve| -> DispatchResult {
 						*currency_reserve = currency_reserve
@@ -559,7 +565,7 @@ impl<T: Config> Pallet<T> {
 
 				// Mint liquidity ownership tokens and increase liquidity supply accordingly
 				TotalSupplies::<T>::try_mutate(
-					pool_account,
+					id,
 					token_id,
 					|total_supply| -> DispatchResult {
 						*total_supply = total_liquidity
@@ -578,7 +584,7 @@ impl<T: Config> Pallet<T> {
 				);
 
 				// Update currency reserve size for Token id before transfer
-				CurrencyReserves::<T>::mutate(pool_account, token_id, |currency_reserve| {
+				CurrencyReserves::<T>::mutate(id, token_id, |currency_reserve| {
 					*currency_reserve = max_currency
 				});
 
@@ -587,7 +593,7 @@ impl<T: Config> Pallet<T> {
 
 				// Initial liquidity is amount deposited (Incorrect pricing will be arbitraged)
 				// uint256 initialLiquidity = maxCurrency;
-				TotalSupplies::<T>::mutate(pool_account, token_id, |total_supply| {
+				TotalSupplies::<T>::mutate(id, token_id, |total_supply| {
 					*total_supply = max_currency
 				});
 
@@ -599,25 +605,23 @@ impl<T: Config> Pallet<T> {
 
 		// Mint liquidity pool tokens
 		pallet_token_multi::Pallet::<T>::do_batch_mint(
-			&pool.vault,
-			&pool.lp_token,
-			&who,
+			pool.lp_token,
+			provider,
 			token_ids.clone(),
 			liquidities_to_mint,
 		)?;
 
 		// Transfer all currency to this contract
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
-			who,
-			&pool.currency,
-			who,
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.currency,
+			provider,
 			&pool.vault,
 			total_currency,
 		)?;
 
 		Self::deposit_event(Event::LiquidityAdded(
-			who.clone(),
-			pool_account.clone(),
+			id,
+			provider.clone(),
 			token_ids,
 			token_amounts,
 			currency_amounts,
@@ -627,20 +631,19 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_remove_liquidity(
-		who: &T::AccountId,
-		pool_account: &T::AccountId,
+		id: T::NftPoolId,
+		provider: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		liquidities: Vec<Balance>,
 		min_currencies: Vec<Balance>,
 		min_tokens: Vec<Balance>,
 	) -> DispatchResult {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::InvalidPoolAccount)?;
 
 		// Transfer the liquidity pool tokens to burn to this contract
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
-			who,
-			&pool.lp_token,
-			who,
+			pool.lp_token,
+			provider,
 			&pool.vault,
 			token_ids.clone(),
 			liquidities.clone(),
@@ -651,20 +654,20 @@ impl<T: Config> Pallet<T> {
 		let mut token_amounts = vec![Balance::from(0u128); n];
 		let mut currency_amounts = vec![Balance::from(0u128); n];
 
-		let token_reserves = Self::get_token_reserves(&pool.vault, &pool.token, token_ids.clone())?;
+		let token_reserves = Self::get_token_reserves(pool.token, &pool.vault, token_ids.clone())?;
 
 		for i in 0..n {
 			let token_id = token_ids[i];
 			let liquidity = liquidities[i];
 			let token_reserve = token_reserves[i];
 
-			let total_liquidity = Self::total_supplies(pool_account, token_id);
+			let total_liquidity = Self::total_supplies(id, token_id);
 			ensure!(
 				total_liquidity > Zero::zero(),
 				Error::<T>::NullTotalLiquidity
 			);
 
-			let currency_reserve = Self::currency_reserves(pool_account, token_id);
+			let currency_reserve = Self::currency_reserves(id, token_id);
 
 			let currency_amount = U256::from(liquidity)
 				.saturating_mul(U256::from(currency_reserve))
@@ -689,7 +692,7 @@ impl<T: Config> Pallet<T> {
 
 			// Update total liquidity pool token supply of token_id
 			TotalSupplies::<T>::try_mutate(
-				pool_account,
+				id,
 				token_id,
 				|total_supply| -> DispatchResult {
 					*total_supply = total_liquidity
@@ -701,7 +704,7 @@ impl<T: Config> Pallet<T> {
 
 			// Update currency reserve size for token_id
 			CurrencyReserves::<T>::try_mutate(
-				pool_account,
+				id,
 				token_id,
 				|currency_reserve| -> DispatchResult {
 					*currency_reserve = currency_reserve
@@ -719,35 +722,32 @@ impl<T: Config> Pallet<T> {
 
 		// Burn liquidity pool tokens for offchain supplies
 		pallet_token_multi::Pallet::<T>::do_batch_burn(
-			&pool.vault,
-			&pool.lp_token,
+			pool.lp_token,
 			&pool.vault,
 			token_ids.clone(),
 			liquidities,
 		)?;
 
 		// Transfer total currency
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.currency,
 			&pool.vault,
-			&pool.currency,
-			&pool.vault,
-			who,
+			provider,
 			total_currency,
 		)?;
 
 		// Transfer all tokens to provider
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			pool.lp_token,
 			&pool.vault,
-			&pool.lp_token,
-			&pool.vault,
-			who,
+			provider,
 			token_ids.clone(),
 			token_amounts.clone(),
 		)?;
 
 		Self::deposit_event(Event::LiquidityRemoved(
-			who.clone(),
-			pool_account.clone(),
+			id,
+			provider.clone(),
 			token_ids,
 			token_amounts,
 			currency_amounts,
@@ -813,8 +813,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn get_token_reserves(
+		token: T::MultiTokenId,
 		vault: &T::AccountId,
-		token_account: &T::AccountId,
 		token_ids: Vec<TokenId>,
 	) -> Result<Vec<Balance>, DispatchError> {
 		let n = token_ids.len();
@@ -822,7 +822,7 @@ impl<T: Config> Pallet<T> {
 		if n == 1 {
 			let mut token_reserves = vec![Balance::from(0u128); 1];
 			token_reserves[0] =
-				pallet_token_multi::Pallet::<T>::balance_of(vault, token_account, token_ids[0]);
+				pallet_token_multi::Pallet::<T>::balance_of(token, (token_ids[0], vault));
 			Ok(token_reserves)
 		} else {
 			let accounts = vec![vault.clone(); n];
@@ -834,7 +834,7 @@ impl<T: Config> Pallet<T> {
 				);
 			}
 
-			pallet_token_multi::Pallet::<T>::balance_of_batch(&token_account, &accounts, token_ids)
+			pallet_token_multi::Pallet::<T>::balance_of_batch(token, &accounts, token_ids)
 		}
 	}
 

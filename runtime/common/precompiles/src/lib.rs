@@ -24,8 +24,8 @@ where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
 	R: pallet_evm::Config + pallet_token_multi::Config,
-	// R::AccountId: From<H160>,
 	R::Call: From<pallet_token_multi::Call<R>>,
+	<R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
 {
 	fn execute(
 		address: H160,

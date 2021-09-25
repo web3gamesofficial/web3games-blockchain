@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 serde = { version = "1.0.124", optional = true }
+log = { version = "0.4.14", default-features = false }
 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -22,6 +23,7 @@ default = ["std"]
 std = [
     "serde/std",
     "codec/std",
+    "log/std",
     "frame-support/std",
     "frame-system/std",
     "sp-std/std",

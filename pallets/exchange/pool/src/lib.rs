@@ -1,16 +1,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::{Balance, PoolIndex};
+use primitives::Balance;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, One, Zero},
+	traits::{AtLeast32BitUnsigned, AccountIdConversion, One, Zero, CheckedAdd},
 	RuntimeDebug,
 };
 use sp_std::{cmp, convert::TryInto, prelude::*};
@@ -28,16 +28,16 @@ type BalanceOf<T> =
 
 pub const MINIMUM_LIQUIDITY: u128 = 1000; // 10**3;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Pool<AccountId> {
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+pub struct Pool<AccountId, FungibleTokenId> {
 	/// The owner of pool
 	pub owner: AccountId,
-	/// The account of first token
-	token_0: AccountId,
-	/// The account of second token
-	token_1: AccountId,
-	/// The account of liquidity pool token
-	pub lp_token: AccountId,
+	/// The id of first token
+	pub token_0: FungibleTokenId,
+	/// The id of second token
+	pub token_1: FungibleTokenId,
+	/// The id of liquidity pool token
+	pub lp_token: FungibleTokenId,
 }
 
 #[frame_support::pallet]
@@ -52,6 +52,8 @@ pub mod pallet {
 
 		type PalletId: Get<PalletId>;
 
+		type PoolId: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
+
 		/// The minimum balance to create pool
 		#[pallet::constant]
 		type CreatePoolDeposit: Get<BalanceOf<Self>>;
@@ -64,28 +66,42 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Pools<T: Config> = StorageMap<_, Blake2_128, T::AccountId, Pool<T::AccountId>>;
+	pub(super) type Pools<T: Config> = StorageMap<_, Blake2_128, T::PoolId, Pool<T::AccountId, T::FungibleTokenId>>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn pool_count)]
-	pub(super) type PoolCount<T> = StorageValue<_, PoolIndex, ValueQuery>;
+	#[pallet::getter(fn next_pool_id)]
+	pub(super) type NextPoolId<T: Config> = StorageValue<_, T::PoolId, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_pool)]
+	pub(super) type GetPool<T: Config> = StorageMap<
+		_,
+		Blake2_128,
+		(T::FungibleTokenId, T::FungibleTokenId),
+		T::PoolId,
+		ValueQuery
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn reserves)]
 	pub(super) type Reserves<T: Config> =
-		StorageMap<_, Blake2_128, T::AccountId, (Balance, Balance), ValueQuery>;
+		StorageMap<_, Blake2_128, T::PoolId, (Balance, Balance), ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		PoolCreated(T::AccountId, T::AccountId),
+		PoolCreated(T::PoolId, T::AccountId),
+		LiquidityAdded(T::PoolId, Balance, Balance, Balance),
+		LiquidityRemoved(T::PoolId),
+		Swapped(T::PoolId),
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		Overflow,
-		InvalidPoolAccount,
+		PoolNotFound,
+		NoAvailablePoolId,
 		InsufficientAmount,
 		InsufficientOutAmount,
 		InsufficientInputAmount,
@@ -98,59 +114,20 @@ pub mod pallet {
 		InsufficientLiquidityBurned,
 		InvalidPath,
 		TokenAccountNotFound,
+		PoolAlreadyCreated,
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
-		pub fn create_pair(
+		pub fn create_pool(
 			origin: OriginFor<T>,
-			token_a: T::AccountId,
-			token_b: T::AccountId,
+			token_a: T::FungibleTokenId,
+			token_b: T::FungibleTokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(
-				pallet_token_fungible::Pallet::<T>::exists(&token_a),
-				Error::<T>::TokenAccountNotFound
-			);
-
-			ensure!(
-				pallet_token_fungible::Pallet::<T>::exists(&token_b),
-				Error::<T>::TokenAccountNotFound
-			);
-
-			let pool_id =
-				PoolCount::<T>::try_mutate(|count| -> Result<PoolIndex, DispatchError> {
-					let new_count = count.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
-					*count = new_count;
-					Ok(new_count)
-				})?;
-
-			let pool_account = Self::pool_account_id(pool_id);
-
-			let deposit = T::CreatePoolDeposit::get();
-			<T as Config>::Currency::transfer(&who, &Self::account_id(), deposit, AllowDeath)?;
-
-			let lp_token = pallet_token_fungible::Pallet::<T>::do_create_token(
-				&Self::account_id(),
-				[].to_vec(),
-				[].to_vec(),
-				0,
-			)?;
-
-			let (token_0, token_1) = Self::sort_tokens(&token_a, &token_b);
-
-			let pool = Pool {
-				owner: who.clone(),
-				token_0,
-				token_1,
-				lp_token,
-			};
-
-			Pools::<T>::insert(&pool_account, pool);
-
-			Self::deposit_event(Event::PoolCreated(pool_account, who));
+			Self::do_create_pool(&who, token_a, token_b)?;
 
 			Ok(())
 		}
@@ -158,9 +135,7 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn add_liquidity(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
-			token_a: T::AccountId,
-			token_b: T::AccountId,
+			id: T::PoolId,
 			amount_a_desired: Balance,
 			amount_b_desired: Balance,
 			amount_a_min: Balance,
@@ -169,35 +144,31 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
+
 			let (amount_a, amount_b) = Self::do_add_liquidity(
-				&pool_account,
-				&token_a,
-				&token_b,
+				id,
 				amount_a_desired,
 				amount_b_desired,
 				amount_a_min,
 				amount_b_min,
 			)?;
 
-			let _pool = Pools::<T>::get(&pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
-
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&who,
-				&token_a,
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_0,
 				&who,
 				&Self::account_id(),
 				amount_a,
-			)
-			.expect("do_transfer_from fail");
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&who,
-				&token_b,
+			)?;
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_1,
 				&who,
 				&Self::account_id(),
 				amount_b,
-			)
-			.expect("do_transfer_from fail");
-			let _liquidity = Self::mint(&who, &pool_account, &to)?;
+			)?;
+			let liquidity = Self::mint(&who, id, &to)?;
+	
+			Self::deposit_event(Event::LiquidityAdded(id, amount_a, amount_b, liquidity));
 
 			Ok(())
 		}
@@ -205,9 +176,9 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn remove_liquidity(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
-			token_a: T::AccountId,
-			token_b: T::AccountId,
+			id: T::PoolId,
+			token_a: T::FungibleTokenId,
+			token_b: T::FungibleTokenId,
 			liquidity: Balance,
 			amount_a_min: Balance,
 			amount_b_min: Balance,
@@ -215,18 +186,16 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let pool = Pools::<T>::get(&pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+			let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&who,
-				&pool.lp_token,
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.lp_token,
 				&who,
 				&Self::account_id(),
 				liquidity,
-			)
-			.expect("do_transfer_from fail");
-			let (amount_0, amount_1) = Self::burn(&who, &pool_account, &to)?;
-			let (token_0, _token_1) = Self::sort_tokens(&token_a, &token_b);
+			)?;
+			let (amount_0, amount_1) = Self::burn(&who, id, &to)?;
+			let (token_0, _token_1) = Self::sort_tokens(token_a, token_b);
 			let (amount_a, amount_b) = if token_a == token_0 {
 				(amount_0, amount_1)
 			} else {
@@ -242,31 +211,29 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_exact_tokens_for_tokens(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::PoolId,
 			amount_in: Balance,
 			amount_out_min: Balance,
-			path: Vec<T::AccountId>,
+			path: Vec<T::FungibleTokenId>,
 			to: T::AccountId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let _pool = Pools::<T>::get(&pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
-			let amounts = Self::get_amounts_out(&pool_account, amount_in, &path)?;
+			let amounts = Self::get_amounts_out(id, amount_in, path.clone())?;
 			ensure!(
 				amounts[amounts.len() - 1] >= amount_out_min,
 				Error::<T>::InsufficientOutAmount
 			);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&who,
-				&path[0],
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				path[0],
 				&who,
 				&Self::account_id(),
 				amounts[0],
-			)
-			.expect("do_transfer_from fail");
-			Self::do_swap(&who, &pool_account, amounts, &path, &to).expect("swap fail");
+			)?;
+			Self::do_swap(id, amounts, path, &to).expect("swap fail");
 
 			Ok(())
 		}
@@ -274,31 +241,29 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_tokens_for_exact_tokens(
 			origin: OriginFor<T>,
-			pool_account: T::AccountId,
+			id: T::PoolId,
 			amount_out: Balance,
 			amount_in_max: Balance,
-			path: Vec<T::AccountId>,
+			path: Vec<T::FungibleTokenId>,
 			to: T::AccountId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let _pool = Pools::<T>::get(&pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
-			let amounts = Self::get_amounts_out(&pool_account, amount_out, &path)?;
+			let amounts = Self::get_amounts_out(id, amount_out, path.clone())?;
 			ensure!(
 				amounts[0] <= amount_in_max,
 				Error::<T>::InsufficientInputAmount
 			);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				&who,
-				&path[0],
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				path[0],
 				&who,
 				&Self::account_id(),
 				amounts[0],
-			)
-			.expect("do_transfer_from fail");
-			Self::do_swap(&who, &pool_account, amounts, &path, &to).expect("swap fail");
+			)?;
+			Self::do_swap(id, amounts, path, &to)?;
 
 			Ok(())
 		}
@@ -307,55 +272,153 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	// The account ID of the vault
-	pub fn account_id() -> T::AccountId {
+	fn account_id() -> T::AccountId {
 		<T as Config>::PalletId::get().into_account()
 	}
 
-	// The account ID of a pool account
-	pub fn pool_account_id(id: PoolIndex) -> T::AccountId {
-		<T as Config>::PalletId::get().into_sub_account(id)
+	pub fn exists(token_a: T::FungibleTokenId, token_b: T::FungibleTokenId) -> bool {
+		GetPool::<T>::contains_key((token_a, token_b))
 	}
 
-	fn init_amount_in(balance: Balance, reserve: Balance, amount_out: Balance) -> Balance {
-		if balance > reserve {
-			balance - (reserve - amount_out)
-		} else {
-			Zero::zero()
-		}
-	}
-
-	fn do_update(
-		pool_account: &T::AccountId,
-		balance_a: Balance,
-		balance_b: Balance,
-		_reserve_a: Balance,
-		_reserve_b: Balance,
-	) -> DispatchResult {
+	pub fn do_create_pool(
+		who: &T::AccountId,
+		token_a: T::FungibleTokenId,
+		token_b: T::FungibleTokenId,
+	) -> Result<T::PoolId, DispatchError> {
 		ensure!(
-			balance_a < Zero::zero() && balance_b < Zero::zero(),
-			Error::<T>::Overflow
+			pallet_token_fungible::Pallet::<T>::exists(token_a),
+			Error::<T>::TokenAccountNotFound,
 		);
 
-		Reserves::<T>::mutate(pool_account, |reserve| *reserve = (balance_a, balance_b));
+		ensure!(
+			pallet_token_fungible::Pallet::<T>::exists(token_b),
+			Error::<T>::TokenAccountNotFound,
+		);
+
+		ensure!(
+			!GetPool::<T>::contains_key((token_a, token_b)),
+			Error::<T>::PoolAlreadyCreated
+		);
+
+		let id = NextPoolId::<T>::try_mutate(|id| -> Result<T::PoolId, DispatchError> {
+			let current_id = *id;
+			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailablePoolId)?;
+			Ok(current_id)
+		})?;
+
+		let deposit = T::CreatePoolDeposit::get();
+		<T as Config>::Currency::transfer(who, &Self::account_id(), deposit, AllowDeath)?;
+
+		let lp_token = pallet_token_fungible::Pallet::<T>::do_create_token(
+			&Self::account_id(),
+			[].to_vec(),
+			[].to_vec(),
+			0,
+		)?;
+
+		let (token_0, token_1) = Self::sort_tokens(token_a, token_b);
+
+		let pool = Pool {
+			owner: who.clone(),
+			token_0,
+			token_1,
+			lp_token,
+		};
+
+		Pools::<T>::insert(id, pool);
+		GetPool::<T>::insert((token_a, token_b), id);
+
+		Self::deposit_event(Event::PoolCreated(id, who.clone()));
+
+		Ok(id)
+	}
+
+	fn do_swap(
+		id: T::PoolId,
+		amounts: Vec<Balance>,
+		path: Vec<T::FungibleTokenId>,
+		to: &T::AccountId,
+	) -> DispatchResult {
+		let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
+
+		let vault_account = Self::account_id();
+
+		for i in 0..path.len() - 1 {
+			let (input, output) = (path[i], path[i + 1]);
+			let (token_0, _) = Self::sort_tokens(input, output);
+			let amount_out = amounts[i + 1];
+			let (amount_0_out, amount_1_out) = if input == token_0 {
+				(Balance::from(0u128), amount_out)
+			} else {
+				(amount_out, Balance::from(0u128))
+			};
+			let receiver = if i < path.len() - 2 {
+				vault_account.clone()
+			} else {
+				to.clone()
+			};
+
+			Self::swap(id, amount_0_out, amount_1_out, &receiver)?;
+		}
 
 		Ok(())
 	}
 
+	fn do_add_liquidity(
+		id: T::PoolId,
+		amount_a_desired: Balance,
+		amount_b_desired: Balance,
+		amount_a_min: Balance,
+		amount_b_min: Balance,
+	) -> Result<(Balance, Balance), DispatchError> {
+		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
+
+		let amount_a;
+		let amount_b;
+		if reserve_a == Zero::zero() && reserve_b == Zero::zero() {
+			amount_a = amount_a_desired;
+			amount_b = amount_b_desired;
+		} else {
+			let amount_b_optimal = Self::quote(amount_a_desired, reserve_a, reserve_b)?;
+			if amount_b_optimal <= amount_b_desired {
+				ensure!(
+					amount_b_optimal >= amount_b_min,
+					Error::<T>::InsufficientBAmount
+				);
+				amount_a = amount_a_desired;
+				amount_b = amount_b_optimal;
+			} else {
+				let amount_a_optimal = Self::quote(amount_b_desired, reserve_b, reserve_a)?;
+				ensure!(
+					amount_a_optimal <= amount_a_desired,
+					Error::<T>::InsufficientAmount
+				);
+				ensure!(
+					amount_a_optimal >= amount_a_min,
+					Error::<T>::InsufficientAAmount
+				);
+				amount_a = amount_a_optimal;
+				amount_b = amount_b_desired;
+			}
+		}
+
+		Ok((amount_a, amount_b))
+	}
+
 	pub fn swap(
-		who: &T::AccountId,
-		pool_account: &T::AccountId,
+		id: T::PoolId,
 		amount_0_out: Balance,
 		amount_1_out: Balance,
 		to: &T::AccountId,
 	) -> DispatchResult {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 		ensure!(
 			amount_0_out > Zero::zero() || amount_1_out > Zero::zero(),
 			Error::<T>::InsufficientOutAmount
 		);
 
-		let (reserve_0, reserve_1) = Reserves::<T>::get(pool_account);
+		let (reserve_0, reserve_1) = Reserves::<T>::get(id);
 		ensure!(
 			amount_0_out < reserve_0 && amount_1_out < reserve_1,
 			Error::<T>::InsufficientLiquidity
@@ -364,30 +427,26 @@ impl<T: Config> Pallet<T> {
 		let vault_account = Self::account_id();
 
 		if amount_0_out > Zero::zero() {
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				who,
-				&pool.token_0,
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_0,
 				&vault_account,
 				to,
 				amount_0_out,
-			)
-			.expect("do_transfer_from fail");
+			)?;
 		}
 		if amount_1_out > Zero::zero() {
-			pallet_token_fungible::Pallet::<T>::do_transfer_from(
-				who,
-				&pool.token_1,
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_1,
 				&vault_account,
 				to,
 				amount_1_out,
-			)
-			.expect("do_transfer_from fail");
+			)?;
 		}
 
 		let balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_0, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &vault_account);
 		let balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_1, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &vault_account);
 
 		let amount_0_in = Self::init_amount_in(balance_0, reserve_0, amount_0_out);
 		let amount_1_in = Self::init_amount_in(balance_1, reserve_1, amount_1_out);
@@ -407,7 +466,7 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::AdjustedError
 		);
 
-		Self::do_update(pool_account, balance_0, balance_1, reserve_0, reserve_1)
+		Self::do_update(id, balance_0, balance_1, reserve_0, reserve_1)
 			.expect("do update fail");
 
 		Ok(())
@@ -415,35 +474,34 @@ impl<T: Config> Pallet<T> {
 
 	pub fn mint(
 		_who: &T::AccountId,
-		pool_account: &T::AccountId,
+		id: T::PoolId,
 		to: &T::AccountId,
 	) -> Result<Balance, DispatchError> {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
-		let (reserve_a, reserve_b) = Reserves::<T>::get(pool_account);
+		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
 		let vault_account = Self::account_id();
 
 		let balance_a =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_0, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &vault_account);
 		let balance_b =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_1, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &vault_account);
 
 		let amount_a = balance_a - reserve_a;
 		let amount_b = balance_b - reserve_b;
 
 		let liquidity: Balance;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token)?;
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token)?;
 		if total_supply == Zero::zero() {
 			liquidity =
 				((amount_a * amount_b) * (amount_a * amount_b)) - Balance::from(MINIMUM_LIQUIDITY);
+			// permanently lock the first MINIMUM_LIQUIDITY tokens
 			pallet_token_fungible::Pallet::<T>::do_mint(
-				&vault_account,
-				&pool.lp_token,
+				pool.lp_token,
 				&T::AccountId::default(),
 				Balance::from(MINIMUM_LIQUIDITY),
-			)
-			.expect("do mint fail"); // permanently lock the first MINIMUM_LIQUIDITY tokens
+			)?;
 		} else {
 			liquidity = cmp::min(
 				amount_a * total_supply / reserve_a,
@@ -454,34 +512,32 @@ impl<T: Config> Pallet<T> {
 			liquidity >= Zero::zero(),
 			Error::<T>::InsufficientLiquidityMinted
 		);
-		pallet_token_fungible::Pallet::<T>::do_mint(&vault_account, &pool.lp_token, to, liquidity)
-			.expect("do mint fail");
+		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, to, liquidity)?;
 
-		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b)
-			.expect("update fail");
+		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 
 		Ok(liquidity)
 	}
 
 	pub fn burn(
 		_who: &T::AccountId,
-		pool_account: &T::AccountId,
+		id: T::PoolId,
 		to: &T::AccountId,
 	) -> Result<(Balance, Balance), DispatchError> {
-		let pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
-		let (reserve_a, reserve_b) = Reserves::<T>::get(pool_account);
+		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
 		let vault_account = Self::account_id();
 
 		let mut balance_a =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_0, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &vault_account);
 		let mut balance_b =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_1, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &vault_account);
 
 		let liquidity =
-			pallet_token_fungible::Pallet::<T>::balance_of(&pool.lp_token, &vault_account);
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.lp_token, &vault_account);
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(&pool.lp_token)?;
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token)?;
 
 		let amount_a = liquidity * balance_a / total_supply;
 		let amount_b = liquidity * balance_b / total_supply;
@@ -490,131 +546,69 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientLiquidityBurned
 		);
 
-		pallet_token_fungible::Pallet::<T>::do_burn(&vault_account, &pool.lp_token, liquidity)
-			.expect("do_burn fail");
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
-			&vault_account,
-			&pool.token_0,
+		pallet_token_fungible::Pallet::<T>::do_burn(pool.lp_token, &vault_account, liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.token_0,
 			&vault_account,
 			to,
 			amount_a,
-		)
-		.expect("do_transfer_from fail");
-		pallet_token_fungible::Pallet::<T>::do_transfer_from(
-			&vault_account,
-			&pool.token_1,
+		)?;
+		pallet_token_fungible::Pallet::<T>::do_transfer(
+			pool.token_1,
 			&vault_account,
 			to,
 			amount_b,
-		)
-		.expect("do_transfer_from fail");
+		)?;
 
-		balance_a = pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_0, &vault_account);
-		balance_b = pallet_token_fungible::Pallet::<T>::balance_of(&pool.token_1, &vault_account);
+		balance_a = pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &vault_account);
+		balance_b = pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &vault_account);
 
-		Self::do_update(pool_account, balance_a, balance_b, reserve_a, reserve_b)
-			.expect("update fail");
+		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 
 		Ok((amount_a, amount_b))
 	}
 
-	fn do_swap(
-		who: &T::AccountId,
-		pool_account: &T::AccountId,
-		amounts: Vec<Balance>,
-		path: &Vec<T::AccountId>,
-		to: &T::AccountId,
+	fn do_update(
+		id: T::PoolId,
+		balance_a: Balance,
+		balance_b: Balance,
+		_reserve_a: Balance,
+		_reserve_b: Balance,
 	) -> DispatchResult {
-		let _pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
+		ensure!(
+			balance_a < Zero::zero() && balance_b < Zero::zero(),
+			Error::<T>::Overflow
+		);
 
-		let vault_account = Self::account_id();
-
-		for i in 0..path.len() - 1 {
-			let (input, output) = (&path[i], &path[i + 1]);
-			let (token_0, _) = Self::sort_tokens(input, output);
-			let amount_out = amounts[i + 1];
-			let (amount_0_out, amount_1_out) = if *input == token_0 {
-				(Balance::from(0u128), amount_out)
-			} else {
-				(amount_out, Balance::from(0u128))
-			};
-			let receiver = if i < path.len() - 2 {
-				vault_account.clone()
-			} else {
-				to.clone()
-			};
-
-			Self::swap(who, pool_account, amount_0_out, amount_1_out, &receiver)
-				.expect("swap fail");
-		}
+		Reserves::<T>::mutate(id, |reserve| *reserve = (balance_a, balance_b));
 
 		Ok(())
 	}
 
-	fn do_add_liquidity(
-		pool_account: &T::AccountId,
-		_token_a: &T::AccountId,
-		_token_b: &T::AccountId,
-		amount_a_desired: Balance,
-		amount_b_desired: Balance,
-		amount_a_min: Balance,
-		amount_b_min: Balance,
-	) -> Result<(Balance, Balance), DispatchError> {
-		let _pool = Pools::<T>::get(pool_account).ok_or(Error::<T>::InvalidPoolAccount)?;
-
-		let (reserve_a, reserve_b) = Reserves::<T>::get(pool_account);
-
-		let amount_a;
-		let amount_b;
-		if reserve_a == Zero::zero() && reserve_b == Zero::zero() {
-			// (amount_a, amount_b) = (amount_a_desired, amount_b_desired);
-			amount_a = amount_a_desired;
-			amount_b = amount_b_desired;
+	fn init_amount_in(balance: Balance, reserve: Balance, amount_out: Balance) -> Balance {
+		if balance > reserve {
+			balance - (reserve - amount_out)
 		} else {
-			let amount_b_optimal = Self::quote(amount_a_desired, reserve_a, reserve_b)?;
-			if amount_b_optimal <= amount_b_desired {
-				ensure!(
-					amount_b_optimal >= amount_b_min,
-					Error::<T>::InsufficientBAmount
-				);
-				// (amount_a, amount_b) = (amount_a_desired, amount_b_optimal);
-				amount_a = amount_a_desired;
-				amount_b = amount_b_optimal;
-			} else {
-				let amount_a_optimal = Self::quote(amount_b_desired, reserve_b, reserve_a)?;
-				ensure!(
-					amount_a_optimal <= amount_a_desired,
-					Error::<T>::InsufficientAmount
-				);
-				ensure!(
-					amount_a_optimal >= amount_a_min,
-					Error::<T>::InsufficientAAmount
-				);
-				// (amount_a, amount_b) = (amount_a_optimal, amount_b_desired);
-				amount_a = amount_a_optimal;
-				amount_b = amount_b_desired;
-			}
+			Zero::zero()
 		}
-
-		Ok((amount_a, amount_b))
 	}
 
-	fn sort_tokens(token_a: &T::AccountId, token_b: &T::AccountId) -> (T::AccountId, T::AccountId) {
+	fn sort_tokens(token_a: T::FungibleTokenId, token_b: T::FungibleTokenId) -> (T::FungibleTokenId, T::FungibleTokenId) {
 		if token_a < token_b {
-			(token_a.clone(), token_b.clone())
+			(token_a, token_b)
 		} else {
-			(token_b.clone(), token_a.clone())
+			(token_b, token_a)
 		}
 	}
 
 	fn get_reserves(
-		pool_account: &T::AccountId,
-		token_a: &T::AccountId,
-		token_b: &T::AccountId,
+		id: T::PoolId,
+		token_a: T::FungibleTokenId,
+		token_b: T::FungibleTokenId,
 	) -> (Balance, Balance) {
 		let (token_0, _) = Self::sort_tokens(token_a, token_b);
-		let (reserve_0, reserve_1) = Reserves::<T>::get(pool_account);
-		let (reserve_a, reserve_b) = if *token_a == token_0 {
+		let (reserve_0, reserve_1) = Reserves::<T>::get(id);
+		let (reserve_a, reserve_b) = if token_a == token_0 {
 			(reserve_0, reserve_1)
 		} else {
 			(reserve_1, reserve_0)
@@ -638,7 +632,7 @@ impl<T: Config> Pallet<T> {
 		Ok(amount_b)
 	}
 
-	fn get_amount_out(
+	pub fn get_amount_out(
 		amount_in: Balance,
 		reserve_in: Balance,
 		reserve_out: Balance,
@@ -666,7 +660,7 @@ impl<T: Config> Pallet<T> {
 		Ok(amount_out)
 	}
 
-	fn get_amount_in(
+	pub fn get_amount_in(
 		amount_out: Balance,
 		reserve_in: Balance,
 		reserve_out: Balance,
@@ -690,10 +684,10 @@ impl<T: Config> Pallet<T> {
 		Ok(amount_in)
 	}
 
-	fn get_amounts_out(
-		pool_account: &T::AccountId,
+	pub fn get_amounts_out(
+		id: T::PoolId,
 		amount_in: Balance,
-		path: &Vec<T::AccountId>,
+		path: Vec<T::FungibleTokenId>,
 	) -> Result<Vec<Balance>, DispatchError> {
 		ensure!(path.len() >= 2, Error::<T>::InvalidPath);
 
@@ -701,17 +695,17 @@ impl<T: Config> Pallet<T> {
 		amounts[0] = amount_in;
 		for i in 0..path.len() - 1 {
 			let (reserve_in, reserve_out) =
-				Self::get_reserves(pool_account, &path[i], &path[i + 1]);
+				Self::get_reserves(id, path[i], path[i + 1]);
 			amounts[i + 1] = Self::get_amount_out(amounts[i], reserve_in, reserve_out)?;
 		}
 
 		Ok(amounts)
 	}
 
-	fn _get_amounts_in(
-		pool_account: &T::AccountId,
+	pub fn get_amounts_in(
+		id: T::PoolId,
 		amount_out: Balance,
-		path: &Vec<T::AccountId>,
+		path: Vec<T::FungibleTokenId>,
 	) -> Result<Vec<Balance>, DispatchError> {
 		ensure!(path.len() >= 2, Error::<T>::InvalidPath);
 
@@ -719,7 +713,7 @@ impl<T: Config> Pallet<T> {
 		amounts[path.len() - 1] = amount_out;
 		for i in (0..path.len() - 1).rev() {
 			let (reserve_in, reserve_out) =
-				Self::get_reserves(pool_account, &path[i - 1], &path[i]);
+				Self::get_reserves(id, path[i - 1], path[i]);
 			amounts[i - 1] = Self::get_amount_in(amounts[i], reserve_in, reserve_out)?;
 		}
 
