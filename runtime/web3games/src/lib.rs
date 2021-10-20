@@ -435,19 +435,19 @@ pub fn get_all_pallet_accounts() -> Vec<AccountId> {
 		TokenNonFungiblePalletId::get().into_account(),
 		TokenMultiPalletId::get().into_account(),
 		WrapCurrencyPalletId::get().into_account(),
-		PoolPalletId::get().into_account(),
-		NftPoolPalletId::get().into_account(),
+		ExchangePalletId::get().into_account(),
+		ExchangeNftPalletId::get().into_account(),
 		ZeroAccountId::get(),
 	]
 }
 
 parameter_types! {
-	pub const TokenFungiblePalletId: PalletId = PalletId(*b"w3g/tofm");
-	pub const TokenNonFungiblePalletId: PalletId = PalletId(*b"w3g/tonf");
-	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tomm");
+	pub const TokenFungiblePalletId: PalletId = PalletId(*b"w3g/tfpi");
+	pub const TokenNonFungiblePalletId: PalletId = PalletId(*b"w3g/tnfp");
+	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tmpi");
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
-	pub const PoolPalletId: PalletId = PalletId(*b"w3g/pool");
-	pub const NftPoolPalletId: PalletId = PalletId(*b"w3g/nftp");
+	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
+	pub const ExchangeNftPalletId: PalletId = PalletId(*b"w3g/exnp");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
 }
@@ -487,23 +487,23 @@ impl pallet_wrap_currency::Config for Runtime {
 	type GetNativeCurrencyId = GetNativeCurrencyId;
 }
 
-impl pallet_exchange_pool::Config for Runtime {
+impl pallet_exchange::Config for Runtime {
 	type Event = Event;
-	type PalletId = PoolPalletId;
+	type PalletId = ExchangePalletId;
 	type PoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
 
-impl pallet_exchange_nft_pool::Config for Runtime {
+impl pallet_exchange_nft::Config for Runtime {
 	type Event = Event;
-	type PalletId = NftPoolPalletId;
+	type PalletId = ExchangeNftPalletId;
 	type NftPoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 }
 
-impl pallet_nft_market::Config for Runtime {
+impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
 	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
@@ -536,9 +536,9 @@ construct_runtime!(
 		TokenNonFungible: pallet_token_non_fungible::{Pallet, Call, Storage, Event<T>},
 		TokenMulti: pallet_token_multi::{Pallet, Call, Storage, Event<T>},
 		WrapCurrency: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>},
-		ExchangePool: pallet_exchange_pool::{Pallet, Call, Storage, Event<T>},
-		ExchangeNftPool: pallet_exchange_nft_pool::{Pallet, Call, Storage, Event<T>},
-		NftMarket: pallet_nft_market::{Pallet, Call, Storage, Event<T>},
+		Exchange: pallet_exchange::{Pallet, Call, Storage, Event<T>},
+		ExchangeNft: pallet_exchange_nft::{Pallet, Call, Storage, Event<T>},
+		Marketplace: pallet_marketplace::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

@@ -4436,7 +4436,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange-nft-pool"
+name = "pallet-exchange"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "integer-sqrt",
+ "log",
+ "pallet-timestamp",
+ "pallet-token-fungible",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-primitives",
+]
+
+[[package]]
+name = "pallet-exchange-nft"
 version = "0.1.0"
 dependencies = [
  "frame-support",
@@ -4447,24 +4465,6 @@ dependencies = [
  "pallet-timestamp",
  "pallet-token-fungible",
  "pallet-token-multi",
- "parity-scale-codec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
-name = "pallet-exchange-pool"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-timestamp",
- "pallet-token-fungible",
  "parity-scale-codec",
  "sp-core",
  "sp-io",
@@ -4496,7 +4496,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-nft-market"
+name = "pallet-marketplace"
 version = "0.1.0"
 dependencies = [
  "frame-support",
@@ -8765,10 +8765,10 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-exchange-nft-pool",
- "pallet-exchange-pool",
+ "pallet-exchange",
+ "pallet-exchange-nft",
  "pallet-grandpa",
- "pallet-nft-market",
+ "pallet-marketplace",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",

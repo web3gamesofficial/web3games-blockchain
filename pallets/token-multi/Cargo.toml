@@ -16,7 +16,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 
 [features]
 default = ["std"]

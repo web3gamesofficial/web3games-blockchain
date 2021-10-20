@@ -1,5 +1,5 @@
 [package]
-name = "pallet-token-non-fungible"
+name = "pallet-token-fungible"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
@@ -15,7 +15,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 
 [features]
 default = ["std"]

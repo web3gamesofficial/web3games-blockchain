@@ -1,5 +1,5 @@
 [package]
-name = "pallet-exchange-pool"
+name = "pallet-exchange-nft"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2018"
@@ -16,8 +16,12 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
-pallet-token-fungible = { path = "../../token/fungible", default-features = false }
+primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
+pallet-token-fungible = { path = "../token-fungible", default-features = false }
+pallet-token-multi = { path = "../token-multi", default-features = false }
+
+[dev-dependencies]
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]
@@ -33,4 +37,5 @@ std = [
     "sp-core/std",
     "primitives/std",
     "pallet-token-fungible/std",
+    "pallet-token-multi/std",
 ]

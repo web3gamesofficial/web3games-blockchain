@@ -17,7 +17,7 @@ randomness = { package = "pallet-randomness-collective-flip", git = "https://git
 pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "eb4de697ccd45948254db422abbcd735ae3c295a", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
-pallet-token-multi = { default-features = false, path = "../../../pallets/token/multi" }
+pallet-token-multi = { default-features = false, path = "../../../pallets/token-multi" }
 
 [features]
 default = ["std"]
