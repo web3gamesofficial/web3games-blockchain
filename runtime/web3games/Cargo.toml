@@ -10,7 +10,9 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 static_assertions = "1.1.0"
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-serde = { version = "1.0.124", optional = true, default-features = false }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+
+# serde = { version = "1.0.124", optional = true, default-features = false }
 
 pallet-aura = { git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -40,9 +42,9 @@ frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate"
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 # Contract
-pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "eb4de697ccd45948254db422abbcd735ae3c295a", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "eb4de697ccd45948254db422abbcd735ae3c295a", default-features = false }
-pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "eb4de697ccd45948254db422abbcd735ae3c295a", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15", default-features = false }
 
 # Used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true }
@@ -50,16 +52,16 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", d
 hex-literal = { version = "0.3.1", optional = true }
 
 # EVM
-pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
-pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
+pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
 
-fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
 
 # Orml packages
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
-orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
-orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.2" }
+orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.3" }
+orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.3" }
+orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.3" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 runtime-common = { path = "../common", default-features = false }
@@ -80,7 +82,8 @@ substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
 default = ["std"]
 std = [
 	"codec/std",
-	"serde",
+	"scale-info/std",
+	# "serde",
 	"frame-executive/std",
 	"frame-support/std",
 	"pallet-aura/std",

@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -21,6 +22,7 @@ primitives = { package = "web3games-primitives", path = "../../primitives", defa
 default = ["std"]
 std = [
 	"codec/std",
+    "scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
     "sp-std/std",

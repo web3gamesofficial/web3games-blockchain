@@ -13,6 +13,7 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::{convert::TryInto, prelude::*};
+use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -25,7 +26,7 @@ mod tests;
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Token<AccountId, BoundedString> {
 	owner: AccountId,
 	name: BoundedString,
@@ -98,7 +99,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		TokenCreated(T::FungibleTokenId, T::AccountId),
