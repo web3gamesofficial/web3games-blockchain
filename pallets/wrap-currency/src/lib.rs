@@ -6,6 +6,7 @@ use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
 use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
 use sp_std::prelude::*;
+use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -15,7 +16,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct WrapToken<FungibleTokenId> {
 	token_id: FungibleTokenId,
 	total_supply: Balance,
@@ -56,7 +57,6 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, CurrencyId, WrapToken<T::FungibleTokenId>>;
 
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		TokenCreated(CurrencyId, T::AccountId),

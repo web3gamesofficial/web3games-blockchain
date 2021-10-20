@@ -61,7 +61,7 @@ where
 				let amount: Balance = env.read_as()?;
 
 				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::transfer_from(id, from, to, token_id, amount)
+					pallet_token_multi::Call::<E::T>::transfer_from { id, from, to, token_id, amount }
 				);
 
 				let dispatch_info = call.get_dispatch_info();
@@ -86,7 +86,7 @@ where
 				let amount: Balance = env.read_as()?;
 
 				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::mint(id, to, token_id, amount)
+					pallet_token_multi::Call::<E::T>::mint { id, to, token_id, amount }
 				);
 
 				let dispatch_info = call.get_dispatch_info();

@@ -1,14 +1,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
+	BoundedVec,
 };
 use primitives::{Balance, TokenId};
 use sp_runtime::{traits::One, RuntimeDebug};
-use sp_std::prelude::*;
+use sp_std::{convert::TryInto, prelude::*};
+use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -23,15 +25,15 @@ type BalanceOf<T> =
 
 pub type CollectionId = u64;
 
-#[derive(Encode, Decode, Copy, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub enum NftType {
 	NonFungibleToken,
 	MultiToken,
 }
 
 /// Collection info
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug)]
-pub struct Collection<AccountId> {
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct Collection<AccountId, BoundedString> {
 	/// Class owner
 	pub owner: AccountId,
 	// The type of nft
@@ -39,7 +41,7 @@ pub struct Collection<AccountId> {
 	/// The account of nft
 	pub nft_account: AccountId,
 	/// Metadata from ipfs
-	pub metadata: Vec<u8>,
+	pub metadata: BoundedString,
 }
 
 #[frame_support::pallet]
@@ -51,6 +53,10 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
+		/// The maximum length of metadata stored on-chain.
+		#[pallet::constant]
+		type StringLimit: Get<u32>;
 
 		/// The minimum balance to create collection
 		#[pallet::constant]
@@ -65,14 +71,13 @@ pub mod pallet {
 
 	#[pallet::storage]
 	pub(super) type Collections<T: Config> =
-		StorageMap<_, Blake2_128Concat, CollectionId, Collection<T::AccountId>>;
+		StorageMap<_, Blake2_128Concat, CollectionId, Collection<T::AccountId, BoundedVec<u8, T::StringLimit>>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection_id)]
 	pub(super) type NextCollectionId<T: Config> = StorageValue<_, CollectionId, ValueQuery>;
 
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		CollectionCreated(CollectionId, T::AccountId),
@@ -90,6 +95,7 @@ pub mod pallet {
 		InvalidQuantity,
 		NoPermission,
 		CannotDestroyCollection,
+		BadMetadata,
 	}
 
 	#[pallet::hooks]
@@ -199,6 +205,9 @@ impl<T: Config> Pallet<T> {
 		nft_account: &T::AccountId,
 		metadata: Vec<u8>,
 	) -> Result<CollectionId, DispatchError> {
+		let bounded_metadata: BoundedVec<u8, T::StringLimit> =
+		metadata.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
+
 		let collection_id =
 			NextCollectionId::<T>::try_mutate(|id| -> Result<CollectionId, DispatchError> {
 				let current_id = *id;
@@ -215,7 +224,7 @@ impl<T: Config> Pallet<T> {
 			owner: who.clone(),
 			nft_type,
 			nft_account: nft_account.clone(),
-			metadata,
+			metadata: bounded_metadata,
 		};
 
 		Collections::<T>::insert(collection_id, collection);

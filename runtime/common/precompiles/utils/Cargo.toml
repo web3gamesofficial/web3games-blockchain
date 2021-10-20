@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 log = "0.4.14"
+sha3 = { version = "0.9", default-features = false }
 num_enum = { version = "0.5.3", default-features = false }
 
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -15,13 +16,13 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.2" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
 evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
 
 precompile-utils-macro = { path = "macro" }
 
 [dev-dependencies]
-sha3 = "0.9"
+hex-literal = "0.3.1"
 
 [features]
 default = ["std"]

@@ -14,6 +14,7 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::{cmp, convert::TryInto, prelude::*};
+use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -28,7 +29,7 @@ type BalanceOf<T> =
 
 pub const MINIMUM_LIQUIDITY: u128 = 1000; // 10**3;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen)]
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Pool<AccountId, FungibleTokenId> {
 	/// The owner of pool
 	pub owner: AccountId,
@@ -88,7 +89,6 @@ pub mod pallet {
 		StorageMap<_, Blake2_128, T::PoolId, (Balance, Balance), ValueQuery>;
 
 	#[pallet::event]
-	#[pallet::metadata(T::AccountId = "AccountId")]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		PoolCreated(T::PoolId, T::AccountId),

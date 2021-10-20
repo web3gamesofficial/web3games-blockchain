@@ -32,9 +32,9 @@ where
 		context: &Context,
 	) -> Result<PrecompileOutput, ExitError> {
 		log::info!("precompiles: tokens call");
-		let mut input = EvmDataReader::new(input);
+		let (input, selector) = EvmDataReader::new_with_selector(input)?;
 
-		let (origin, call) = match &input.read_selector()? {
+		let (origin, call) = match selector {
 			// pallet methods
 			Action::CreateToken => return Self::create_token(input, context),
 			// storage getters
@@ -119,7 +119,7 @@ where
 
 		let origin = Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_multi::Call::<Runtime>::transfer_from(id, from, to, token_id, amount);
+		let call = pallet_token_multi::Call::<Runtime>::transfer_from { id, from, to, token_id, amount };
 
 		Ok((Some(origin).into(), call))
 	}
@@ -144,7 +144,7 @@ where
 
 		let origin = Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_multi::Call::<Runtime>::mint(id, to, token_id, amount);
+		let call = pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount };
 
 		Ok((Some(origin).into(), call))
 	}
