@@ -1,0 +1,27 @@
+root = true
+
+[*.rs]
+indent_style=tab
+indent_size=tab
+max_line_length=100
+
+[*.ts]
+indent_style=space
+indent_size=2
+max_line_length=100
+
+[*.js]
+indent_style=space
+indent_size=2
+max_line_length=100
+
+[*.sh]
+indent_style=space
+indent_size=2
+
+[*.json]
+indent_style=space
+indent_size=2
+
+[*.md]
+trim_trailing_whitespace=false
