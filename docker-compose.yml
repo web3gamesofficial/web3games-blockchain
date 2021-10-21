@@ -1,0 +1,17 @@
+version: "3.2"
+
+services:
+  dev:
+    container_name: web3games-node
+    image: paritytech/ci-linux:002c04ad-20211021
+    working_dir: /var/www/web3games-node
+    ports:
+      - "9944:9944"
+    environment:
+      - CARGO_HOME=/var/www/web3games-node/.cargo
+    volumes:
+      - .:/var/www/web3games-node
+      - type: bind
+        source: ./.local
+        target: /root/.local
+    command: bash -c "cargo build --release && ./target/release/web3games-node --dev --ws-external"
