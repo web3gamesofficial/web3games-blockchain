@@ -57,6 +57,33 @@ Start a development chain with:
 ./target/release/web3games-node --dev
 ```
 
+Test 
+
+local path test
+```bash
+cargo test
+```
+// local path all pallet test
+```bash
+cargo test --all
+```
+
+// test runtime palletname
+```bash
+cargo test -p demo-node-runtime
+```
+
+// test runtime palletname  module
+```bash
+cargo test -p demo-node-runtime mymodule
+```
+
+// get more  test help
+```bash
+cargo test --help
+```
+
+
 Detailed logs may be shown by running the node with the following environment variables set: `RUST_LOG=debug RUST_BACKTRACE=1 cargo run -- --dev`.
 
 ### Multi-Node Local Testnet
