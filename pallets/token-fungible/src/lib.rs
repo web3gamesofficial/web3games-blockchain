@@ -116,6 +116,9 @@ pub mod pallet {
 		InvalidId,
 		AmountExceedAllowance,
 		BadMetadata,
+		InsufficientAuthorizedTokens,
+		InsufficientTokens,
+		ConfuseBehavior
 	}
 
 	#[pallet::hooks]
@@ -138,68 +141,6 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn approve(
-			origin: OriginFor<T>,
-			id: T::FungibleTokenId,
-			spender: T::AccountId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-	
-			Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
-				*allowance = allowance
-					.checked_add(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
-				Ok(())
-			})?;
-	
-			Self::deposit_event(Event::Transfer(
-				id,
-				who.clone(),
-				spender.clone(),
-				amount,
-			));
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn transfer(
-			origin: OriginFor<T>,
-			id: T::FungibleTokenId,
-			recipient: T::AccountId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::do_transfer(id, &who, &recipient, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn transfer_from(
-			origin: OriginFor<T>,
-			id: T::FungibleTokenId,
-			sender: T::AccountId,
-			recipient: T::AccountId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-	
-			Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
-				*allowance = allowance
-					.checked_sub(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
-				Ok(())
-			})?;
-
-			Self::do_transfer(id, &sender, &recipient, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
 		pub fn mint(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -216,12 +157,91 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn approve(
+			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
+			spender: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+
+			Self::maybe_check_permission(id, &who)?;
+			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientAuthorizedTokens);
+
+
+			Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
+				*allowance = allowance
+					.checked_add(amount)
+					.ok_or(Error::<T>::NumOverflow)?;
+				Ok(())
+			})?;
+
+			Self::deposit_event(Event::Transfer(
+				id,
+				who.clone(),
+				spender.clone(),
+				amount,
+			));
+
+			Ok(())
+		}
+
+
+		#[pallet::weight(10_000)]
+		pub fn transfer(
+			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
+			recipient: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::maybe_check_permission(id, &who)?;
+			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientTokens);
+
+			Self::do_transfer(id, &who, &recipient, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn transfer_from(
+			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
+			sender: T::AccountId,
+			recipient: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
+
+
+			ensure!(Allowances::<T>::get(id,(&sender, &who)) == amount, Error::<T>::InsufficientAuthorizedTokens);
+
+			// over flow check
+			Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
+				*allowance = allowance
+					.checked_sub(amount)
+					.ok_or(Error::<T>::NumOverflow)?;
+				Ok(())
+			})?;
+
+			Self::do_transfer(id, &sender, &recipient, amount)?;
+			Ok(())
+
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn burn(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+			Self::maybe_check_permission(id, &who)?;
 
 			Self::do_burn(id, &who, amount)?;
 

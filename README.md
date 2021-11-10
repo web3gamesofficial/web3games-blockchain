@@ -61,7 +61,9 @@ Test
 
 local path test
 ```bash
-cargo test
+cargo test 
+
+cargo test -- --nocapture
 ```
 // local path all pallet test
 ```bash

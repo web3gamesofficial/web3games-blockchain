@@ -18,6 +18,10 @@ sp-std = { git = "https://github.com/paritytech/substrate", default-features = f
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 
+[dev-dependencies]
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
+log = { version = "0.4.14", default-features = false }
+
 [features]
 default = ["std"]
 std = [
