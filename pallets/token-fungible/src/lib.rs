@@ -118,7 +118,8 @@ pub mod pallet {
 		BadMetadata,
 		InsufficientAuthorizedTokens,
 		InsufficientTokens,
-		ConfuseBehavior
+		ConfuseBehavior,
+		ApproveToCurrentOwner
 	}
 
 	#[pallet::hooks]
@@ -165,6 +166,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
 			Self::maybe_check_permission(id, &who)?;
 			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientAuthorizedTokens);
@@ -196,6 +198,8 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
 			Self::maybe_check_permission(id, &who)?;
 			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientTokens);
