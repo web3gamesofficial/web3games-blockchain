@@ -389,7 +389,7 @@ impl<T: Config> Pallet<T> {
 		base_uri: Vec<u8>,
 	) -> Result<T::NonFungibleTokenId, DispatchError> {
 		let deposit = T::CreateTokenDeposit::get();
-		println!("{:?}",deposit);
+		// println!("{:?}",deposit);
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =

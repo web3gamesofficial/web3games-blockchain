@@ -18,11 +18,12 @@ fn test_create_token_works() {
 fn test_create_token_not_works_by_bad_metadata() {
 	new_test_ext().execute_with(|| {
 		let origin = Origin::signed(1);
-		let name:Vec<u8> = vec![].max();
+		let name:Vec<u8> = vec![1,2,3];
 		let symbol:Vec<u8> = "FCK".to_string().into();
 		let decimals:u8 = 2;
 		assert_ok!(TokenFungible::create_token(origin,name,symbol,decimals));
 		// assert_eq!(TokenFungible::next_token_id(),1)
+
 	})
 }
 
