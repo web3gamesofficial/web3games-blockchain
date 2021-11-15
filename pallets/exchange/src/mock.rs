@@ -27,7 +27,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
-		Exchange: pallet_exchange::{Pallet, Call, Storage, Event<T>},
+		ExchangeNft: pallet_exchange_nft::{Pallet, Call, Storage, Event<T>},
 	}
 );
 

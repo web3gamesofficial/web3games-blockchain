@@ -246,6 +246,7 @@ pub mod pallet {
 			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 			let amounts = Self::get_amounts_out(id, amount_in, path.clone())?;
+			println!("{:?},{:?}",amounts[amounts.len() - 1],amount_out_min);
 			ensure!(
 				amounts[amounts.len() - 1] >= amount_out_min,
 				Error::<T>::InsufficientOutAmount
@@ -275,7 +276,9 @@ pub mod pallet {
 
 			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
+
 			let amounts = Self::get_amounts_out(id, amount_out, path.clone())?;
+			println!("{:?}",amounts);
 			ensure!(
 				amounts[0] <= amount_in_max,
 				Error::<T>::InsufficientInputAmount
@@ -669,12 +672,10 @@ impl<T: Config> Pallet<T> {
 			U256::from(amount_in_with_fee).saturating_mul(U256::from(reserve_out));
 		let denominator: U256 = (U256::from(reserve_in).saturating_mul(U256::from(1000u128)))
 			.saturating_add(amount_in_with_fee);
-
 		let amount_out = numerator
 			.checked_div(denominator)
 			.and_then(|n| TryInto::<Balance>::try_into(n).ok())
 			.unwrap_or_else(Zero::zero);
-
 		Ok(amount_out)
 	}
 

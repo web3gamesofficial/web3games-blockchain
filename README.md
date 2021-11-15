@@ -57,6 +57,10 @@ Start a development chain with:
 ./target/release/web3games-node --dev
 ```
 
+```bash
+./target/release/web3games-node --dev --tmp
+```
+
 Test 
 
 local path test

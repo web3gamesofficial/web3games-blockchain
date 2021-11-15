@@ -177,49 +177,21 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			ensure!(
+				pallet_token_fungible::Pallet::<T>::exists(currency),
+				Error::<T>::CurrencyAccountNotFound
+			);
+			ensure!(
+				pallet_token_multi::Pallet::<T>::exists(token),
+				Error::<T>::TokenAccountNotFound
+			);
+
+			ensure!(
+				!GetPool::<T>::contains_key((currency, token)),
+				Error::<T>::PoolAlreadyCreated
+			);
+
 			Self::do_create_pool(&who, currency, token)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn swap_currency_to_token(
-			origin: OriginFor<T>,
-			id: T::NftPoolId,
-			token_ids: Vec<TokenId>,
-			token_amounts_out: Vec<Balance>,
-			max_currency: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::do_swap_currency_to_token(
-				id,
-				&who,
-				token_ids,
-				token_amounts_out,
-				max_currency,
-			)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn swap_token_to_currency(
-			origin: OriginFor<T>,
-			id: T::NftPoolId,
-			token_ids: Vec<TokenId>,
-			token_amounts_in: Vec<Balance>,
-			min_currency: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::do_swap_token_to_currency(
-				id,
-				&who,
-				token_ids,
-				token_amounts_in,
-				min_currency,
-			)?;
 
 			Ok(())
 		}
@@ -267,6 +239,48 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::weight(10_000)]
+		pub fn swap_currency_to_token(
+			origin: OriginFor<T>,
+			id: T::NftPoolId,
+			token_ids: Vec<TokenId>,
+			token_amounts_out: Vec<Balance>,
+			max_currency: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_swap_currency_to_token(
+				id,
+				&who,
+				token_ids,
+				token_amounts_out,
+				max_currency,
+			)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn swap_token_to_currency(
+			origin: OriginFor<T>,
+			id: T::NftPoolId,
+			token_ids: Vec<TokenId>,
+			token_amounts_in: Vec<Balance>,
+			min_currency: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::do_swap_token_to_currency(
+				id,
+				&who,
+				token_ids,
+				token_amounts_in,
+				min_currency,
+			)?;
+
+			Ok(())
+		}
 	}
 }
 
@@ -281,19 +295,7 @@ impl<T: Config> Pallet<T> {
 		currency: T::FungibleTokenId,
 		token: T::MultiTokenId,
 	) -> Result<T::NftPoolId, DispatchError> {
-		ensure!(
-			pallet_token_fungible::Pallet::<T>::exists(currency),
-			Error::<T>::CurrencyAccountNotFound
-		);
-		ensure!(
-			pallet_token_multi::Pallet::<T>::exists(token),
-			Error::<T>::TokenAccountNotFound
-		);
 
-		ensure!(
-			!GetPool::<T>::contains_key((currency, token)),
-			Error::<T>::PoolAlreadyCreated
-		);
 
 		let id = NextPoolId::<T>::try_mutate(|id| -> Result<T::NftPoolId, DispatchError> {
 			let current_id = *id;

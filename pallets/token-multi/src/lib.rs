@@ -9,7 +9,7 @@ use frame_support::{
 };
 use primitives::{Balance, TokenId};
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, One, Zero, CheckedAdd},
+	traits::{AtLeast32BitUnsigned, One, CheckedAdd},
 	RuntimeDebug,
 };
 use sp_std::{convert::TryInto, prelude::*};
