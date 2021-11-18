@@ -662,14 +662,13 @@ dependencies = [
 
 [[package]]
 name = "cargo_metadata"
-version = "0.13.1"
+version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "081e3f0755c1f380c2d010481b6fa2e02973586d5f2b24eebb7a2a1d98b143d8"
+checksum = "ba2ae6de944143141f6155a473a6b02f66c7c3f9f47316f802f80204ebfe6e12"
 dependencies = [
  "camino",
  "cargo-platform",
- "semver 0.11.0",
- "semver-parser 0.10.2",
+ "semver 1.0.4",
  "serde",
  "serde_json",
 ]
@@ -2400,9 +2399,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "0.14.13"
+version = "0.14.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15d1cfb9e4f68655fa04c01f59edb405b6074a0f7118ea881e5026e4a1cd8593"
+checksum = "2b91bb1f221b6ea1f1e4371216b70f40748774c2fb5971b450c07773fb92d26b"
 dependencies = [
  "bytes 1.1.0",
  "futures-channel",
@@ -4499,7 +4498,7 @@ dependencies = [
 [[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#dcad42f9b51130621e24c3a93ca1075cd1bb9d15"
+source = "git+https://github.com/paritytech/substrate#1b646b219e0e0c7489a2a8488381fc2e32da6a1c"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -6043,7 +6042,7 @@ dependencies = [
  "pwasm-utils",
  "sc-allocator",
  "sp-core",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.0.0-dev",
  "sp-serializer",
  "sp-wasm-interface",
  "thiserror",
@@ -6683,6 +6682,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f301af10236f6df4160f7c3f04eec6dbc70ace82d23326abad5edee88801c6b6"
 dependencies = [
  "semver-parser 0.10.2",
+]
+
+[[package]]
+name = "semver"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "568a8e6258aa33c13358f81fd834adb854c6f7c9468520910a9b1e8fac068012"
+dependencies = [
  "serde",
 ]
 
@@ -7137,7 +7144,7 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#dcad42f9b51130621e24c3a93ca1075cd1bb9d15"
+source = "git+https://github.com/paritytech/substrate#1b646b219e0e0c7489a2a8488381fc2e32da6a1c"
 dependencies = [
  "kvdb",
  "parking_lot",
@@ -7252,6 +7259,14 @@ dependencies = [
 name = "sp-maybe-compressed-blob"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech//substrate?rev=dcad42f9b51130621e24c3a93ca1075cd1bb9d15#dcad42f9b51130621e24c3a93ca1075cd1bb9d15"
+dependencies = [
+ "zstd",
+]
+
+[[package]]
+name = "sp-maybe-compressed-blob"
+version = "4.1.0-dev"
+source = "git+https://github.com/paritytech/substrate#1b646b219e0e0c7489a2a8488381fc2e32da6a1c"
 dependencies = [
  "zstd",
 ]
@@ -7712,12 +7727,12 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#dcad42f9b51130621e24c3a93ca1075cd1bb9d15"
+source = "git+https://github.com/paritytech/substrate#1b646b219e0e0c7489a2a8488381fc2e32da6a1c"
 dependencies = [
  "ansi_term 0.12.1",
  "build-helper",
  "cargo_metadata",
- "sp-maybe-compressed-blob",
+ "sp-maybe-compressed-blob 4.1.0-dev",
  "tempfile",
  "toml",
  "walkdir",
