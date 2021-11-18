@@ -14,6 +14,7 @@ use sp_runtime::{
 };
 use sp_std::{convert::TryInto, prelude::*};
 use scale_info::TypeInfo;
+// use log::{log,Level};
 
 pub use pallet::*;
 
@@ -195,6 +196,7 @@ pub mod pallet {
 		NotOwnerOrApproved,
 		ApproveToCaller,
 		BadMetadata,
+		ConfuseBehavior,
 	}
 
 	#[pallet::hooks]
@@ -210,8 +212,23 @@ pub mod pallet {
 			base_uri: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
 			Self::do_create_token(&who, name, symbol, base_uri)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			id: T::NonFungibleTokenId,
+			to: T::AccountId,
+			token_id: TokenId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
+
+			Self::do_mint(id, &to, token_id)?;
 
 			Ok(())
 		}
@@ -225,15 +242,18 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let owner = Self::owner_of(id, token_id);
+			let owner = Owners::<T>::get(id, token_id);
+
 			ensure!(
 				owner != T::AccountId::default(),
 				Error::<T>::TokenNonExistent
 			);
 	
 			ensure!(to != owner, Error::<T>::ApproveToCurrentOwner);
+
+
 			ensure!(
-				who == owner || Self::is_approved_for_all(id, (&owner, &who)),
+				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
 				Error::<T>::NotOwnerOrApproved
 			);
 	
@@ -245,7 +265,6 @@ pub mod pallet {
 				to,
 				token_id,
 			));
-
 			Ok(())
 		}
 
@@ -273,6 +292,31 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn transfer(
+			origin: OriginFor<T>,
+			id: T::NonFungibleTokenId,
+			to: T::AccountId,
+			token_id: TokenId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			ensure!(who != to, Error::<T>::ConfuseBehavior);
+
+			let owner = Owners::<T>::get(id, token_id);
+			ensure!(
+				owner != T::AccountId::default(),
+				Error::<T>::TokenNonExistent
+			);
+
+			ensure!(owner == who, Error::<T>::NotTokenOwner);
+
+			Self::do_transfer_from(id, &who, &to, token_id)?;
+
+			Ok(())
+		}
+
+
+		#[pallet::weight(10_000)]
 		pub fn transfer_from(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -282,28 +326,29 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+
+			ensure!(who != to, Error::<T>::ConfuseBehavior);
+
+
 			ensure!(
 				Self::is_approved_or_owner(id, &who, token_id),
 				Error::<T>::NotOwnerOrApproved
 			);
 
+			let owner = Owners::<T>::get(id, token_id);
+			ensure!(
+				owner != T::AccountId::default(),
+				Error::<T>::TokenNonExistent
+			);
+
+			ensure!(
+				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
+				Error::<T>::NotOwnerOrApproved
+			);
+
+			ensure!(owner == from, Error::<T>::NotTokenOwner);
+
 			Self::do_transfer_from(id, &from, &to, token_id)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn mint(
-			origin: OriginFor<T>,
-			id: T::NonFungibleTokenId,
-			to: T::AccountId,
-			token_id: TokenId,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_mint(id, &to, token_id)?;
 
 			Ok(())
 		}
@@ -315,6 +360,15 @@ pub mod pallet {
 			token_id: TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+			let owner = Owners::<T>::get(id, token_id);
+
+			ensure!(
+				owner != T::AccountId::default(),
+				Error::<T>::TokenNonExistent
+			);
+
+			ensure!(who == owner, Error::<T>::NotTokenOwner);
 
 			Self::do_burn(id, &who, token_id)?;
 
@@ -335,6 +389,7 @@ impl<T: Config> Pallet<T> {
 		base_uri: Vec<u8>,
 	) -> Result<T::NonFungibleTokenId, DispatchError> {
 		let deposit = T::CreateTokenDeposit::get();
+		// println!("{:?}",deposit);
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =
@@ -370,13 +425,6 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		let owner = Self::owner_of(id, token_id);
-		ensure!(
-			owner != T::AccountId::default(),
-			Error::<T>::TokenNonExistent
-		);
-		ensure!(owner == *from, Error::<T>::NotTokenOwner);
-
 		let balance_from = Self::balance_of(id, from);
 		let balance_to = Self::balance_of(id, to);
 
@@ -447,13 +495,8 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		let owner = Self::owner_of(id, token_id);
-		ensure!(
-			owner != T::AccountId::default(),
-			Error::<T>::TokenNonExistent
-		);
-		ensure!(*account == owner, Error::<T>::NotTokenOwner);
 
+		let owner = account;
 		let balance = Self::balance_of(id, &owner);
 
 		let new_balance = match balance.checked_sub(One::one()) {

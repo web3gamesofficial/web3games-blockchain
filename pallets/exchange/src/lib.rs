@@ -15,6 +15,7 @@ use sp_runtime::{
 };
 use sp_std::{cmp, convert::TryInto, prelude::*};
 use scale_info::TypeInfo;
+use integer_sqrt::IntegerSquareRoot;
 
 pub use pallet::*;
 
@@ -115,6 +116,7 @@ pub mod pallet {
 		InvalidPath,
 		TokenAccountNotFound,
 		PoolAlreadyCreated,
+		TokenRepeat
 	}
 
 	#[pallet::call]
@@ -126,6 +128,25 @@ pub mod pallet {
 			token_b: T::FungibleTokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+
+			ensure!(token_a != token_b, Error::<T>::TokenRepeat);
+
+
+			ensure!(
+				pallet_token_fungible::Pallet::<T>::exists(token_a),
+				Error::<T>::TokenAccountNotFound,
+			);
+
+			ensure!(
+				pallet_token_fungible::Pallet::<T>::exists(token_b),
+				Error::<T>::TokenAccountNotFound,
+			);
+
+			ensure!(
+				!GetPool::<T>::contains_key((token_a, token_b)),
+				Error::<T>::PoolAlreadyCreated
+			);
 
 			Self::do_create_pool(&who, token_a, token_b)?;
 
@@ -188,12 +209,15 @@ pub mod pallet {
 
 			let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
+			// return Lp to Pallet
 			pallet_token_fungible::Pallet::<T>::do_transfer(
 				pool.lp_token,
 				&who,
 				&Self::account_id(),
 				liquidity,
 			)?;
+
+
 			let (amount_0, amount_1) = Self::burn(&who, id, &to)?;
 			let (token_0, _token_1) = Self::sort_tokens(token_a, token_b);
 			let (amount_a, amount_b) = if token_a == token_0 {
@@ -251,6 +275,7 @@ pub mod pallet {
 
 			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
+
 			let amounts = Self::get_amounts_out(id, amount_out, path.clone())?;
 			ensure!(
 				amounts[0] <= amount_in_max,
@@ -285,20 +310,6 @@ impl<T: Config> Pallet<T> {
 		token_a: T::FungibleTokenId,
 		token_b: T::FungibleTokenId,
 	) -> Result<T::PoolId, DispatchError> {
-		ensure!(
-			pallet_token_fungible::Pallet::<T>::exists(token_a),
-			Error::<T>::TokenAccountNotFound,
-		);
-
-		ensure!(
-			pallet_token_fungible::Pallet::<T>::exists(token_b),
-			Error::<T>::TokenAccountNotFound,
-		);
-
-		ensure!(
-			!GetPool::<T>::contains_key((token_a, token_b)),
-			Error::<T>::PoolAlreadyCreated
-		);
 
 		let id = NextPoolId::<T>::try_mutate(|id| -> Result<T::PoolId, DispatchError> {
 			let current_id = *id;
@@ -309,11 +320,13 @@ impl<T: Config> Pallet<T> {
 		let deposit = T::CreatePoolDeposit::get();
 		<T as Config>::Currency::transfer(who, &Self::account_id(), deposit, AllowDeath)?;
 
+		let token_name:Vec<u8> = "LP Token".into();
+		let symbol_name:Vec<u8> = "LP-V1".into();
 		let lp_token = pallet_token_fungible::Pallet::<T>::do_create_token(
 			&Self::account_id(),
-			[].to_vec(),
-			[].to_vec(),
-			0,
+			token_name,
+			symbol_name,
+			18,
 		)?;
 
 		let (token_0, token_1) = Self::sort_tokens(token_a, token_b);
@@ -331,6 +344,48 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::PoolCreated(id, who.clone()));
 
 		Ok(id)
+	}
+
+	fn do_add_liquidity(
+		id: T::PoolId,
+		amount_a_desired: Balance,
+		amount_b_desired: Balance,
+		amount_a_min: Balance,
+		amount_b_min: Balance,
+	) -> Result<(Balance, Balance), DispatchError> {
+		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
+
+		let amount_a;
+		let amount_b;
+		// amount_a_desired amount_b_desired = amount_a_desired amount_b_desired
+		if reserve_a == Zero::zero() && reserve_b == Zero::zero() {
+			amount_a = amount_a_desired;
+			amount_b = amount_b_desired;
+		} else {
+			let amount_b_optimal = Self::quote(amount_a_desired, reserve_a, reserve_b)?;
+			if amount_b_optimal <= amount_b_desired {
+				ensure!(
+					amount_b_optimal >= amount_b_min,
+					Error::<T>::InsufficientBAmount
+				);
+				amount_a = amount_a_desired;
+				amount_b = amount_b_optimal;
+			} else {
+				let amount_a_optimal = Self::quote(amount_b_desired, reserve_b, reserve_a)?;
+				ensure!(
+					amount_a_optimal <= amount_a_desired,
+					Error::<T>::InsufficientAmount
+				);
+				ensure!(
+					amount_a_optimal >= amount_a_min,
+					Error::<T>::InsufficientAAmount
+				);
+				amount_a = amount_a_optimal;
+				amount_b = amount_b_desired;
+			}
+		}
+
+		Ok((amount_a, amount_b))
 	}
 
 	fn do_swap(
@@ -364,46 +419,6 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_add_liquidity(
-		id: T::PoolId,
-		amount_a_desired: Balance,
-		amount_b_desired: Balance,
-		amount_a_min: Balance,
-		amount_b_min: Balance,
-	) -> Result<(Balance, Balance), DispatchError> {
-		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
-
-		let amount_a;
-		let amount_b;
-		if reserve_a == Zero::zero() && reserve_b == Zero::zero() {
-			amount_a = amount_a_desired;
-			amount_b = amount_b_desired;
-		} else {
-			let amount_b_optimal = Self::quote(amount_a_desired, reserve_a, reserve_b)?;
-			if amount_b_optimal <= amount_b_desired {
-				ensure!(
-					amount_b_optimal >= amount_b_min,
-					Error::<T>::InsufficientBAmount
-				);
-				amount_a = amount_a_desired;
-				amount_b = amount_b_optimal;
-			} else {
-				let amount_a_optimal = Self::quote(amount_b_desired, reserve_b, reserve_a)?;
-				ensure!(
-					amount_a_optimal <= amount_a_desired,
-					Error::<T>::InsufficientAmount
-				);
-				ensure!(
-					amount_a_optimal >= amount_a_min,
-					Error::<T>::InsufficientAAmount
-				);
-				amount_a = amount_a_optimal;
-				amount_b = amount_b_desired;
-			}
-		}
-
-		Ok((amount_a, amount_b))
-	}
 
 	pub fn swap(
 		id: T::PoolId,
@@ -494,14 +509,17 @@ impl<T: Config> Pallet<T> {
 
 		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token)?;
 		if total_supply == Zero::zero() {
-			liquidity =
-				((amount_a * amount_b) * (amount_a * amount_b)) - Balance::from(MINIMUM_LIQUIDITY);
+			let value = amount_a * amount_b;
+			liquidity = value.integer_sqrt() - Balance::from(MINIMUM_LIQUIDITY);
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
 				&T::AccountId::default(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
+			// println!("liquidity = {}",liquidity);
+			// println!("pool.lp_token = {:#?}",pool.lp_token);
+			// println!("account = {:#?}",&T::AccountId::default());
 		} else {
 			liquidity = cmp::min(
 				amount_a * total_supply / reserve_a,
@@ -575,10 +593,11 @@ impl<T: Config> Pallet<T> {
 		_reserve_a: Balance,
 		_reserve_b: Balance,
 	) -> DispatchResult {
-		ensure!(
-			balance_a < Zero::zero() && balance_b < Zero::zero(),
-			Error::<T>::Overflow
-		);
+		// println!("balance_a = {},balance_b = {}",balance_a,balance_b);
+		// ensure!(
+		// 	balance_a < Zero::zero() && balance_b < Zero::zero(),
+		// 	Error::<T>::Overflow
+		// );
 
 		Reserves::<T>::mutate(id, |reserve| *reserve = (balance_a, balance_b));
 
@@ -651,12 +670,10 @@ impl<T: Config> Pallet<T> {
 			U256::from(amount_in_with_fee).saturating_mul(U256::from(reserve_out));
 		let denominator: U256 = (U256::from(reserve_in).saturating_mul(U256::from(1000u128)))
 			.saturating_add(amount_in_with_fee);
-
 		let amount_out = numerator
 			.checked_div(denominator)
 			.and_then(|n| TryInto::<Balance>::try_into(n).ok())
 			.unwrap_or_else(Zero::zero);
-
 		Ok(amount_out)
 	}
 
