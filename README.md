@@ -57,6 +57,39 @@ Start a development chain with:
 ./target/release/web3games-node --dev
 ```
 
+```bash
+./target/release/web3games-node --dev --tmp
+```
+
+Test 
+
+local path test
+```bash
+cargo test 
+
+cargo test -- --nocapture
+```
+// local path all pallet test
+```bash
+cargo test --all
+```
+
+// test runtime palletname
+```bash
+cargo test -p demo-node-runtime
+```
+
+// test runtime palletname  module
+```bash
+cargo test -p demo-node-runtime mymodule
+```
+
+// get more  test help
+```bash
+cargo test --help
+```
+
+
 Detailed logs may be shown by running the node with the following environment variables set: `RUST_LOG=debug RUST_BACKTRACE=1 cargo run -- --dev`.
 
 ### Multi-Node Local Testnet
@@ -90,6 +123,33 @@ cargo run -- \
   --port 30334 \
   --telemetry-url 'wss://telemetry.polkadot.io/submit/ 0' \
   --validator
+```
+
+## 5. Run in Docker
+
+First, install [Docker](https://docs.docker.com/get-docker/) and
+[Docker Compose](https://docs.docker.com/compose/install/).
+
+Then run the following command to start a single node development chain.
+
+```bash
+./scripts/docker_run.sh
+```
+
+This command will firstly compile your code, and then start a local development network. You can
+also replace the default command
+(`cargo build --release && ./target/release/web3games-node --dev --ws-external`)
+by appending your own. A few useful ones are as follow.
+
+```bash
+# Run Substrate node without re-compiling
+./scripts/docker_run.sh ./target/release/web3games-node --dev --ws-external
+
+# Purge the local dev chain
+./scripts/docker_run.sh ./target/release/web3games-node purge-chain --dev
+
+# Check whether the code is compilable
+./scripts/docker_run.sh cargo check
 ```
 
 ## License
