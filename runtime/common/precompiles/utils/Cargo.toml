@@ -16,8 +16,8 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-evm = { version = "0.30.0", default-features = false, features = ["with-codec"] }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+evm = { version = "0.33.0", default-features = false, features = ["with-codec"] }
 
 precompile-utils-macro = { path = "macro" }
 

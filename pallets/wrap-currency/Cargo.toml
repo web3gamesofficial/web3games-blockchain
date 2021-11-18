@@ -16,7 +16,7 @@ sp-io = { git = "https://github.com/paritytech/substrate", default-features = fa
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.3" }
+orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.4" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 pallet-token-fungible = { path = "../token-fungible", default-features = false }
