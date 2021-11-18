@@ -17,7 +17,7 @@ fn test_create_pool_works() {
         assert_eq!(TokenFungible::next_token_id(),1);
         let origin = Origin::signed(2);
         let name:Vec<u8> = "KING".to_string().into();
-        let symbol:Vec<u8> = "FUCK".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let decimals:u8 = 2;
         assert_ok!(TokenFungible::create_token(origin,name,symbol,decimals));
         assert_eq!(TokenFungible::next_token_id(),2);
@@ -47,7 +47,7 @@ fn test_add_liquidity_works() {
 
         let origin = Origin::signed(2);
         let name:Vec<u8> = "KING".to_string().into();
-        let symbol:Vec<u8> = "FUCK".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let decimals:u8 = 18;
         assert_ok!(TokenFungible::create_token(origin.clone(),name,symbol,decimals));
         assert_eq!(TokenFungible::next_token_id(),2);
@@ -96,7 +96,7 @@ fn test_swap_exact_tokens_for_tokens_works() {
 
         let origin = Origin::signed(2);
         let name:Vec<u8> = "KING".to_string().into();
-        let symbol:Vec<u8> = "FUCK".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let decimals:u8 = 18;
         assert_ok!(TokenFungible::create_token(origin.clone(),name,symbol,decimals));
         assert_eq!(TokenFungible::next_token_id(),2);
@@ -150,7 +150,7 @@ fn test_swap_tokens_for_exact_tokens_works() {
 
         let origin = Origin::signed(2);
         let name:Vec<u8> = "KING".to_string().into();
-        let symbol:Vec<u8> = "FUCK".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let decimals:u8 = 18;
         assert_ok!(TokenFungible::create_token(origin.clone(),name,symbol,decimals));
         assert_eq!(TokenFungible::next_token_id(),2);
