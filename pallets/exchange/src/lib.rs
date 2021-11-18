@@ -246,7 +246,6 @@ pub mod pallet {
 			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 			let amounts = Self::get_amounts_out(id, amount_in, path.clone())?;
-			println!("{:?},{:?}",amounts[amounts.len() - 1],amount_out_min);
 			ensure!(
 				amounts[amounts.len() - 1] >= amount_out_min,
 				Error::<T>::InsufficientOutAmount
@@ -278,7 +277,6 @@ pub mod pallet {
 
 
 			let amounts = Self::get_amounts_out(id, amount_out, path.clone())?;
-			println!("{:?}",amounts);
 			ensure!(
 				amounts[0] <= amount_in_max,
 				Error::<T>::InsufficientInputAmount
