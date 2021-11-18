@@ -9,8 +9,8 @@ pub type TokenId = u32;
 fn test_create_token_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
     })
@@ -20,8 +20,8 @@ fn test_create_token_works() {
 fn test_mint_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
@@ -35,8 +35,8 @@ fn test_mint_works() {
 fn test_approve_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
@@ -52,8 +52,8 @@ fn test_approve_works() {
 fn test_set_approve_for_all_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
@@ -70,8 +70,8 @@ fn test_set_approve_for_all_works() {
 fn test_transfer_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
@@ -87,8 +87,8 @@ fn test_transfer_works() {
 fn test_transfer_from_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
@@ -105,8 +105,8 @@ fn test_transfer_from_works() {
 fn test_burn_works() {
     new_test_ext().execute_with(|| {
         let origin = Origin::signed(1);
-        let name:Vec<u8> = "FUCKING".to_string().into();
-        let symbol:Vec<u8> = "FCK".to_string().into();
+        let name:Vec<u8> = "KING".to_string().into();
+        let symbol:Vec<u8> = "KIN".to_string().into();
         let base_uri:Vec<u8> = "www.nft.com".to_string().into();
         assert_ok!(TokenNonFungible::create_token(origin.clone(),name,symbol,base_uri));
         let id:u32 = 0;
