@@ -8,7 +8,7 @@ edition = "2018"
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 serde = { version = "1.0.124", optional = true }
-
+log = { version = "0.4.14", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -18,12 +18,18 @@ sp-std = { git = "https://github.com/paritytech/substrate", default-features = f
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 
+[dev-dependencies]
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
+
+
+
 [features]
 default = ["std"]
 std = [
     "serde/std",
     "codec/std",
     "scale-info/std",
+    "log/std",
     "frame-support/std",
     "frame-system/std",
     "sp-std/std",

@@ -4431,6 +4431,7 @@ dependencies = [
  "frame-system",
  "integer-sqrt",
  "log",
+ "pallet-balances",
  "pallet-timestamp",
  "pallet-token-fungible",
  "parity-scale-codec",
@@ -4604,6 +4605,8 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "log",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4620,7 +4623,7 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
- "log",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4637,6 +4640,8 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "log",
+ "pallet-balances",
  "parity-scale-codec",
  "scale-info",
  "serde",

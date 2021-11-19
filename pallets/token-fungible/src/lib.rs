@@ -125,6 +125,10 @@ pub mod pallet {
 		InvalidId,
 		AmountExceedAllowance,
 		BadMetadata,
+		InsufficientAuthorizedTokens,
+		InsufficientTokens,
+		ConfuseBehavior,
+		ApproveToCurrentOwner,
 	}
 
 	#[pallet::hooks]
@@ -147,6 +151,22 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
+			account: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::maybe_check_permission(id, &who)?;
+
+			Self::do_mint(id, &account, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn approve(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -154,6 +174,14 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+			ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
+
+			Self::maybe_check_permission(id, &who)?;
+			ensure!(
+				Balances::<T>::get(id, who.clone()) == amount,
+				Error::<T>::InsufficientAuthorizedTokens
+			);
 
 			Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
 				*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
@@ -174,6 +202,11 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
+
+			Self::maybe_check_permission(id, &who)?;
+			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientTokens);
+
 			Self::do_transfer(id, &who, &recipient, amount)?;
 
 			Ok(())
@@ -189,29 +222,20 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
+
+			ensure!(
+				Allowances::<T>::get(id, (&sender, &who)) == amount,
+				Error::<T>::InsufficientAuthorizedTokens
+			);
+
+			// over flow check
 			Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
 				*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
 			Self::do_transfer(id, &sender, &recipient, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn mint(
-			origin: OriginFor<T>,
-			id: T::FungibleTokenId,
-			account: T::AccountId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::maybe_check_permission(id, &who)?;
-
-			Self::do_mint(id, &account, amount)?;
-
 			Ok(())
 		}
 
@@ -222,6 +246,8 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+
+			Self::maybe_check_permission(id, &who)?;
 
 			Self::do_burn(id, &who, amount)?;
 
@@ -334,6 +360,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
+		// println!("{}",amount);
 		Balances::<T>::try_mutate(id, to, |balance| -> DispatchResult {
 			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
@@ -347,6 +374,7 @@ impl<T: Config> Pallet<T> {
 		from: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
+		// println!("{}",amount);
 		Balances::<T>::try_mutate(id, from, |balance| -> DispatchResult {
 			*balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
