@@ -149,19 +149,15 @@ construct_runtime!(
 );
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
-	currency_token::GenesisConfig::<Test> {
-		instance: (1, [].to_vec()),
-	}
-	.assimilate_storage(&mut t)
-	.unwrap();
+	currency_token::GenesisConfig::<Test> { instance: (1, [].to_vec()) }
+		.assimilate_storage(&mut t)
+		.unwrap();
 	t.into()
 }
 

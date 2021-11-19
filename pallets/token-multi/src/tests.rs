@@ -69,12 +69,7 @@ fn test_do_batch_burn() {
 	new_test_ext().execute_with(|| {
 		let token_ids = vec![1, 2, 3];
 		let amounts = vec![100; 3];
-		assert_ok!(Tokens::do_batch_mint(
-			&1,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
+		assert_ok!(Tokens::do_batch_mint(&1, 1, token_ids.clone(), amounts.clone()));
 		assert_ok!(Tokens::do_batch_burn(&1, 1, token_ids, amounts));
 	})
 }
@@ -92,15 +87,8 @@ fn test_do_batch_transfer_from() {
 	new_test_ext().execute_with(|| {
 		let token_ids = vec![1, 2, 3];
 		let amounts = vec![100; 3];
-		assert_ok!(Tokens::do_batch_mint(
-			&1,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		assert_ok!(Tokens::do_batch_transfer_from(
-			&1, &2, 1, token_ids, amounts
-		));
+		assert_ok!(Tokens::do_batch_mint(&1, 1, token_ids.clone(), amounts.clone()));
+		assert_ok!(Tokens::do_batch_transfer_from(&1, &2, 1, token_ids, amounts));
 	})
 }
 
@@ -132,30 +120,12 @@ fn test_balance_of_batch_token_ids_sample() {
 		let token_ids = vec![1; 3];
 		let amounts = vec![100; 3];
 
-		assert_ok!(Tokens::do_batch_mint(
-			&1,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		assert_ok!(Tokens::do_batch_mint(
-			&2,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		assert_ok!(Tokens::do_batch_mint(
-			&3,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
+		assert_ok!(Tokens::do_batch_mint(&1, 1, token_ids.clone(), amounts.clone()));
+		assert_ok!(Tokens::do_batch_mint(&2, 1, token_ids.clone(), amounts.clone()));
+		assert_ok!(Tokens::do_batch_mint(&3, 1, token_ids.clone(), amounts.clone()));
 
 		let account = vec![1, 2, 3];
-		assert_eq!(
-			Tokens::balance_of_batch(&account, 1, token_ids).unwrap(),
-			vec![300; 3]
-		);
+		assert_eq!(Tokens::balance_of_batch(&account, 1, token_ids).unwrap(), vec![300; 3]);
 	})
 }
 
@@ -165,29 +135,11 @@ fn test_balance_of_batch_token_ids_not_sample() {
 		let token_ids = vec![1, 2, 3];
 		let amounts = vec![100; 3];
 
-		assert_ok!(Tokens::do_batch_mint(
-			&1,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		assert_ok!(Tokens::do_batch_mint(
-			&2,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		assert_ok!(Tokens::do_batch_mint(
-			&3,
-			1,
-			token_ids.clone(),
-			amounts.clone()
-		));
+		assert_ok!(Tokens::do_batch_mint(&1, 1, token_ids.clone(), amounts.clone()));
+		assert_ok!(Tokens::do_batch_mint(&2, 1, token_ids.clone(), amounts.clone()));
+		assert_ok!(Tokens::do_batch_mint(&3, 1, token_ids.clone(), amounts.clone()));
 
 		let account = vec![1, 2, 3];
-		assert_eq!(
-			Tokens::balance_of_batch(&account, 1, token_ids).unwrap(),
-			amounts
-		);
+		assert_eq!(Tokens::balance_of_batch(&account, 1, token_ids).unwrap(), amounts);
 	})
 }

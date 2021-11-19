@@ -3,23 +3,14 @@ use crate::mock::*;
 use frame_support::{assert_noop, assert_ok};
 
 fn last_event() -> mock::Event {
-	frame_system::Pallet::<Test>::events()
-		.pop()
-		.expect("Event expected")
-		.event
+	frame_system::Pallet::<Test>::events().pop().expect("Event expected").event
 }
 
 pub fn before_exchange() {
 	assert_ok!(WrapCurrency::mint(Origin::signed(1), W3G, 500 * CENTS));
 
 	assert_ok!(Token::create_instance(Origin::signed(1), [0].to_vec()));
-	assert_ok!(Token::create_token(
-		Origin::signed(1),
-		1,
-		1,
-		false,
-		[0].to_vec()
-	));
+	assert_ok!(Token::create_token(Origin::signed(1), 1, 1, false, [0].to_vec()));
 	assert_ok!(Token::mint(Origin::signed(1), 1, 1, 1, 50000 * CENTS));
 }
 
@@ -30,10 +21,7 @@ fn create_exchange_works() {
 		run_to_block(10);
 		assert_ok!(Dex::create_exchange(Origin::signed(1), W3G, 1));
 
-		assert_eq!(
-			last_event(),
-			mock::Event::pallet_dex(crate::Event::ExchangeCreated(0, 1)),
-		);
+		assert_eq!(last_event(), mock::Event::pallet_dex(crate::Event::ExchangeCreated(0, 1)),);
 	})
 }
 

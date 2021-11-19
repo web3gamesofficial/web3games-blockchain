@@ -97,10 +97,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		move || {
 			testnet_genesis(
 				// Initial PoA authorities
-				vec![
-					authority_keys_from_seed("Alice"),
-					authority_keys_from_seed("Bob"),
-				],
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -233,46 +230,25 @@ fn testnet_genesis(
 		},
 		balances: BalancesConfig {
 			// Configure endowed accounts with initial balance of 1 << 60.
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ENDOWMENT))
-				.collect(),
+			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
 		},
 		grandpa: GrandpaConfig {
-			authorities: initial_authorities
-				.iter()
-				.map(|x| (x.1.clone(), 1))
-				.collect(),
+			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		sudo: SudoConfig { key: root_key },
-		evm: EVMConfig {
-			accounts: evm_accounts,
-		},
+		evm: EVMConfig { accounts: evm_accounts },
 		ethereum: EthereumConfig {},
 		orml_tokens: OrmlTokensConfig {
 			balances: endowed_accounts
 				.iter()
 				.flat_map(|x| {
 					vec![
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::DOT),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::ACA),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::AUSD),
-							1000000 * DOLLARS,
-						),
+						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
 					]
 				})
 				.collect(),

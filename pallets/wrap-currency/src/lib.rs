@@ -4,9 +4,9 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{traits::Get, PalletId};
 use orml_traits::{MultiCurrency, MultiCurrencyExtended};
 use primitives::{Balance, CurrencyId};
+use scale_info::TypeInfo;
 use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
 use sp_std::prelude::*;
-use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -90,10 +90,7 @@ pub mod pallet {
 				18,
 			)?;
 
-			let wrap_token = WrapToken {
-				token_id,
-				total_supply: Default::default(),
-			};
+			let wrap_token = WrapToken { token_id, total_supply: Default::default() };
 
 			WrapTokens::<T>::insert(currency_id, wrap_token);
 
@@ -108,10 +105,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(
-				WrapTokens::<T>::contains_key(currency_id),
-				Error::<T>::WrapTokenNotFound
-			);
+			ensure!(WrapTokens::<T>::contains_key(currency_id), Error::<T>::WrapTokenNotFound);
 
 			let vault_account = Self::account_id();
 
@@ -120,16 +114,10 @@ pub mod pallet {
 			WrapTokens::<T>::try_mutate(currency_id, |wrap_token| -> DispatchResult {
 				let token = wrap_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
-				pallet_token_fungible::Pallet::<T>::do_mint(
-					token.token_id,
-					&who,
-					amount,
-				)?;
+				pallet_token_fungible::Pallet::<T>::do_mint(token.token_id, &who, amount)?;
 
-				token.total_supply = token
-					.total_supply
-					.checked_add(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
+				token.total_supply =
+					token.total_supply.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
@@ -155,10 +143,8 @@ pub mod pallet {
 
 				pallet_token_fungible::Pallet::<T>::do_burn(token.token_id, &who, amount)?;
 
-				token.total_supply = token
-					.total_supply
-					.checked_sub(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
+				token.total_supply =
+					token.total_supply.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 

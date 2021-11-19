@@ -8,13 +8,13 @@ use frame_support::{
 	PalletId,
 };
 use primitives::{Balance, TokenId};
+use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, AccountIdConversion, One, Zero, CheckedAdd},
+	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
 	RuntimeDebug,
 };
 use sp_std::{convert::TryInto, prelude::*};
-use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -69,7 +69,12 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Pools<T: Config> = StorageMap<_, Blake2_128, T::NftPoolId, Pool<T::AccountId, T::FungibleTokenId, T::MultiTokenId>>;
+	pub(super) type Pools<T: Config> = StorageMap<
+		_,
+		Blake2_128,
+		T::NftPoolId,
+		Pool<T::AccountId, T::FungibleTokenId, T::MultiTokenId>,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_pool_id)]
@@ -77,13 +82,8 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn get_pool)]
-	pub(super) type GetPool<T: Config> = StorageMap<
-		_,
-		Blake2_128,
-		(T::FungibleTokenId, T::MultiTokenId),
-		T::NftPoolId,
-		ValueQuery
-	>;
+	pub(super) type GetPool<T: Config> =
+		StorageMap<_, Blake2_128, (T::FungibleTokenId, T::MultiTokenId), T::NftPoolId, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn total_supplies)]
@@ -113,34 +113,10 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		PoolCreated(T::NftPoolId, T::AccountId),
-		SwapCurrencyToToken(
-			T::NftPoolId,
-			T::AccountId,
-			Vec<TokenId>,
-			Vec<Balance>,
-			Balance,
-		),
-		SwapTokenToCurrency(
-			T::NftPoolId,
-			T::AccountId,
-			Vec<TokenId>,
-			Vec<Balance>,
-			Balance,
-		),
-		LiquidityAdded(
-			T::NftPoolId,
-			T::AccountId,
-			Vec<TokenId>,
-			Vec<Balance>,
-			Vec<Balance>,
-		),
-		LiquidityRemoved(
-			T::NftPoolId,
-			T::AccountId,
-			Vec<TokenId>,
-			Vec<Balance>,
-			Vec<Balance>,
-		),
+		SwapCurrencyToToken(T::NftPoolId, T::AccountId, Vec<TokenId>, Vec<Balance>, Balance),
+		SwapTokenToCurrency(T::NftPoolId, T::AccountId, Vec<TokenId>, Vec<Balance>, Balance),
+		LiquidityAdded(T::NftPoolId, T::AccountId, Vec<TokenId>, Vec<Balance>, Vec<Balance>),
+		LiquidityRemoved(T::NftPoolId, T::AccountId, Vec<TokenId>, Vec<Balance>, Vec<Balance>),
 	}
 
 	#[pallet::error]
@@ -192,13 +168,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_swap_currency_to_token(
-				id,
-				&who,
-				token_ids,
-				token_amounts_out,
-				max_currency,
-			)?;
+			Self::do_swap_currency_to_token(id, &who, token_ids, token_amounts_out, max_currency)?;
 
 			Ok(())
 		}
@@ -213,13 +183,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_swap_token_to_currency(
-				id,
-				&who,
-				token_ids,
-				token_amounts_in,
-				min_currency,
-			)?;
+			Self::do_swap_token_to_currency(id, &who, token_ids, token_amounts_in, min_currency)?;
 
 			Ok(())
 		}
@@ -234,13 +198,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_add_liquidity(
-				id,
-				&who,
-				token_ids,
-				token_amounts,
-				max_currencies,
-			)?;
+			Self::do_add_liquidity(id, &who, token_ids, token_amounts, max_currencies)?;
 
 			Ok(())
 		}
@@ -285,15 +243,9 @@ impl<T: Config> Pallet<T> {
 			pallet_token_fungible::Pallet::<T>::exists(currency),
 			Error::<T>::CurrencyAccountNotFound
 		);
-		ensure!(
-			pallet_token_multi::Pallet::<T>::exists(token),
-			Error::<T>::TokenAccountNotFound
-		);
+		ensure!(pallet_token_multi::Pallet::<T>::exists(token), Error::<T>::TokenAccountNotFound);
 
-		ensure!(
-			!GetPool::<T>::contains_key((currency, token)),
-			Error::<T>::PoolAlreadyCreated
-		);
+		ensure!(!GetPool::<T>::contains_key((currency, token)), Error::<T>::PoolAlreadyCreated);
 
 		let id = NextPoolId::<T>::try_mutate(|id| -> Result<T::NftPoolId, DispatchError> {
 			let current_id = *id;
@@ -308,13 +260,7 @@ impl<T: Config> Pallet<T> {
 
 		let lp_token = pallet_token_multi::Pallet::<T>::do_create_token(&vault, [].to_vec())?;
 
-		let pool = Pool {
-			owner: who.clone(),
-			currency,
-			token,
-			lp_token,
-			vault,
-		};
+		let pool = Pool { owner: who.clone(), currency, token, lp_token, vault };
 
 		Pools::<T>::insert(id, pool);
 		GetPool::<T>::insert((currency, token), id);
@@ -352,10 +298,7 @@ impl<T: Config> Pallet<T> {
 			let token_amount_out = token_amounts_out[i];
 			let token_reserve = token_reserves[i];
 
-			ensure!(
-				token_amount_out > Zero::zero(),
-				Error::<T>::NullTokensBought
-			);
+			ensure!(token_amount_out > Zero::zero(), Error::<T>::NullTokensBought);
 
 			let currency_reserve = Self::currency_reserves(id, token_id);
 			let currency_amount =
@@ -464,10 +407,7 @@ impl<T: Config> Pallet<T> {
 		}
 
 		// If minCurrency is not met
-		ensure!(
-			total_currency >= min_currency,
-			Error::<T>::InsufficientCurrencyAmount
-		);
+		ensure!(total_currency >= min_currency, Error::<T>::InsufficientCurrencyAmount);
 
 		// Transfer currency here
 		pallet_token_fungible::Pallet::<T>::do_transfer(
@@ -517,10 +457,7 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = token_amounts[i];
 
-			ensure!(
-				max_currencies[i] > Zero::zero(),
-				Error::<T>::NullMaxCurrency
-			);
+			ensure!(max_currencies[i] > Zero::zero(), Error::<T>::NullMaxCurrency);
 			ensure!(amount > Zero::zero(), Error::<T>::NullTokensAmount);
 
 			let total_liquidity = Self::total_supplies(id, token_id);
@@ -554,26 +491,19 @@ impl<T: Config> Pallet<T> {
 				total_currency = total_currency.saturating_add(currency_amount);
 
 				// If rounding error occurred, round down to favor previous liquidity providers
-				let fixed_currency_amount = if rounded {
-					currency_amount.saturating_sub(1u128)
-				} else {
-					currency_amount
-				};
+				let fixed_currency_amount =
+					if rounded { currency_amount.saturating_sub(1u128) } else { currency_amount };
 				liquidities_to_mint[i] =
 					(fixed_currency_amount.saturating_mul(total_liquidity)) / currency_reserve;
 				currency_amounts[i] = currency_amount;
 
 				// Mint liquidity ownership tokens and increase liquidity supply accordingly
-				TotalSupplies::<T>::try_mutate(
-					id,
-					token_id,
-					|total_supply| -> DispatchResult {
-						*total_supply = total_liquidity
-							.checked_add(liquidities_to_mint[i])
-							.ok_or(Error::<T>::Overflow)?;
-						Ok(())
-					},
-				)?;
+				TotalSupplies::<T>::try_mutate(id, token_id, |total_supply| -> DispatchResult {
+					*total_supply = total_liquidity
+						.checked_add(liquidities_to_mint[i])
+						.ok_or(Error::<T>::Overflow)?;
+					Ok(())
+				})?;
 			} else {
 				let max_currency = max_currencies[i];
 
@@ -662,10 +592,7 @@ impl<T: Config> Pallet<T> {
 			let token_reserve = token_reserves[i];
 
 			let total_liquidity = Self::total_supplies(id, token_id);
-			ensure!(
-				total_liquidity > Zero::zero(),
-				Error::<T>::NullTotalLiquidity
-			);
+			ensure!(total_liquidity > Zero::zero(), Error::<T>::NullTotalLiquidity);
 
 			let currency_reserve = Self::currency_reserves(id, token_id);
 
@@ -681,26 +608,15 @@ impl<T: Config> Pallet<T> {
 				.and_then(|n| TryInto::<Balance>::try_into(n).ok())
 				.unwrap_or_else(Zero::zero);
 
-			ensure!(
-				currency_amount >= min_currencies[i],
-				Error::<T>::InsufficientCurrencyAmount
-			);
-			ensure!(
-				token_amount >= min_tokens[i],
-				Error::<T>::InsufficientTokens
-			);
+			ensure!(currency_amount >= min_currencies[i], Error::<T>::InsufficientCurrencyAmount);
+			ensure!(token_amount >= min_tokens[i], Error::<T>::InsufficientTokens);
 
 			// Update total liquidity pool token supply of token_id
-			TotalSupplies::<T>::try_mutate(
-				id,
-				token_id,
-				|total_supply| -> DispatchResult {
-					*total_supply = total_liquidity
-						.checked_sub(liquidity)
-						.ok_or(Error::<T>::Overflow)?;
-					Ok(())
-				},
-			)?;
+			TotalSupplies::<T>::try_mutate(id, token_id, |total_supply| -> DispatchResult {
+				*total_supply =
+					total_liquidity.checked_sub(liquidity).ok_or(Error::<T>::Overflow)?;
+				Ok(())
+			})?;
 
 			// Update currency reserve size for token_id
 			CurrencyReserves::<T>::try_mutate(
@@ -767,10 +683,7 @@ impl<T: Config> Pallet<T> {
 		reserve_in: Balance,
 		reserve_out: Balance,
 	) -> Result<Balance, DispatchError> {
-		ensure!(
-			reserve_in > Zero::zero() && reserve_out > Zero::zero(),
-			Error::<T>::EmptyReserve
-		);
+		ensure!(reserve_in > Zero::zero() && reserve_out > Zero::zero(), Error::<T>::EmptyReserve);
 
 		let numerator: U256 = U256::from(reserve_in)
 			.saturating_mul(U256::from(amount_out))
@@ -793,10 +706,7 @@ impl<T: Config> Pallet<T> {
 		reserve_in: Balance,
 		reserve_out: Balance,
 	) -> Result<Balance, DispatchError> {
-		ensure!(
-			reserve_in > Zero::zero() && reserve_out > Zero::zero(),
-			Error::<T>::EmptyReserve
-		);
+		ensure!(reserve_in > Zero::zero() && reserve_out > Zero::zero(), Error::<T>::EmptyReserve);
 
 		let amount_in_with_fee: U256 = U256::from(amount_in).saturating_mul(U256::from(995u128));
 		let numerator: U256 =
@@ -828,10 +738,7 @@ impl<T: Config> Pallet<T> {
 			let accounts = vec![vault.clone(); n];
 
 			for i in 1..n {
-				ensure!(
-					token_ids[i - 1] < token_ids[i],
-					Error::<T>::UnsortedOrDuplicateTokenIds
-				);
+				ensure!(token_ids[i - 1] < token_ids[i], Error::<T>::UnsortedOrDuplicateTokenIds);
 			}
 
 			pallet_token_multi::Pallet::<T>::balance_of_batch(token, &accounts, token_ids)

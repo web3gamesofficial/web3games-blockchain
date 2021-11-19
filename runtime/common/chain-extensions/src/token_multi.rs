@@ -1,10 +1,7 @@
 use codec::Encode;
+use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
-};
-use frame_support::{
-	dispatch::GetDispatchInfo,
-	weights::extract_actual_weight,
 };
 use primitives::{Balance, TokenId};
 use sp_runtime::DispatchError;
@@ -12,8 +9,7 @@ use sp_std::vec::Vec;
 
 pub struct MultiTokenExtension;
 
-impl<C> ChainExtension<C>
-	for MultiTokenExtension
+impl<C> ChainExtension<C> for MultiTokenExtension
 where
 	C: pallet_contracts::Config + pallet_token_multi::Config,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
@@ -60,9 +56,16 @@ where
 				let token_id: TokenId = env.read_as()?;
 				let amount: Balance = env.read_as()?;
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::transfer_from { id, from, to, token_id, amount }
-				);
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
+						E::T,
+					>::transfer_from {
+						id,
+						from,
+						to,
+						token_id,
+						amount,
+					});
 
 				let dispatch_info = call.get_dispatch_info();
 				let charged = env.charge_weight(dispatch_info.weight)?;
@@ -71,7 +74,7 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
 			}
@@ -85,9 +88,15 @@ where
 				let token_id: TokenId = env.read_as()?;
 				let amount: Balance = env.read_as()?;
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::mint { id, to, token_id, amount }
-				);
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
+						E::T,
+					>::mint {
+						id,
+						to,
+						token_id,
+						amount,
+					});
 
 				let dispatch_info = call.get_dispatch_info();
 				let charged = env.charge_weight(dispatch_info.weight)?;
@@ -96,7 +105,7 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
 			}
