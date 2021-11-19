@@ -18,7 +18,7 @@
 
 extern crate alloc;
 
-use evm::ExitError;
+pub use evm::{executor::stack::PrecompileFailure, ExitError};
 use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	traits::Get,
@@ -36,11 +36,11 @@ pub use precompile_utils_macro::{generate_function_selector, keccak256};
 mod tests;
 
 /// Alias for Result returning an EVM precompile error.
-pub type EvmResult<T = ()> = Result<T, ExitError>;
+pub type EvmResult<T = ()> = Result<T, PrecompileFailure>;
 
 /// Return an error with provided (static) text.
-pub fn error<T: Into<alloc::borrow::Cow<'static, str>>>(text: T) -> ExitError {
-	ExitError::Other(text.into())
+pub fn error<T: Into<alloc::borrow::Cow<'static, str>>>(text: T) -> PrecompileFailure {
+	PrecompileFailure::Error { exit_status: ExitError::Other(text.into()) }
 }
 
 /// Builder for PrecompileOutput.
@@ -54,10 +54,7 @@ impl LogsBuilder {
 	/// Create a new builder with no logs.
 	/// Takes the address of the precompile (usualy `context.address`).
 	pub fn new(address: H160) -> Self {
-		Self {
-			logs: vec![],
-			address,
-		}
+		Self { logs: vec![], address }
 	}
 
 	/// Returns the logs array.
@@ -70,11 +67,7 @@ impl LogsBuilder {
 	where
 		D: Into<Vec<u8>>,
 	{
-		self.logs.push(Log {
-			address: self.address,
-			data: data.into(),
-			topics: vec![],
-		});
+		self.logs.push(Log { address: self.address, data: data.into(), topics: vec![] });
 		self
 	}
 
@@ -176,7 +169,7 @@ where
 		if let Some(gas_limit) = target_gas {
 			let required_gas = Runtime::GasWeightMapping::weight_to_gas(dispatch_info.weight);
 			if required_gas > gas_limit {
-				return Err(ExitError::OutOfGas);
+				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas });
 			}
 		}
 
@@ -191,9 +184,7 @@ where
 			.actual_weight;
 
 		// Return used weight by converting weight to gas.
-		Ok(Runtime::GasWeightMapping::weight_to_gas(
-			used_weight.unwrap_or(dispatch_info.weight),
-		))
+		Ok(Runtime::GasWeightMapping::weight_to_gas(used_weight.unwrap_or(dispatch_info.weight)))
 	}
 }
 
@@ -229,10 +220,7 @@ impl Gasometer {
 	/// Create a new Gasometer with provided gas limit.
 	/// None is no limit.
 	pub fn new(target_gas: Option<u64>) -> Self {
-		Self {
-			target_gas,
-			used_gas: 0,
-		}
+		Self { target_gas, used_gas: 0 }
 	}
 
 	/// Get used gas.
@@ -242,10 +230,15 @@ impl Gasometer {
 
 	/// Record cost, and return error if it goes out of gas.
 	pub fn record_cost(&mut self, cost: u64) -> EvmResult {
-		self.used_gas = self.used_gas.checked_add(cost).ok_or(ExitError::OutOfGas)?;
+		self.used_gas = self
+			.used_gas
+			.checked_add(cost)
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		match self.target_gas {
-			Some(gas_limit) if self.used_gas > gas_limit => Err(ExitError::OutOfGas),
+			Some(gas_limit) if self.used_gas > gas_limit => {
+				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
+			}
 			_ => Ok(()),
 		}
 	}
@@ -262,11 +255,11 @@ impl Gasometer {
 
 		let topic_cost = G_LOGTOPIC
 			.checked_mul(topics as u64)
-			.ok_or(ExitError::OutOfGas)?;
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		let data_cost = G_LOGDATA
 			.checked_mul(data_len as u64)
-			.ok_or(ExitError::OutOfGas)?;
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		self.record_cost(G_LOG)?;
 		self.record_cost(topic_cost)?;
@@ -293,7 +286,7 @@ impl Gasometer {
 			Some(gas_limit) => Some(
 				gas_limit
 					.checked_sub(self.used_gas)
-					.ok_or(ExitError::OutOfGas)?,
+					.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?,
 			),
 		})
 	}

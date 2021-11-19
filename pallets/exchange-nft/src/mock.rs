@@ -1,7 +1,5 @@
 use crate as pallet_exchange_nft;
-use frame_support::{
-	construct_runtime, parameter_types,PalletId,
-};
+use frame_support::{construct_runtime, parameter_types, PalletId};
 use frame_system as system;
 use primitives::Balance;
 use sp_core::H256;
@@ -79,16 +77,12 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = ();
 }
 
-
-
-
 parameter_types! {
 	pub const TokenFungiblePalletId: PalletId = PalletId(*b"w3g/tfpi");
 	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tmpi");
 	pub const StringLimit: u32 = 50;
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
-
 
 impl pallet_token_fungible::Config for Test {
 	type Event = Event;
@@ -108,7 +102,6 @@ impl pallet_token_multi::Config for Test {
 	type Currency = Balances;
 }
 
-
 parameter_types! {
 	pub const ExchangeNftPalletId: PalletId = PalletId(*b"w3g/exnp");
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
@@ -122,16 +115,13 @@ impl pallet_exchange_nft::Config for Test {
 	type Currency = Balances;
 }
 
-
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
 	}
-		.assimilate_storage(&mut t)
-		.unwrap();
+	.assimilate_storage(&mut t)
+	.unwrap();
 	t.into()
 }

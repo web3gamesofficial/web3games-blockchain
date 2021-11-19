@@ -1,12 +1,12 @@
 use crate as pallet_token_multi;
-use frame_support::{parameter_types,PalletId};
+use frame_support::{parameter_types, PalletId};
 use frame_system as system;
+use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use primitives::Balance;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -75,13 +75,11 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = ();
 }
 
-
 parameter_types! {
 	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tmpi");
 	pub const StringLimit: u32 = 50;
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
-
 
 impl pallet_token_multi::Config for Test {
 	type Event = Event;
@@ -92,15 +90,12 @@ impl pallet_token_multi::Config for Test {
 	type Currency = Balances;
 }
 
-
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
 	}
-		.assimilate_storage(&mut t)
-		.unwrap();
+	.assimilate_storage(&mut t)
+	.unwrap();
 	t.into()
 }

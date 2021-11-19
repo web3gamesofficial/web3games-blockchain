@@ -361,7 +361,9 @@ fn read_address_array_size_too_big() {
 	let mut reader = EvmDataReader::new(&writer_output);
 	match reader.read::<Vec<Address>>() {
 		Ok(_) => panic!("should not parse correctly"),
-		Err(ExitError::Other(err)) => assert_eq!(err, "tried to parse H160 out of bounds"),
+		Err(PrecompileFailure::Error { exit_status: ExitError::Other(err) }) => {
+			assert_eq!(err, "tried to parse H160 out of bounds")
+		}
 		Err(_) => panic!("unexpected error"),
 	}
 }
@@ -374,10 +376,7 @@ fn write_address_nested_array() {
 			Address(H160::repeat_byte(0x22)),
 			Address(H160::repeat_byte(0x33)),
 		],
-		vec![
-			Address(H160::repeat_byte(0x44)),
-			Address(H160::repeat_byte(0x55)),
-		],
+		vec![Address(H160::repeat_byte(0x44)), Address(H160::repeat_byte(0x55))],
 	];
 	let writer_output = EvmDataWriter::new().write(array.clone()).build();
 	assert_eq!(writer_output.len(), 0x160);
@@ -406,10 +405,7 @@ fn read_address_nested_array() {
 			Address(H160::repeat_byte(0x22)),
 			Address(H160::repeat_byte(0x33)),
 		],
-		vec![
-			Address(H160::repeat_byte(0x44)),
-			Address(H160::repeat_byte(0x55)),
-		],
+		vec![Address(H160::repeat_byte(0x44)), Address(H160::repeat_byte(0x55))],
 	];
 	let writer_output = EvmDataWriter::new().write(array.clone()).build();
 
@@ -430,10 +426,7 @@ fn write_multiple_arrays() {
 
 	let array2 = vec![H256::repeat_byte(0x44), H256::repeat_byte(0x55)];
 
-	let writer_output = EvmDataWriter::new()
-		.write(array1.clone())
-		.write(array2.clone())
-		.build();
+	let writer_output = EvmDataWriter::new().write(array1.clone()).write(array2.clone()).build();
 
 	assert_eq!(writer_output.len(), 0x120);
 
@@ -461,10 +454,7 @@ fn read_multiple_arrays() {
 
 	let array2 = vec![H256::repeat_byte(0x44), H256::repeat_byte(0x55)];
 
-	let writer_output = EvmDataWriter::new()
-		.write(array1.clone())
-		.write(array2.clone())
-		.build();
+	let writer_output = EvmDataWriter::new().write(array1.clone()).write(array2.clone()).build();
 
 	// offset 0x20
 	// offset 0x40
@@ -664,12 +654,8 @@ impl EvmData for MultiLocation {
 	}
 
 	fn write(writer: &mut EvmDataWriter, value: Self) {
-		writer.write_pointer(
-			EvmDataWriter::new()
-				.write(value.parents)
-				.write(value.interior)
-				.build(),
-		);
+		writer
+			.write_pointer(EvmDataWriter::new().write(value.parents).write(value.interior).build());
 	}
 }
 
@@ -715,10 +701,7 @@ fn read_complex_solidity_function() {
 		reader.read::<MultiLocation>().unwrap(),
 		MultiLocation {
 			parents: 1,
-			interior: vec![
-				Bytes::from(&hex!("00000003e8")[..]),
-				Bytes::from(&hex!("0403")[..]),
-			],
+			interior: vec![Bytes::from(&hex!("00000003e8")[..]), Bytes::from(&hex!("0403")[..]),],
 		}
 	);
 

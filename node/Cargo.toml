@@ -50,24 +50,23 @@ sc-basic-authorship = { git = "https://github.com/paritytech/substrate" }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate" }
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate" }
 
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15" }
-pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15" }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e" }
+pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
 frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate" }
 
-fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
+fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 
-pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
-pallet-dynamic-fee = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.3" }
+pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 
 web3games-runtime = { path = "../runtime/web3games", default-features = false, features = ["std"] }
 

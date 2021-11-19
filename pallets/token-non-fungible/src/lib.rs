@@ -5,15 +5,15 @@ use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
-	PalletId, BoundedVec,
+	BoundedVec, PalletId,
 };
 use primitives::{TokenId, TokenIndex};
+use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, One, CheckedAdd},
+	traits::{AtLeast32BitUnsigned, CheckedAdd, One},
 	RuntimeDebug,
 };
 use sp_std::{convert::TryInto, prelude::*};
-use scale_info::TypeInfo;
 // use log::{log,Level};
 
 pub use pallet::*;
@@ -48,7 +48,12 @@ pub mod pallet {
 		type PalletId: Get<PalletId>;
 
 		/// Identifier for the class of token.
-		type NonFungibleTokenId: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
+		type NonFungibleTokenId: Member
+			+ Parameter
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaxEncodedLen;
 
 		/// The maximum length of base uri stored on-chain.
 		#[pallet::constant]
@@ -66,8 +71,12 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Tokens<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::NonFungibleTokenId, Token<T::AccountId, BoundedVec<u8, T::StringLimit>>>;
+	pub(super) type Tokens<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::NonFungibleTokenId,
+		Token<T::AccountId, BoundedVec<u8, T::StringLimit>>,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_token_id)]
@@ -244,27 +253,17 @@ pub mod pallet {
 
 			let owner = Owners::<T>::get(id, token_id);
 
-			ensure!(
-				owner != T::AccountId::default(),
-				Error::<T>::TokenNonExistent
-			);
-	
+			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 			ensure!(to != owner, Error::<T>::ApproveToCurrentOwner);
-
 
 			ensure!(
 				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
 				Error::<T>::NotOwnerOrApproved
 			);
-	
+
 			TokenApprovals::<T>::insert(id, token_id, &to);
-	
-			Self::deposit_event(Event::Approval(
-				id,
-				owner,
-				to,
-				token_id,
-			));
+
+			Self::deposit_event(Event::Approval(id, owner, to, token_id));
 			Ok(())
 		}
 
@@ -280,13 +279,8 @@ pub mod pallet {
 			ensure!(operator != who, Error::<T>::ApproveToCaller);
 
 			OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
-	
-			Self::deposit_event(Event::ApprovalForAll(
-				id,
-				who,
-				operator,
-				approved,
-			));
+
+			Self::deposit_event(Event::ApprovalForAll(id, who, operator, approved));
 
 			Ok(())
 		}
@@ -303,10 +297,7 @@ pub mod pallet {
 			ensure!(who != to, Error::<T>::ConfuseBehavior);
 
 			let owner = Owners::<T>::get(id, token_id);
-			ensure!(
-				owner != T::AccountId::default(),
-				Error::<T>::TokenNonExistent
-			);
+			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(owner == who, Error::<T>::NotTokenOwner);
 
@@ -314,7 +305,6 @@ pub mod pallet {
 
 			Ok(())
 		}
-
 
 		#[pallet::weight(10_000)]
 		pub fn transfer_from(
@@ -326,20 +316,12 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-
 			ensure!(who != to, Error::<T>::ConfuseBehavior);
 
-
-			ensure!(
-				Self::is_approved_or_owner(id, &who, token_id),
-				Error::<T>::NotOwnerOrApproved
-			);
+			ensure!(Self::is_approved_or_owner(id, &who, token_id), Error::<T>::NotOwnerOrApproved);
 
 			let owner = Owners::<T>::get(id, token_id);
-			ensure!(
-				owner != T::AccountId::default(),
-				Error::<T>::TokenNonExistent
-			);
+			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(
 				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
@@ -363,10 +345,7 @@ pub mod pallet {
 
 			let owner = Owners::<T>::get(id, token_id);
 
-			ensure!(
-				owner != T::AccountId::default(),
-				Error::<T>::TokenNonExistent
-			);
+			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(who == owner, Error::<T>::NotTokenOwner);
 
@@ -399,11 +378,12 @@ impl<T: Config> Pallet<T> {
 		let bounded_base_uri: BoundedVec<u8, T::StringLimit> =
 			base_uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
-		let id = NextTokenId::<T>::try_mutate(|id| -> Result<T::NonFungibleTokenId, DispatchError> {
-			let current_id = *id;
-			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
-			Ok(current_id)
-		})?;
+		let id =
+			NextTokenId::<T>::try_mutate(|id| -> Result<T::NonFungibleTokenId, DispatchError> {
+				let current_id = *id;
+				*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
+				Ok(current_id)
+			})?;
 
 		let token = Token {
 			owner: who.clone(),
@@ -447,12 +427,7 @@ impl<T: Config> Pallet<T> {
 		Balances::<T>::insert(id, to, new_balance_to);
 		Owners::<T>::insert(id, token_id, to);
 
-		Self::deposit_event(Event::Transfer(
-			id.clone(),
-			from.clone(),
-			to.clone(),
-			token_id,
-		));
+		Self::deposit_event(Event::Transfer(id.clone(), from.clone(), to.clone(), token_id));
 
 		Ok(())
 	}
@@ -462,10 +437,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(
-			!Self::exists(id, token_id),
-			Error::<T>::TokenAlreadyMinted
-		);
+		ensure!(!Self::exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
 
@@ -495,7 +467,6 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-
 		let owner = account;
 		let balance = Self::balance_of(id, &owner);
 
@@ -563,9 +534,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		TotalSupply::<T>::try_mutate(id, |total_supply| -> DispatchResult {
 			let new_token_index = *total_supply;
-			*total_supply = total_supply
-				.checked_add(One::one())
-				.ok_or(Error::<T>::Overflow)?;
+			*total_supply = total_supply.checked_add(One::one()).ok_or(Error::<T>::Overflow)?;
 
 			AllTokensIndex::<T>::insert(id, token_id, new_token_index);
 			AllTokens::<T>::insert(id, new_token_index, token_id);

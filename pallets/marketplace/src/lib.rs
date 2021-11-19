@@ -8,9 +8,9 @@ use frame_support::{
 	BoundedVec,
 };
 use primitives::{Balance, TokenId};
+use scale_info::TypeInfo;
 use sp_runtime::{traits::One, RuntimeDebug};
 use sp_std::{convert::TryInto, prelude::*};
-use scale_info::TypeInfo;
 
 pub use pallet::*;
 
@@ -70,8 +70,12 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Collections<T: Config> =
-		StorageMap<_, Blake2_128Concat, CollectionId, Collection<T::AccountId, BoundedVec<u8, T::StringLimit>>>;
+	pub(super) type Collections<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		CollectionId,
+		Collection<T::AccountId, BoundedVec<u8, T::StringLimit>>,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_collection_id)]
@@ -206,14 +210,12 @@ impl<T: Config> Pallet<T> {
 		metadata: Vec<u8>,
 	) -> Result<CollectionId, DispatchError> {
 		let bounded_metadata: BoundedVec<u8, T::StringLimit> =
-		metadata.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
+			metadata.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
 		let collection_id =
 			NextCollectionId::<T>::try_mutate(|id| -> Result<CollectionId, DispatchError> {
 				let current_id = *id;
-				*id = id
-					.checked_add(One::one())
-					.ok_or(Error::<T>::NoAvailableCollectionId)?;
+				*id = id.checked_add(One::one()).ok_or(Error::<T>::NoAvailableCollectionId)?;
 				Ok(current_id)
 			})?;
 

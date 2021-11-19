@@ -1,5 +1,9 @@
-use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
-use fp_evm::Precompile;
+// use evm::{executor::PrecompileOutput, Context, ExitError, ExitSucceed};
+// use fp_evm::Precompile;
+use fp_evm::{
+	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
+	PrecompileResult,
+};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
 use precompile_utils::{Address, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
@@ -30,7 +34,8 @@ where
 		input: &[u8], // reminder this is big-endian
 		target_gas: Option<u64>,
 		context: &Context,
-	) -> Result<PrecompileOutput, ExitError> {
+		_is_static: bool,
+	) -> PrecompileResult {
 		log::info!("precompiles: tokens call");
 		let (input, selector) = EvmDataReader::new_with_selector(input)?;
 
@@ -71,7 +76,7 @@ where
 	fn create_token(
 		mut input: EvmDataReader,
 		context: &Context,
-	) -> Result<PrecompileOutput, ExitError> {
+	) -> Result<PrecompileOutput, PrecompileFailure> {
 		log::info!("create token");
 		input.expect_arguments(3)?;
 
@@ -79,13 +84,15 @@ where
 		let uri_len = input.read::<u32>()?;
 		let uri = input.read_raw_bytes(uri_len as usize)?.to_vec();
 
-		let caller: Runtime::AccountId =
-		Runtime::AddressMapping::into_account_id(context.caller);
+		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
 
-		let id: u32 = pallet_token_multi::Pallet::<Runtime>::do_create_token(&caller, uri).map_err(|e| {
-			let err_msg: &str = e.into();
-			ExitError::Other(err_msg.into())
-		})?.into();
+		let id: u32 = pallet_token_multi::Pallet::<Runtime>::do_create_token(&caller, uri)
+			.map_err(|e| {
+				let err_msg: &str = e.into();
+				// ExitError::Other(err_msg.into())
+				PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
+			})?
+			.into();
 
 		let output = U256::from(id);
 
@@ -101,11 +108,8 @@ where
 		mut input: EvmDataReader,
 		context: &Context,
 	) -> Result<
-		(
-			<Runtime::Call as Dispatchable>::Origin,
-			pallet_token_multi::Call<Runtime>,
-		),
-		ExitError,
+		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
+		PrecompileFailure,
 	> {
 		log::info!("transfer from");
 		input.expect_arguments(5)?;
@@ -119,7 +123,8 @@ where
 
 		let origin = Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_multi::Call::<Runtime>::transfer_from { id, from, to, token_id, amount };
+		let call =
+			pallet_token_multi::Call::<Runtime>::transfer_from { id, from, to, token_id, amount };
 
 		Ok((Some(origin).into(), call))
 	}
@@ -128,11 +133,8 @@ where
 		mut input: EvmDataReader,
 		context: &Context,
 	) -> Result<
-		(
-			<Runtime::Call as Dispatchable>::Origin,
-			pallet_token_multi::Call<Runtime>,
-		),
-		ExitError,
+		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
+		PrecompileFailure,
 	> {
 		log::info!("mint");
 		input.expect_arguments(4)?;
@@ -152,7 +154,7 @@ where
 	fn balance_of(
 		mut input: EvmDataReader,
 		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, ExitError> {
+	) -> Result<PrecompileOutput, PrecompileFailure> {
 		log::info!("balance of");
 		let mut gasometer = Gasometer::new(target_gas);
 

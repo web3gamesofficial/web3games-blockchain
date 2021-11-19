@@ -1,7 +1,6 @@
 use super::*;
-use crate::{mock::*};
-use frame_support::{assert_ok};
-
+use crate::mock::*;
+use frame_support::assert_ok;
 
 type MultiTokenId = u32;
 type FungibleTokenId = u32;
@@ -9,24 +8,24 @@ pub type PoolId = u32;
 
 #[test]
 fn test_create_pool_works() {
-    new_test_ext().execute_with(|| {
-        let origin = Origin::signed(1);
-        let name:Vec<u8> = "Test".to_string().into();
-        let symbol:Vec<u8> = "TST".to_string().into();
-        let decimals:u8 = 2;
-        assert_ok!(TokenFungible::create_token(origin,name,symbol,decimals));
-        assert_eq!(TokenFungible::next_token_id(),1);
-        let origin = Origin::signed(2);
-        let uri:Vec<u8> = "KING".to_string().into();
-        assert_ok!(TokenMulti::create_token(origin.clone(),uri));
-        assert_eq!(TokenMulti::next_token_id(),1);
-        let origin = Origin::signed(1);
-        let currency:FungibleTokenId = 0;
-        let token:MultiTokenId = 0;
-        assert_ok!(ExchangeNft::create_pool(origin,currency,token));
-        assert_eq!(ExchangeNft::get_pool((currency,token)),0);
-        assert_eq!(ExchangeNft::next_pool_id(),1);
-    })
+	new_test_ext().execute_with(|| {
+		let origin = Origin::signed(1);
+		let name: Vec<u8> = "Test".to_string().into();
+		let symbol: Vec<u8> = "TST".to_string().into();
+		let decimals: u8 = 2;
+		assert_ok!(TokenFungible::create_token(origin, name, symbol, decimals));
+		assert_eq!(TokenFungible::next_token_id(), 1);
+		let origin = Origin::signed(2);
+		let uri: Vec<u8> = "KING".to_string().into();
+		assert_ok!(TokenMulti::create_token(origin.clone(), uri));
+		assert_eq!(TokenMulti::next_token_id(), 1);
+		let origin = Origin::signed(1);
+		let currency: FungibleTokenId = 0;
+		let token: MultiTokenId = 0;
+		assert_ok!(ExchangeNft::create_pool(origin, currency, token));
+		assert_eq!(ExchangeNft::get_pool((currency, token)), 0);
+		assert_eq!(ExchangeNft::next_pool_id(), 1);
+	})
 }
 
 // #[test]

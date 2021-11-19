@@ -44,8 +44,6 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Development",
@@ -54,7 +52,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		ChainType::Development,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
 				// Sudo account
@@ -91,8 +88,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Local Testnet",
@@ -101,12 +96,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		ChainType::Local,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
-				vec![
-					authority_keys_from_seed("Alice"),
-					authority_keys_from_seed("Bob"),
-				],
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -149,8 +140,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 }
 
 pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Web3Games Plum",
@@ -159,7 +148,6 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 		ChainType::Live,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
 				vec![
 					(
@@ -216,7 +204,6 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
-	wasm_binary: &[u8],
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
@@ -227,10 +214,10 @@ fn testnet_genesis(
 	evm_accounts.insert(
 		built_in_evm_account,
 		pallet_evm::GenesisAccount {
-			nonce: U256::from(0),
+			nonce: Default::default(),
 			balance: U256::from(100_000_000 * DOLLARS),
 			storage: Default::default(),
-			code: wasm_binary.to_vec(),
+			code: Default::default(),
 		},
 	);
 
@@ -239,52 +226,29 @@ fn testnet_genesis(
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
-			code: wasm_binary.to_vec(),
-			changes_trie_config: Default::default(),
+			code: WASM_BINARY.expect("WASM binary is not available.").to_vec(),
 		},
 		balances: BalancesConfig {
 			// Configure endowed accounts with initial balance of 1 << 60.
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ENDOWMENT))
-				.collect(),
+			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
 		},
 		grandpa: GrandpaConfig {
-			authorities: initial_authorities
-				.iter()
-				.map(|x| (x.1.clone(), 1))
-				.collect(),
+			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		sudo: SudoConfig { key: root_key },
-		evm: EVMConfig {
-			accounts: evm_accounts,
-		},
+		evm: EVMConfig { accounts: evm_accounts },
 		ethereum: EthereumConfig {},
-		dynamic_fee: Default::default(),
 		orml_tokens: OrmlTokensConfig {
 			balances: endowed_accounts
 				.iter()
 				.flat_map(|x| {
 					vec![
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::DOT),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::ACA),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::AUSD),
-							1000000 * DOLLARS,
-						),
+						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
 					]
 				})
 				.collect(),
