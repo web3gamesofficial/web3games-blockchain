@@ -54,9 +54,6 @@ hex-literal = { version = "0.3.1", optional = true }
 # EVM
 pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-pallet-dynamic-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-pallet-base-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-
 fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 
 # Orml packages
@@ -119,8 +116,6 @@ std = [
 	"orml-tokens/std",
 	"pallet-ethereum/std",
 	"pallet-evm/std",
-	"pallet-dynamic-fee/std",
-	"pallet-base-fee/std",
 	"primitives/std",
 	"runtime-common/std",
 	"pallet-token-fungible/std",

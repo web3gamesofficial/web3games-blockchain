@@ -66,7 +66,7 @@ pub fn run() -> sc_cli::Result<()> {
 					task_manager,
 					import_queue,
 					..
-				} = service::new_partial(&config, &cli)?;
+				} = service::new_partial(&config)?;
 				Ok((cmd.run(client, import_queue), task_manager))
 			})
 		}
@@ -77,7 +77,7 @@ pub fn run() -> sc_cli::Result<()> {
 					client,
 					task_manager,
 					..
-				} = service::new_partial(&config, &cli)?;
+				} = service::new_partial(&config)?;
 				Ok((cmd.run(client, config.database), task_manager))
 			})
 		}
@@ -88,7 +88,7 @@ pub fn run() -> sc_cli::Result<()> {
 					client,
 					task_manager,
 					..
-				} = service::new_partial(&config, &cli)?;
+				} = service::new_partial(&config)?;
 				Ok((cmd.run(client, config.chain_spec), task_manager))
 			})
 		}
@@ -100,7 +100,7 @@ pub fn run() -> sc_cli::Result<()> {
 					task_manager,
 					import_queue,
 					..
-				} = service::new_partial(&config, &cli)?;
+				} = service::new_partial(&config)?;
 				Ok((cmd.run(client, import_queue), task_manager))
 			})
 		}
@@ -124,7 +124,7 @@ pub fn run() -> sc_cli::Result<()> {
 					task_manager,
 					backend,
 					..
-				} = service::new_partial(&config, &cli)?;
+				} = service::new_partial(&config)?;
 				Ok((cmd.run(client, backend), task_manager))
 			})
 		}

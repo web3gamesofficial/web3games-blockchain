@@ -7,7 +7,7 @@ use fc_rpc::EthTask;
 use fc_rpc_core::types::FilterPool;
 use futures::StreamExt;
 use sc_cli::SubstrateCli;
-use sc_client_api::{ExecutorProvider, BlockchainEvents};
+use sc_client_api::{BlockchainEvents, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 pub use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
@@ -16,7 +16,6 @@ use sc_service::{error::Error as ServiceError, BasePath, Configuration, TaskMana
 use sc_telemetry::{Telemetry, TelemetryWorker};
 use sp_consensus::SlotData;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
-use sp_core::U256;
 use std::{
 	collections::BTreeMap,
 	sync::{Arc, Mutex},
@@ -78,7 +77,6 @@ pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backen
 
 pub fn new_partial(
 	config: &Configuration,
-	cli: &Cli,
 ) -> Result<
 	sc_service::PartialComponents<
 		FullClient,
@@ -127,7 +125,9 @@ pub fn new_partial(
 	let client = Arc::new(client);
 
 	let telemetry = telemetry.map(|(worker, telemetry)| {
-		task_manager.spawn_handle().spawn("telemetry", None, worker.run());
+		task_manager
+			.spawn_handle()
+			.spawn("telemetry", None, worker.run());
 		telemetry
 	});
 
@@ -159,7 +159,6 @@ pub fn new_partial(
 	);
 
 	let slot_duration = sc_consensus_aura::slot_duration(&*client)?.slot_duration();
-	let target_gas_price = cli.run.target_gas_price;
 
 	let import_queue =
 		sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -175,10 +174,7 @@ pub fn new_partial(
 						slot_duration,
 					);
 
-				let dynamic_fee =
-					pallet_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
-
-				Ok((timestamp, slot, dynamic_fee))
+				Ok((timestamp, slot))
 			},
 			spawner: &task_manager.spawn_essential_handle(),
 			can_author_with: sp_consensus::CanAuthorWithNativeVersion::new(
@@ -224,9 +220,8 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		select_chain,
 		transaction_pool,
 		// inherent_data_providers,
-		other:
-			(consensus_result, filter_pool, frontier_backend, mut telemetry),
-	} = new_partial(&config, &cli)?;
+		other: (consensus_result, filter_pool, frontier_backend, mut telemetry),
+	} = new_partial(&config)?;
 
 	let (block_import, grandpa_link) = consensus_result;
 
@@ -242,7 +237,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		};
 	}
 
-	config.network.extra_sets.push(sc_finality_grandpa::grandpa_peers_set_config());
+	config
+		.network
+		.extra_sets
+		.push(sc_finality_grandpa::grandpa_peers_set_config());
 	let warp_sync = Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
 		backend.clone(),
 		grandpa_link.shared_authority_set().clone(),
@@ -371,7 +369,6 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 		let raw_slot_duration = slot_duration.slot_duration();
-		let target_gas_price = cli.run.target_gas_price;
 
 		let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 			StartAuraParams {
@@ -389,10 +386,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
                             raw_slot_duration,
                         );
 
-					let dynamic_fee =
-						pallet_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
-
-					Ok((timestamp, slot, dynamic_fee))
+					Ok((timestamp, slot))
 				},
 				force_authoring,
 				backoff_authoring_blocks,

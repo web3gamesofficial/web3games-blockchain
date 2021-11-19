@@ -67,7 +67,6 @@ fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branc
 
 pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-pallet-dynamic-fee = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
 
 web3games-runtime = { path = "../runtime/web3games", default-features = false, features = ["std"] }
 

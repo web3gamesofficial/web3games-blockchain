@@ -33,7 +33,10 @@ use static_assertions::const_assert;
 use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Contains, EqualPrivilegeOnly, FindAuthor, KeyOwnerProofSystem, Nothing, Everything, Randomness},
+	traits::{
+		Contains, EqualPrivilegeOnly, Everything, FindAuthor, KeyOwnerProofSystem, Nothing,
+		Randomness,
+	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 		DispatchClass, IdentityFee, Weight,
@@ -68,7 +71,7 @@ pub use primitives::{
 	Signature, TokenSymbol,
 };
 
-use runtime_common::{Web3gamesPrecompiles, Web3gamesExtensions};
+pub use runtime_common::{Web3gamesExtensions, Web3gamesPrecompiles};
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -337,6 +340,13 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 	}
 }
 
+pub struct FixedGasPrice;
+impl FeeCalculator for FixedGasPrice {
+	fn min_gas_price() -> U256 {
+		(1 * GIGAWEI).into()
+	}
+}
+
 parameter_types! {
 	pub const ChainId: u64 = 102;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
@@ -344,7 +354,7 @@ parameter_types! {
 }
 
 impl pallet_evm::Config for Runtime {
-	type FeeCalculator = BaseFee;
+	type FeeCalculator = FixedGasPrice;
 	type GasWeightMapping = ();
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type CallOrigin = EnsureAddressTruncated;
@@ -356,8 +366,8 @@ impl pallet_evm::Config for Runtime {
 	type PrecompilesType = Web3gamesPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
 	type ChainId = ChainId;
+	type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, ()>;
 	type BlockGasLimit = BlockGasLimit;
-	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
 }
 
@@ -368,25 +378,6 @@ impl pallet_ethereum::Config for Runtime {
 
 frame_support::parameter_types! {
 	pub BoundDivision: U256 = U256::from(1024);
-}
-
-impl pallet_dynamic_fee::Config for Runtime {
-	type MinGasPriceBoundDivisor = BoundDivision;
-}
-
-pub struct BaseFeeThreshold;
-impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
-	fn lower() -> Permill {
-		Permill::zero()
-	}
-	fn upper() -> Permill {
-		Permill::from_parts(1_000_000)
-	}
-}
-
-impl pallet_base_fee::Config for Runtime {
-	type Event = Event;
-	type Threshold = BaseFeeThreshold;
 }
 
 parameter_types! {
@@ -552,8 +543,6 @@ construct_runtime!(
 		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
 		Ethereum: pallet_ethereum::{Pallet, Call, Storage, Event, Config, Origin},
 		EVM: pallet_evm::{Pallet, Config, Call, Storage, Event<T>},
-		DynamicFee: pallet_dynamic_fee::{Pallet, Call, Storage, Config, Inherent},
-		BaseFee: pallet_base_fee::{Pallet, Call, Storage, Config<T>, Event},
 		OrmlTokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
 		OrmlCurrencies: orml_currencies::{Pallet, Storage, Call, Event<T>},
 
