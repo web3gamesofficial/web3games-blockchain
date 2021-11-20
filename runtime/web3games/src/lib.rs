@@ -71,7 +71,8 @@ pub use primitives::{
 	Signature, TokenSymbol,
 };
 
-pub use runtime_common::{Web3gamesExtensions, Web3gamesPrecompiles};
+use runtime_common::{Web3gamesExtensions, Web3gamesPrecompiles};
+pub type Precompiles = Web3gamesPrecompiles<Runtime>;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
