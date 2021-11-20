@@ -4,15 +4,13 @@ use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
-use sp_core::{sr25519, Pair, Public, H160, U256};
+use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::collections::BTreeMap;
-use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Signature, SudoConfig, SystemConfig,
-	TokenSymbol, DOLLARS, WASM_BINARY,
+	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
+	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -209,17 +207,11 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
-	let built_in_evm_account = H160::from_str("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b").unwrap();
-	let mut evm_accounts = BTreeMap::new();
-	evm_accounts.insert(
-		built_in_evm_account,
-		pallet_evm::GenesisAccount {
-			nonce: Default::default(),
-			balance: U256::from(100_000_000 * DOLLARS),
-			storage: Default::default(),
-			code: Default::default(),
-		},
-	);
+	// This is the simplest bytecode to revert without returning any data.
+	// We will pre-deploy it under all of our precompiles to ensure they can be called from
+	// within contracts.
+	// (PUSH1 0x00 PUSH1 0x00 REVERT)
+	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
 	const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
 
@@ -239,7 +231,24 @@ fn testnet_genesis(
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		sudo: SudoConfig { key: root_key },
-		evm: EVMConfig { accounts: evm_accounts },
+		evm: EVMConfig {
+			// We need _some_ code inserted at the precompile address so that
+			// the evm will actually call the address.
+			accounts: Precompiles::used_addresses()
+				.iter()
+				.map(|addr| {
+					(
+						addr.clone(),
+						pallet_evm::GenesisAccount {
+							nonce: Default::default(),
+							balance: Default::default(),
+							storage: Default::default(),
+							code: revert_bytecode.clone(),
+						},
+					)
+				})
+				.collect(),
+		},
 		ethereum: EthereumConfig {},
 		orml_tokens: OrmlTokensConfig {
 			balances: endowed_accounts
