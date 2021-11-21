@@ -16,9 +16,9 @@ pub mod token_multi;
 pub use token_multi::MultiTokenExtension;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Web3gamesPrecompiles<R>(PhantomData<R>);
+pub struct Web3GamesPrecompiles<R>(PhantomData<R>);
 
-impl<R> Web3gamesPrecompiles<R>
+impl<R> Web3GamesPrecompiles<R>
 where
 	R: pallet_evm::Config,
 {
@@ -33,7 +33,7 @@ where
 	}
 }
 
-impl<R> PrecompileSet for Web3gamesPrecompiles<R>
+impl<R> PrecompileSet for Web3GamesPrecompiles<R>
 where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
