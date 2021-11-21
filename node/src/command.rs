@@ -25,7 +25,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"support.anonymous.an".into()
+		"https://github.com/web3gamesofficial/web3games-blockchain/issues".into()
 	}
 
 	fn copyright_start_year() -> i32 {
