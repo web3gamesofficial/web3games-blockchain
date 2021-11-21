@@ -44,9 +44,9 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 pub fn development_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Web3Games Development Testnet",
 		// ID
-		"dev",
+		"web3games_dev",
 		ChainType::Development,
 		move || {
 			testnet_genesis(
@@ -88,9 +88,9 @@ pub fn development_config() -> Result<ChainSpec, String> {
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Local Testnet",
+		"Web3Games Local Testnet",
 		// ID
-		"local_testnet",
+		"web3games_local",
 		ChainType::Local,
 		move || {
 			testnet_genesis(
@@ -137,12 +137,12 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
+pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Web3Games Plum",
+		"Web3Games Testnet",
 		// ID
-		"web3games_plum",
+		"web3games_testnet",
 		ChainType::Live,
 		move || {
 			testnet_genesis(
@@ -184,7 +184,7 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID
-		Some("plum"),
+		None,
 		// Properties
 		Some(
 			json!({
