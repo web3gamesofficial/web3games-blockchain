@@ -36,7 +36,13 @@ impl SubstrateCli for Cli {
 		Ok(match id {
 			"dev" => Box::new(chain_spec::development_config()?),
 			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
-			"plum" => Box::new(chain_spec::plum_staging_testnet_config()?),
+			"staging" => Box::new(chain_spec::staging_testnet_config()?),
+			"web3games" => {
+				return Err("The mainnet is not yet available.".into());
+				// Box::new(chain_spec::RawChainSpec::from_json_bytes(
+				// 	&include_bytes!("../../../specs/web3games.json")[..],
+				// )?)
+			}
 			path => {
 				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?)
 			}
