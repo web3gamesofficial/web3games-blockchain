@@ -22,14 +22,14 @@ pallet-token-multi = { default-features = false, path = "../../../pallets/token-
 [features]
 default = ["std"]
 std = [
-  "codec/std",
-  "serde/std",
-  "log/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "frame-support/std",
-  "randomness/std",
-  "pallet-contracts/std",
-  "primitives/std",
-  "pallet-token-multi/std",
+	"codec/std",
+	"serde/std",
+	"log/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"frame-support/std",
+	"randomness/std",
+	"pallet-contracts/std",
+	"primitives/std",
+	"pallet-token-multi/std",
 ]

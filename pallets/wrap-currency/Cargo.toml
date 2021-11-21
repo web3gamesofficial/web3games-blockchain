@@ -24,16 +24,16 @@ pallet-token-fungible = { path = "../token-fungible", default-features = false }
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "scale-info/std",
-    "serde/std",
-    "frame-support/std",
-    "frame-system/std",
-    "sp-runtime/std",
-    "sp-io/std",
-    "sp-std/std",
-    "sp-core/std",
-    "orml-traits/std",
+	"codec/std",
+	"scale-info/std",
+	"serde/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-runtime/std",
+	"sp-io/std",
+	"sp-std/std",
+	"sp-core/std",
+	"orml-traits/std",
 	"primitives/std",
 	"pallet-token-fungible/std",
 ]
