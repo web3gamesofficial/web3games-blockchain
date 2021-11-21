@@ -1,19 +1,19 @@
 [workspace]
 members = [
-    "pallets/token-fungible",
-    "pallets/token-multi",
-    "pallets/token-non-fungible",
-    "pallets/exchange",
-    "pallets/exchange-nft",
-    "pallets/wrap-currency",
-    "pallets/marketplace",
-    "pallets/template",
-    "primitives",
-    "runtime/common",
-    "runtime/common/chain-extensions",
-    "runtime/common/precompiles",
-    "runtime/web3games",
-    "node",
+	"pallets/token-fungible",
+	"pallets/token-multi",
+	"pallets/token-non-fungible",
+	"pallets/exchange",
+	"pallets/exchange-nft",
+	"pallets/wrap-currency",
+	"pallets/marketplace",
+	"pallets/template",
+	"primitives",
+	"runtime/common",
+	"runtime/common/chain-extensions",
+	"runtime/common/precompiles",
+	"runtime/web3games",
+	"node",
 ]
 
 [profile.release]

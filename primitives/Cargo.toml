@@ -17,12 +17,12 @@ sp-std = { git = "https://github.com/paritytech/substrate", default-features = f
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "scale-info/std",
-    "serde",
-    "frame-system/std",
-    "sp-application-crypto/std",
-    "sp-core/std",
-    "sp-runtime/std",
-    "sp-std/std",
+	"codec/std",
+	"scale-info/std",
+	"serde",
+	"frame-system/std",
+	"sp-application-crypto/std",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
 ]

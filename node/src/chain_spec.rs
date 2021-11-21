@@ -73,8 +73,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")
@@ -125,8 +125,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")
@@ -188,8 +188,8 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")

@@ -27,12 +27,12 @@ hex-literal = "0.3.1"
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "sp-std/std",
-    "sp-core/std",
-    "sp-io/std",
-    "frame-support/std",
-    "frame-system/std",
-    "pallet-evm/std",
-    "evm/std",
+	"codec/std",
+	"sp-std/std",
+	"sp-core/std",
+	"sp-io/std",
+	"frame-support/std",
+	"frame-system/std",
+	"pallet-evm/std",
+	"evm/std",
 ]
