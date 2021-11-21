@@ -71,8 +71,8 @@ pub use primitives::{
 	Signature, TokenSymbol,
 };
 
-use runtime_common::{Web3gamesExtensions, Web3gamesPrecompiles};
-pub type Precompiles = Web3gamesPrecompiles<Runtime>;
+use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
+pub type Precompiles = Web3GamesPrecompiles<Runtime>;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -313,7 +313,7 @@ impl pallet_contracts::Config for Runtime {
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-	type ChainExtension = Web3gamesExtensions<Self>;
+	type ChainExtension = Web3GamesChainExtensions<Self>;
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
@@ -348,7 +348,7 @@ impl FeeCalculator for FixedGasPrice {
 parameter_types! {
 	pub const ChainId: u64 = 102;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
-	pub PrecompilesValue: Web3gamesPrecompiles<Runtime> = Web3gamesPrecompiles::<_>::new();
+	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -361,7 +361,7 @@ impl pallet_evm::Config for Runtime {
 	type Currency = Balances;
 	type Event = Event;
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
-	type PrecompilesType = Web3gamesPrecompiles<Self>;
+	type PrecompilesType = Web3GamesPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
 	type ChainId = ChainId;
 	type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, ()>;
