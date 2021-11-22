@@ -7,7 +7,6 @@ members = [
 	"pallets/exchange-nft",
 	"pallets/wrap-currency",
 	"pallets/marketplace",
-	"pallets/template",
 	"primitives",
 	"runtime/common",
 	"runtime/common/chain-extensions",
