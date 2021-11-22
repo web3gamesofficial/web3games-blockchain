@@ -28,7 +28,7 @@ use frame_support::{
 use primitives::{Balance, TokenId};
 use scale_info::TypeInfo;
 use sp_runtime::{traits::One, RuntimeDebug};
-use sp_std::{convert::TryInto, prelude::*};
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
