@@ -2,7 +2,7 @@
 name = "web3games-runtime"
 version = "0.0.1"
 authors = ["Web3Games Developers"]
-edition = "2018"
+edition = "2021"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
