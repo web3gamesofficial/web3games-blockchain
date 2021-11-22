@@ -18,7 +18,6 @@ use proc_macro::TokenStream;
 use proc_macro2::Literal;
 use quote::{quote, quote_spanned};
 use sha3::{Digest, Keccak256};
-use std::convert::TryInto;
 use syn::{parse_macro_input, spanned::Spanned, Expr, ExprLit, Ident, ItemEnum, Lit, LitStr};
 
 struct Bytes(Vec<u8>);
