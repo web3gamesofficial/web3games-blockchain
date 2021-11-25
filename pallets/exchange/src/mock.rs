@@ -1,17 +1,33 @@
+// This file is part of Web3Games.
+
+// Copyright (C) 2021 Web3Games https://web3games.org
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use crate as pallet_exchange;
-use frame_support::{parameter_types,PalletId};
+use frame_support::{parameter_types, PalletId};
 use frame_system as system;
+use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use primitives::Balance;
-
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
-
 
 pub const MILLICENTS: Balance = 10_000_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
@@ -84,7 +100,6 @@ parameter_types! {
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
 
-
 impl pallet_token_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
@@ -94,12 +109,10 @@ impl pallet_token_fungible::Config for Test {
 	type Currency = Balances;
 }
 
-
 parameter_types! {
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 }
-
 
 impl pallet_exchange::Config for Test {
 	type Event = Event;
@@ -111,13 +124,11 @@ impl pallet_exchange::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
 	}
-		.assimilate_storage(&mut t)
-		.unwrap();
+	.assimilate_storage(&mut t)
+	.unwrap();
 	t.into()
 }

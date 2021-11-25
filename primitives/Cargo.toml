@@ -2,7 +2,7 @@
 name = "web3games-primitives"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
@@ -17,12 +17,12 @@ sp-std = { git = "https://github.com/paritytech/substrate", default-features = f
 [features]
 default = ["std"]
 std = [
-    "codec/std",
-    "scale-info/std",
-    "serde",
-    "frame-system/std",
-    "sp-application-crypto/std",
-    "sp-core/std",
-    "sp-runtime/std",
-    "sp-std/std",
+	"codec/std",
+	"scale-info/std",
+	"serde",
+	"frame-system/std",
+	"sp-application-crypto/std",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
 ]

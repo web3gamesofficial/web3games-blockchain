@@ -1,7 +1,24 @@
-use super::*;
-use crate::{mock::*};
-use frame_support::{assert_ok};
+// This file is part of Web3Games.
 
+// Copyright (C) 2021 Web3Games https://web3games.org
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+use super::*;
+use crate::mock::*;
+use frame_support::assert_ok;
 
 type MultiTokenId = u32;
 type FungibleTokenId = u32;
@@ -9,24 +26,24 @@ pub type PoolId = u32;
 
 #[test]
 fn test_create_pool_works() {
-    new_test_ext().execute_with(|| {
-        let origin = Origin::signed(1);
-        let name:Vec<u8> = "Test".to_string().into();
-        let symbol:Vec<u8> = "TST".to_string().into();
-        let decimals:u8 = 2;
-        assert_ok!(TokenFungible::create_token(origin,name,symbol,decimals));
-        assert_eq!(TokenFungible::next_token_id(),1);
-        let origin = Origin::signed(2);
-        let uri:Vec<u8> = "KING".to_string().into();
-        assert_ok!(TokenMulti::create_token(origin.clone(),uri));
-        assert_eq!(TokenMulti::next_token_id(),1);
-        let origin = Origin::signed(1);
-        let currency:FungibleTokenId = 0;
-        let token:MultiTokenId = 0;
-        assert_ok!(ExchangeNft::create_pool(origin,currency,token));
-        assert_eq!(ExchangeNft::get_pool((currency,token)),0);
-        assert_eq!(ExchangeNft::next_pool_id(),1);
-    })
+	new_test_ext().execute_with(|| {
+		let origin = Origin::signed(1);
+		let name: Vec<u8> = "Test".to_string().into();
+		let symbol: Vec<u8> = "TST".to_string().into();
+		let decimals: u8 = 2;
+		assert_ok!(TokenFungible::create_token(origin, name, symbol, decimals));
+		assert_eq!(TokenFungible::next_token_id(), 1);
+		let origin = Origin::signed(2);
+		let uri: Vec<u8> = "KING".to_string().into();
+		assert_ok!(TokenMulti::create_token(origin.clone(), uri));
+		assert_eq!(TokenMulti::next_token_id(), 1);
+		let origin = Origin::signed(1);
+		let currency: FungibleTokenId = 0;
+		let token: MultiTokenId = 0;
+		assert_ok!(ExchangeNft::create_pool(origin, currency, token));
+		assert_eq!(ExchangeNft::get_pool((currency, token)), 0);
+		assert_eq!(ExchangeNft::next_pool_id(), 1);
+	})
 }
 
 // #[test]

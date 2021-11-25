@@ -2,7 +2,7 @@
 name = "pallet-marketplace"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
@@ -22,13 +22,13 @@ primitives = { package = "web3games-primitives", path = "../../primitives", defa
 default = ["std"]
 std = [
 	"codec/std",
-    "scale-info/std",
+	"scale-info/std",
 	"frame-support/std",
 	"frame-system/std",
-    "sp-std/std",
-    "sp-io/std",
-    "sp-runtime/std",
-    "pallet-timestamp/std",
-    "sp-core/std",
-    "primitives/std",
+	"sp-std/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"pallet-timestamp/std",
+	"sp-core/std",
+	"primitives/std",
 ]

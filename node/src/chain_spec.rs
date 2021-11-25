@@ -1,18 +1,34 @@
+// This file is part of Web3Games.
+
+// Copyright (C) 2021 Web3Games https://web3games.org
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use hex_literal::hex;
 use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
-use sp_core::{sr25519, Pair, Public, H160, U256};
+use sp_core::{sr25519, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use std::collections::BTreeMap;
-use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Signature, SudoConfig, SystemConfig,
-	TokenSymbol, DOLLARS, WASM_BINARY,
+	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
+	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -44,17 +60,14 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Development",
+		"Web3Games Development Testnet",
 		// ID
-		"dev",
+		"web3games_dev",
 		ChainType::Development,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
 				// Sudo account
@@ -78,8 +91,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")
@@ -91,22 +104,16 @@ pub fn development_config() -> Result<ChainSpec, String> {
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Local Testnet",
+		"Web3Games Local Testnet",
 		// ID
-		"local_testnet",
+		"web3games_local",
 		ChainType::Local,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
-				vec![
-					authority_keys_from_seed("Alice"),
-					authority_keys_from_seed("Bob"),
-				],
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 				// Sudo account
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 				// Pre-funded accounts
@@ -136,8 +143,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")
@@ -148,18 +155,15 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm not available".to_string())?;
-
+pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Web3Games Plum",
+		"Web3Games Testnet",
 		// ID
-		"web3games_plum",
+		"web3games_testnet",
 		ChainType::Live,
 		move || {
 			testnet_genesis(
-				wasm_binary,
 				// Initial PoA authorities
 				vec![
 					(
@@ -198,12 +202,12 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID
-		Some("plum"),
+		None,
 		// Properties
 		Some(
 			json!({
-			  "tokenDecimals": 18,
-			  "tokenSymbol": "W3G"
+				"tokenDecimals": 18,
+				"tokenSymbol": "W3G"
 			})
 			.as_object()
 			.expect("Provided valid json map")
@@ -216,75 +220,64 @@ pub fn plum_staging_testnet_config() -> Result<ChainSpec, String> {
 
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
-	wasm_binary: &[u8],
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
-	let built_in_evm_account = H160::from_str("6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b").unwrap();
-	let mut evm_accounts = BTreeMap::new();
-	evm_accounts.insert(
-		built_in_evm_account,
-		pallet_evm::GenesisAccount {
-			nonce: U256::from(0),
-			balance: U256::from(100_000_000 * DOLLARS),
-			storage: Default::default(),
-			code: wasm_binary.to_vec(),
-		},
-	);
+	// This is the simplest bytecode to revert without returning any data.
+	// We will pre-deploy it under all of our precompiles to ensure they can be called from
+	// within contracts.
+	// (PUSH1 0x00 PUSH1 0x00 REVERT)
+	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
 	const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
 
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
-			code: wasm_binary.to_vec(),
-			changes_trie_config: Default::default(),
+			code: WASM_BINARY.expect("WASM binary is not available.").to_vec(),
 		},
 		balances: BalancesConfig {
 			// Configure endowed accounts with initial balance of 1 << 60.
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, ENDOWMENT))
-				.collect(),
+			balances: endowed_accounts.iter().cloned().map(|k| (k, ENDOWMENT)).collect(),
 		},
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
 		},
 		grandpa: GrandpaConfig {
-			authorities: initial_authorities
-				.iter()
-				.map(|x| (x.1.clone(), 1))
-				.collect(),
+			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
 		sudo: SudoConfig { key: root_key },
+		scheduler: Default::default(),
+		transaction_payment: Default::default(),
 		evm: EVMConfig {
-			accounts: evm_accounts,
+			// We need _some_ code inserted at the precompile address so that
+			// the evm will actually call the address.
+			accounts: Precompiles::used_addresses()
+				.iter()
+				.map(|addr| {
+					(
+						addr.clone(),
+						pallet_evm::GenesisAccount {
+							nonce: Default::default(),
+							balance: Default::default(),
+							storage: Default::default(),
+							code: revert_bytecode.clone(),
+						},
+					)
+				})
+				.collect(),
 		},
 		ethereum: EthereumConfig {},
-		dynamic_fee: Default::default(),
 		orml_tokens: OrmlTokensConfig {
 			balances: endowed_accounts
 				.iter()
 				.flat_map(|x| {
 					vec![
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::DOT),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::ACA),
-							1000000 * DOLLARS,
-						),
-						(
-							x.clone(),
-							CurrencyId::Token(TokenSymbol::AUSD),
-							1000000 * DOLLARS,
-						),
+						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
+						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
 					]
 				})
 				.collect(),

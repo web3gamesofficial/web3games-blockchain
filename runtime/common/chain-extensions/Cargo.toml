@@ -2,7 +2,7 @@
 name = "chain-extensions"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
@@ -14,7 +14,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 randomness = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "dcad42f9b51130621e24c3a93ca1075cd1bb9d15", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 pallet-token-multi = { default-features = false, path = "../../../pallets/token-multi" }
@@ -22,14 +22,14 @@ pallet-token-multi = { default-features = false, path = "../../../pallets/token-
 [features]
 default = ["std"]
 std = [
-  "codec/std",
-  "serde/std",
-  "log/std",
-  "sp-runtime/std",
-  "sp-std/std",
-  "frame-support/std",
-  "randomness/std",
-  "pallet-contracts/std",
-  "primitives/std",
-  "pallet-token-multi/std",
+	"codec/std",
+	"serde/std",
+	"log/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"frame-support/std",
+	"randomness/std",
+	"pallet-contracts/std",
+	"primitives/std",
+	"pallet-token-multi/std",
 ]

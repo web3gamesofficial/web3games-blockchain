@@ -1,3 +1,21 @@
+// This file is part of Web3Games.
+
+// Copyright (C) 2021 Web3Games https://web3games.org
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode, MaxEncodedLen};
@@ -5,15 +23,15 @@ use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
-	PalletId, BoundedVec,
+	BoundedVec, PalletId,
 };
 use primitives::Balance;
+use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, One, CheckedAdd},
+	traits::{AtLeast32BitUnsigned, CheckedAdd, One},
 	RuntimeDebug,
 };
-use sp_std::{convert::TryInto, prelude::*};
-use scale_info::TypeInfo;
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
@@ -48,7 +66,12 @@ pub mod pallet {
 		type PalletId: Get<PalletId>;
 
 		/// Identifier for the class of token.
-		type FungibleTokenId: Member + Parameter + AtLeast32BitUnsigned + Default + Copy + MaxEncodedLen;
+		type FungibleTokenId: Member
+			+ Parameter
+			+ AtLeast32BitUnsigned
+			+ Default
+			+ Copy
+			+ MaxEncodedLen;
 
 		/// The maximum length of a name or symbol stored on-chain.
 		#[pallet::constant]
@@ -66,8 +89,12 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Tokens<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::FungibleTokenId, Token<T::AccountId, BoundedVec<u8, T::StringLimit>>>;
+	pub(super) type Tokens<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat,
+		T::FungibleTokenId,
+		Token<T::AccountId, BoundedVec<u8, T::StringLimit>>,
+	>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn next_token_id)]
@@ -119,7 +146,7 @@ pub mod pallet {
 		InsufficientAuthorizedTokens,
 		InsufficientTokens,
 		ConfuseBehavior,
-		ApproveToCurrentOwner
+		ApproveToCurrentOwner,
 	}
 
 	#[pallet::hooks]
@@ -169,26 +196,20 @@ pub mod pallet {
 			ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
 			Self::maybe_check_permission(id, &who)?;
-			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientAuthorizedTokens);
-
+			ensure!(
+				Balances::<T>::get(id, who.clone()) == amount,
+				Error::<T>::InsufficientAuthorizedTokens
+			);
 
 			Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
-				*allowance = allowance
-					.checked_add(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
+				*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
-			Self::deposit_event(Event::Transfer(
-				id,
-				who.clone(),
-				spender.clone(),
-				amount,
-			));
+			Self::deposit_event(Event::Transfer(id, who.clone(), spender.clone(), amount));
 
 			Ok(())
 		}
-
 
 		#[pallet::weight(10_000)]
 		pub fn transfer(
@@ -221,20 +242,19 @@ pub mod pallet {
 
 			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
-
-			ensure!(Allowances::<T>::get(id,(&sender, &who)) == amount, Error::<T>::InsufficientAuthorizedTokens);
+			ensure!(
+				Allowances::<T>::get(id, (&sender, &who)) == amount,
+				Error::<T>::InsufficientAuthorizedTokens
+			);
 
 			// over flow check
 			Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
-				*allowance = allowance
-					.checked_sub(amount)
-					.ok_or(Error::<T>::NumOverflow)?;
+				*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 				Ok(())
 			})?;
 
 			Self::do_transfer(id, &sender, &recipient, amount)?;
 			Ok(())
-
 		}
 
 		#[pallet::weight(10_000)]
@@ -308,12 +328,7 @@ impl<T: Config> Pallet<T> {
 		Self::decrease_balance(id, sender, amount)?;
 		Self::increase_balance(id, recipient, amount)?;
 
-		Self::deposit_event(Event::Transfer(
-			id,
-			sender.clone(),
-			recipient.clone(),
-			amount,
-		));
+		Self::deposit_event(Event::Transfer(id, sender.clone(), recipient.clone(), amount));
 
 		Ok(())
 	}
@@ -333,12 +348,7 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(
-			id,
-			T::AccountId::default(),
-			account.clone(),
-			amount,
-		));
+		Self::deposit_event(Event::Transfer(id, T::AccountId::default(), account.clone(), amount));
 
 		Ok(())
 	}
@@ -348,7 +358,6 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-
 		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
 			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
@@ -359,12 +368,7 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(
-			id,
-			account.clone(),
-			T::AccountId::default(),
-			amount,
-		));
+		Self::deposit_event(Event::Transfer(id, account.clone(), T::AccountId::default(), amount));
 
 		Ok(())
 	}

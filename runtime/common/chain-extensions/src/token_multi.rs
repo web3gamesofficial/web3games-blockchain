@@ -1,10 +1,25 @@
+// This file is part of Web3Games.
+
+// Copyright (C) 2021 Web3Games https://web3games.org
+// SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <https://www.gnu.org/licenses/>.
+
 use codec::Encode;
+use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
-};
-use frame_support::{
-	dispatch::GetDispatchInfo,
-	weights::extract_actual_weight,
 };
 use primitives::{Balance, TokenId};
 use sp_runtime::DispatchError;
@@ -12,8 +27,7 @@ use sp_std::vec::Vec;
 
 pub struct MultiTokenExtension;
 
-impl<C> ChainExtension<C>
-	for MultiTokenExtension
+impl<C> ChainExtension<C> for MultiTokenExtension
 where
 	C: pallet_contracts::Config + pallet_token_multi::Config,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
@@ -60,9 +74,16 @@ where
 				let token_id: TokenId = env.read_as()?;
 				let amount: Balance = env.read_as()?;
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::transfer_from { id, from, to, token_id, amount }
-				);
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
+						E::T,
+					>::transfer_from {
+						id,
+						from,
+						to,
+						token_id,
+						amount,
+					});
 
 				let dispatch_info = call.get_dispatch_info();
 				let charged = env.charge_weight(dispatch_info.weight)?;
@@ -71,7 +92,7 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
 			}
@@ -85,9 +106,15 @@ where
 				let token_id: TokenId = env.read_as()?;
 				let amount: Balance = env.read_as()?;
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_multi::Call::<E::T>::mint { id, to, token_id, amount }
-				);
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
+						E::T,
+					>::mint {
+						id,
+						to,
+						token_id,
+						amount,
+					});
 
 				let dispatch_info = call.get_dispatch_info();
 				let charged = env.charge_weight(dispatch_info.weight)?;
@@ -96,7 +123,7 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
 			}
