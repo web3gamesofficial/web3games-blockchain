@@ -17,14 +17,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use hex_literal::hex;
+use pallet_evm::{AddressMapping, HashedAddressMapping};
 use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::crypto::UncheckedInto;
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{sr25519, Pair, Public, H160};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::traits::{IdentifyAccount, Verify};
+use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
+use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
 	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
@@ -59,6 +61,12 @@ pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
 
+pub fn get_account_id_from_evm_address(address: &str) -> AccountId {
+	HashedAddressMapping::<BlakeTwo256>::into_account_id(
+		H160::from_str(address).expect("invalid evm address"),
+	)
+}
+
 pub fn development_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -78,6 +86,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob"),
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
 				],
 				true,
 			)
@@ -130,6 +139,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
 				],
 				true,
 			)
