@@ -19,6 +19,8 @@ structopt = "0.3.8"
 jsonrpc-core = "18.0.0"
 jsonrpc-pubsub = "18.0.0"
 hex-literal = "0.3.1"
+async-trait = "0.1"
+log = "0.4.8"
 
 sc-cli = { git = "https://github.com/paritytech/substrate", features = ["wasmtime"] }
 sp-core = { git = "https://github.com/paritytech/substrate" }
@@ -33,6 +35,7 @@ sc-consensus-aura = { git = "https://github.com/paritytech/substrate" }
 sp-consensus-aura = { git = "https://github.com/paritytech/substrate" }
 sp-consensus = { git = "https://github.com/paritytech/substrate" }
 sc-consensus = { git = "https://github.com/paritytech/substrate" }
+sc-consensus-manual-seal = { git = "https://github.com/paritytech/substrate" }
 sc-network = { git = "https://github.com/paritytech/substrate" }
 sc-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
 sp-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
@@ -74,7 +77,9 @@ web3games-runtime = { path = "../runtime/web3games", default-features = false, f
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate" }
 
 [features]
-default = []
+default = ["aura"]
+aura = ["web3games-runtime/aura"]
+manual-seal = ["web3games-runtime/manual-seal"]
 runtime-benchmarks = [
 	"web3games-runtime/runtime-benchmarks",
 ]
