@@ -530,11 +530,11 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
+		println!("amount{}",amount);
 		Balances::<T>::try_mutate(id, (token_id, to), |balance| -> DispatchResult {
 			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
-
 		Ok(())
 	}
 
@@ -544,6 +544,7 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
+		println!("amount{}",amount);
 		Balances::<T>::try_mutate(id, (token_id, from), |balance| -> DispatchResult {
 			*balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())

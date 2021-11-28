@@ -4482,6 +4482,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-timestamp",
+ "pallet-token-multi",
+ "pallet-token-non-fungible",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

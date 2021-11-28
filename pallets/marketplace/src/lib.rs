@@ -25,7 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec,
 };
-use primitives::{Balance, TokenId};
+use primitives::{AccountId, Balance, TokenId};
 use scale_info::TypeInfo;
 use sp_runtime::{traits::One, RuntimeDebug};
 use sp_std::prelude::*;
@@ -42,6 +42,7 @@ type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 pub type CollectionId = u64;
+pub type NftId = u32;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub enum NftType {
@@ -57,7 +58,7 @@ pub struct Collection<AccountId, BoundedString> {
 	// The type of nft
 	pub nft_type: NftType,
 	/// The account of nft
-	pub nft_account: AccountId,
+	pub nft_id: NftId,
 	/// Metadata from ipfs
 	pub metadata: BoundedString,
 }
@@ -67,9 +68,12 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	// use crate::NftType::{MultiToken, NonFungibleToken};
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config:
+		frame_system::Config + pallet_token_non_fungible::Config + pallet_token_multi::Config
+	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// The maximum length of metadata stored on-chain.
@@ -109,6 +113,7 @@ pub mod pallet {
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
+		TokenNotFound,
 		NumOverflow,
 		NoAvailableCollectionId,
 		CollectionNotFound,
@@ -119,7 +124,6 @@ pub mod pallet {
 		CannotDestroyCollection,
 		BadMetadata,
 	}
-
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
@@ -129,12 +133,22 @@ pub mod pallet {
 		pub fn create_collection(
 			origin: OriginFor<T>,
 			nft_type: NftType,
-			nft_account: T::AccountId,
+			nft_id: NftId,
 			metadata: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_create_collection(&who, nft_type, &nft_account, metadata)?;
+			// if nft_type == NonFungibleToken{
+			// 	let nft_id:T::NonFungibleTokenId = nft_id.into();
+			// 	ensure!(
+			// 	pallet_token_non_fungible::Pallet::<T>::exists(nft_id),
+			// 	Error::<T>::TokenNotFound,);
+			// }else if nft_type == MultiToken {
+			// 	let nft_id:T::MultiTokenId = nft_id.into();
+			// 	ensure!(
+			// 	pallet_token_multi::Pallet::<T>::exists(nft_id),
+			// 	Error::<T>::TokenNotFound);
+			// }
+			Self::do_create_collection(&who, nft_type,nft_id, metadata)?;
 
 			Ok(().into())
 		}
@@ -224,7 +238,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_create_collection(
 		who: &T::AccountId,
 		nft_type: NftType,
-		nft_account: &T::AccountId,
+		nft_id: NftId,
 		metadata: Vec<u8>,
 	) -> Result<CollectionId, DispatchError> {
 		let bounded_metadata: BoundedVec<u8, T::StringLimit> =
@@ -238,12 +252,13 @@ impl<T: Config> Pallet<T> {
 			})?;
 
 		let deposit = T::CreateCollectionDeposit::get();
-		T::Currency::reserve(who, deposit.clone())?;
+		<T as pallet::Config>::Currency::reserve(who, deposit.clone())?;
+
 
 		let collection = Collection {
 			owner: who.clone(),
 			nft_type,
-			nft_account: nft_account.clone(),
+			nft_id,
 			metadata: bounded_metadata,
 		};
 
@@ -296,19 +311,20 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_destroy_collection(
-		who: &T::AccountId,
-		collection_id: CollectionId,
+		_who: &T::AccountId,
+		_collection_id: CollectionId,
 	) -> DispatchResult {
-		Collections::<T>::try_mutate_exists(collection_id, |collection| -> DispatchResult {
-			let c = collection.take().ok_or(Error::<T>::CollectionNotFound)?;
-			ensure!(c.owner == *who, Error::<T>::NoPermission);
-
-			let deposit = T::CreateCollectionDeposit::get();
-			T::Currency::unreserve(who, deposit);
-
-			Self::deposit_event(Event::CollectionDestroyed(collection_id, who.clone()));
-
-			Ok(())
-		})
+		// Collections::<T>::try_mutate_exists(collection_id, |collection| -> DispatchResult {
+		// 	let c = collection.take().ok_or(Error::<T>::CollectionNotFound)?;
+		// 	ensure!(c.owner == *who, Error::<T>::NoPermission);
+		//
+		// 	let deposit = T::CreateCollectionDeposit::get();
+		// 	<T as pallet::Config>::Currency::unreserve(who, deposit);
+		//
+		// 	Self::deposit_event(Event::CollectionDestroyed(collection_id, who.clone()));
+		//
+		// 	Ok(())
+		// })
+		todo!()
 	}
 }

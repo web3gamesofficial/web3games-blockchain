@@ -375,7 +375,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
+	pub fn exists(id: T::NonFungibleTokenId) -> bool {
+		Tokens::<T>::contains_key(id)
+	}
+	pub fn tokens_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
 		Owners::<T>::contains_key(id, token_id)
 	}
 
@@ -455,7 +458,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(!Self::exists(id, token_id), Error::<T>::TokenAlreadyMinted);
+		ensure!(!Self::tokens_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
 
