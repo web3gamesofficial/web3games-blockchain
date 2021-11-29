@@ -325,7 +325,6 @@ impl<T: Config> Pallet<T> {
 			let currency_amount =
 				Self::get_buy_price(token_amount_out, currency_reserve, token_reserve)?;
 
-			println!("currency_amount={}",currency_amount);
 			// println!("currency_amount{}",currency_amount.clone());
 			total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
 
@@ -769,7 +768,6 @@ impl<T: Config> Pallet<T> {
 
 	/// Divides two numbers and add 1 if there is a rounding error
 	fn div_round(numerator: U256, denominator: U256) -> (Balance, bool) {
-		println!("numerator{}denominator{}",numerator,denominator);
 		let remainder = numerator.checked_rem(denominator).unwrap();
 		if remainder.is_zero() {
 			(
