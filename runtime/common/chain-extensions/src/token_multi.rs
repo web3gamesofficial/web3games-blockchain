@@ -62,7 +62,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			},
+			}
 			// transfer_from
 			4226 => {
 				log::info!("func id 4226");

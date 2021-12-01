@@ -60,9 +60,10 @@ impl SubstrateCli for Cli {
 				// Box::new(chain_spec::RawChainSpec::from_json_bytes(
 				// 	&include_bytes!("../../../specs/web3games.json")[..],
 				// )?)
-			},
-			path =>
+			}
+			path => {
 				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?)
+			}
 		})
 	}
 
@@ -122,7 +123,7 @@ pub fn run() -> sc_cli::Result<()> {
 				cmd.run(frontier_database_config)?;
 				cmd.run(config.database)
 			})
-		},
+		}
 		Some(Subcommand::Revert(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
@@ -131,7 +132,7 @@ pub fn run() -> sc_cli::Result<()> {
 				Ok((cmd.run(client, backend), task_manager))
 			})
 		}
-		Some(Subcommand::Benchmark(cmd)) =>
+		Some(Subcommand::Benchmark(cmd)) => {
 			if cfg!(feature = "runtime-benchmarks") {
 				let runner = cli.create_runner(cmd)?;
 
@@ -141,6 +142,7 @@ pub fn run() -> sc_cli::Result<()> {
 					`--features runtime-benchmarks`."
 					.into())
 			}
+		}
 		None => {
 			let runner = cli.create_runner(&cli.run.base)?;
 			runner.run_node_until_exit(|config| async move {
