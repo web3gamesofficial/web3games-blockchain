@@ -98,7 +98,7 @@ pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenSt
 					return quote_spanned! {
 						lit.span() => compile_error("Expected literal string");
 					}
-					.into()
+					.into();
 				}
 			}
 			Some((_eg, expr)) => {
