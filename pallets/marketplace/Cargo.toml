@@ -21,6 +21,9 @@ pallet-token-multi = { path = "../token-multi", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 
+[dev-dependencies]
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
+
 [features]
 default = ["std"]
 std = [
@@ -34,4 +37,6 @@ std = [
 	"pallet-timestamp/std",
 	"sp-core/std",
 	"primitives/std",
+	"pallet-token-non-fungible/std",
+	"pallet-token-multi/std"
 ]
