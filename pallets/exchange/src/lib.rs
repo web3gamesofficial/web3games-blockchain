@@ -460,8 +460,8 @@ impl<T: Config> Pallet<T> {
 		let balance_1_adjusted =
 			balance_1 * Balance::from(1000u128) - (amount_1_in * Balance::from(3u128));
 		ensure!(
-			balance_0_adjusted * balance_1_adjusted >=
-				reserve_0 * reserve_1 * Balance::from(1000u128) * Balance::from(1000u128),
+			balance_0_adjusted * balance_1_adjusted
+					>= reserve_0 * reserve_1 * Balance::from(1000u128) * Balance::from(1000u128),
 			Error::<T>::AdjustedError
 		);
 

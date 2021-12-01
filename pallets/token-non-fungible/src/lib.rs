@@ -340,9 +340,9 @@ pub mod pallet {
 			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(
-				who == owner ||
-					OperatorApprovals::<T>::get(id, (&owner, &who)) ||
-					Self::is_approved_or_owner(id, &from, token_id),
+				who == owner
+					|| OperatorApprovals::<T>::get(id, (&owner, &who))
+					|| Self::is_approved_or_owner(id, &from, token_id),
 				Error::<T>::NotOwnerOrApproved
 			);
 
@@ -519,9 +519,9 @@ impl<T: Config> Pallet<T> {
 	) -> bool {
 		let owner = Self::owner_of(id, token_id);
 
-		*spender == owner ||
-			Self::get_approved(id, token_id) == *spender ||
-			Self::is_approved_for_all(id, (&owner, spender))
+		*spender == owner
+			|| Self::get_approved(id, token_id) == *spender
+			|| Self::is_approved_for_all(id, (&owner, spender))
 	}
 
 	fn has_permission(id: T::NonFungibleTokenId, who: &T::AccountId) -> bool {
