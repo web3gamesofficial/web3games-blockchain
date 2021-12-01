@@ -62,7 +62,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			}
+			},
 			// transfer_from
 			4226 => {
 				log::info!("func id 4226");
@@ -92,10 +92,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {}
+					Ok(_) => {},
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			}
+			},
 			// mint
 			4228 => {
 				log::info!("func id 4228");
@@ -123,10 +123,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {}
+					Ok(_) => {},
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			}
+			},
 			// balance_of
 			4232 => {
 				log::info!("func id 4232");
@@ -150,11 +150,11 @@ where
 				env.write(&balance_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			}
+			},
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+				return Err(DispatchError::Other("Unimplemented func_id"))
+			},
 		}
 		Ok(RetVal::Converging(0))
 	}

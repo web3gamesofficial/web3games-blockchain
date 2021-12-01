@@ -79,20 +79,16 @@ where
 			a if a == hash(8) => Some(Bn128Pairing::execute(input, target_gas, context, is_static)),
 
 			// Non-Web3Games specific nor Ethereum precompiles
-			a if a == hash(1024) => {
-				Some(Sha3FIPS256::execute(input, target_gas, context, is_static))
-			}
-			a if a == hash(1025) => {
-				Some(Dispatch::<R>::execute(input, target_gas, context, is_static))
-			}
-			a if a == hash(1026) => {
-				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static))
-			}
+			a if a == hash(1024) =>
+				Some(Sha3FIPS256::execute(input, target_gas, context, is_static)),
+			a if a == hash(1025) =>
+				Some(Dispatch::<R>::execute(input, target_gas, context, is_static)),
+			a if a == hash(1026) =>
+				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
 
 			// Web3Games precompiles
-			a if a == hash(2048) => {
-				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			}
+			a if a == hash(2048) =>
+				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static)),
 
 			// Not support
 			_ => None,

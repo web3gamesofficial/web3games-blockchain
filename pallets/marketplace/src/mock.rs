@@ -133,10 +133,14 @@ impl pallet_marketplace::Config for Test {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(0, 100 * DOLLARS), (1, 100 * DOLLARS),(2, 100 * DOLLARS), (3, 100 * DOLLARS)],
+		balances: vec![
+			(0, 100 * DOLLARS),
+			(1, 100 * DOLLARS),
+			(2, 100 * DOLLARS),
+			(3, 100 * DOLLARS),
+		],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
 	t.into()
 }
-

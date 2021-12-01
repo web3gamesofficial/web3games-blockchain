@@ -559,6 +559,4 @@ impl<T: Config> Pallet<T> {
 		let token = Tokens::<T>::get(id).unwrap();
 		*who == token.owner
 	}
-
-
 }
