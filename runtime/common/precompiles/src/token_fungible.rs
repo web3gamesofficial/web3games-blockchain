@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{TokenIdConversion, FT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::{TokenIdConversion, CREATE_SELECTOR, FT_PRECOMPILE_ADDRESS_PREFIX};
 use fp_evm::{
 	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
 	PrecompileResult,
@@ -29,9 +29,6 @@ use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
 pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;
-
-/// create function selector: 0x42ecabc0
-pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
@@ -90,14 +87,11 @@ where
 		context: &Context,
 		_is_static: bool,
 	) -> PrecompileResult {
-		log::info!("precompiles: tokens call");
-
 		if let Some(fungible_token_id) = Self::try_from_address(context.address) {
 			if pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
 				let (input, selector) = EvmDataReader::new_with_selector(input)?;
 
 				let (origin, call) = match selector {
-					// Action::Create => return Self::create(input, target_gas, context),
 					// storage getters
 					Action::Name => return Self::name(fungible_token_id, target_gas),
 					Action::Symbol => return Self::symbol(fungible_token_id, target_gas),
@@ -136,6 +130,8 @@ where
 					logs: vec![],
 				});
 			} else {
+				// Action::Create = "create(bytes,bytes)"
+
 				let selector = &input[0..4];
 				if selector == CREATE_SELECTOR {
 					let input = EvmDataReader::new(&input[4..]);
@@ -167,7 +163,6 @@ where
 		target_gas: Option<u64>,
 		context: &Context,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("create");
 		input.expect_arguments(3)?;
 
 		let name: Vec<u8> = input.read::<Bytes>()?.into();
@@ -217,7 +212,6 @@ where
 		id: FungibleTokenIdOf<Runtime>,
 		target_gas: Option<u64>,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("symbol");
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
@@ -235,7 +229,6 @@ where
 		id: FungibleTokenIdOf<Runtime>,
 		target_gas: Option<u64>,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("decimals");
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
@@ -253,7 +246,6 @@ where
 		id: FungibleTokenIdOf<Runtime>,
 		target_gas: Option<u64>,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("total supply");
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
@@ -272,7 +264,6 @@ where
 		mut input: EvmDataReader,
 		target_gas: Option<u64>,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("balance of");
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
@@ -300,7 +291,6 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		log::info!("transfer");
 		// let mut gasometer = Gasometer::new(target_gas);
 		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
 
@@ -326,7 +316,6 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		log::info!("transfer from");
 		// let mut gasometer = Gasometer::new(target_gas);
 		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
 
@@ -359,7 +348,6 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		log::info!("mint");
 		// let mut gasometer = Gasometer::new(target_gas);
 		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
 
@@ -385,7 +373,6 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		log::info!("burn");
 		// let mut gasometer = Gasometer::new(target_gas);
 		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
 

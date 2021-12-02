@@ -93,8 +93,6 @@ where
 		context: &Context,
 		_is_static: bool,
 	) -> PrecompileResult {
-		log::info!("precompiles: tokens call");
-
 		if let Some(non_fungible_token_id) = Self::try_from_address(context.address) {
 			if pallet_non_token_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
 				let (input, selector) = EvmDataReader::new_with_selector(input)?;
