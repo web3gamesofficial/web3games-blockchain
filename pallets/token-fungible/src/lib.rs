@@ -25,6 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
+use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -278,18 +279,6 @@ impl<T: Config> Pallet<T> {
 		Tokens::<T>::contains_key(id)
 	}
 
-	pub fn token_name(id: T::FungibleTokenId) -> Vec<u8> {
-		Tokens::<T>::get(id).name.to_vec()
-	}
-
-	pub fn token_symbol(id: T::FungibleTokenId) -> Vec<u8> {
-		Tokens::<T>::get(id).symbol.to_vec()
-	}
-
-	pub fn token_decimals(id: T::FungibleTokenId) -> u8 {
-		Tokens::<T>::get(id).decimals
-	}
-
 	pub fn total_supply(id: T::FungibleTokenId) -> Balance {
 		Tokens::<T>::get(id).total_supply
 	}
@@ -414,5 +403,21 @@ impl<T: Config> Pallet<T> {
 		ensure!(*who == token.owner, Error::<T>::NoPermission);
 
 		Ok(())
+	}
+}
+
+impl<T: Config> FungibleMetadata for Pallet<T> {
+	type FungibleTokenId = T::FungibleTokenId;
+
+	fn token_name(id: Self::FungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).name.to_vec()
+	}
+
+	fn token_symbol(id: Self::FungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).symbol.to_vec()
+	}
+
+	fn token_decimals(id: Self::FungibleTokenId) -> u8 {
+		Tokens::<T>::get(id).decimals
 	}
 }

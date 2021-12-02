@@ -16,15 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{TokenIdConversion, CREATE_SELECTOR, FT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::{CREATE_SELECTOR, FT_PRECOMPILE_ADDRESS_PREFIX};
 use fp_evm::{
 	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
 	PrecompileResult,
 };
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
+use pallet_support::{FungibleMetadata, TokenIdConversion};
 use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
-use primitives::{Balance, TokenId};
+use primitives::Balance;
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
@@ -163,6 +164,9 @@ where
 		target_gas: Option<u64>,
 		context: &Context,
 	) -> Result<PrecompileOutput, PrecompileFailure> {
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_log_costs_manual(3, 32)?;
+
 		input.expect_arguments(3)?;
 
 		let name: Vec<u8> = input.read::<Bytes>()?.into();
@@ -186,58 +190,6 @@ where
 			exit_status: ExitSucceed::Returned,
 			cost: 0,
 			output: EvmDataWriter::new().write(output).build(),
-			logs: vec![],
-		})
-	}
-
-	fn name(
-		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		log::info!("name");
-		let mut gasometer = Gasometer::new(target_gas);
-		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
-		let name: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_name(id);
-
-		Ok(PrecompileOutput {
-			exit_status: ExitSucceed::Returned,
-			cost: gasometer.used_gas(),
-			output: EvmDataWriter::new().write::<Bytes>(name.as_slice().into()).build(),
-			logs: vec![],
-		})
-	}
-
-	fn symbol(
-		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
-		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
-		let symbol: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_symbol(id);
-
-		Ok(PrecompileOutput {
-			exit_status: ExitSucceed::Returned,
-			cost: gasometer.used_gas(),
-			output: EvmDataWriter::new().write::<Bytes>(symbol.as_slice().into()).build(),
-			logs: vec![],
-		})
-	}
-
-	fn decimals(
-		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
-		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
-		let decimals: u8 = pallet_token_fungible::Pallet::<Runtime>::token_decimals(id);
-
-		Ok(PrecompileOutput {
-			exit_status: ExitSucceed::Returned,
-			cost: gasometer.used_gas(),
-			output: EvmDataWriter::new().write(decimals).build(),
 			logs: vec![],
 		})
 	}
@@ -291,8 +243,8 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		// let mut gasometer = Gasometer::new(target_gas);
-		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_log_costs_manual(3, 32)?;
 
 		input.expect_arguments(2)?;
 
@@ -316,8 +268,8 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		// let mut gasometer = Gasometer::new(target_gas);
-		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_log_costs_manual(3, 32)?;
 
 		input.expect_arguments(3)?;
 
@@ -348,8 +300,8 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		// let mut gasometer = Gasometer::new(target_gas);
-		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_log_costs_manual(3, 32)?;
 
 		input.expect_arguments(2)?;
 
@@ -373,8 +325,8 @@ where
 		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
 		PrecompileFailure,
 	> {
-		// let mut gasometer = Gasometer::new(target_gas);
-		// gasometer.record_cost(RuntimeHelper::<Runtime>::db_write_gas_cost())?;
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_log_costs_manual(3, 32)?;
 
 		input.expect_arguments(1)?;
 
@@ -385,5 +337,56 @@ where
 		let call = pallet_token_fungible::Call::<Runtime>::burn { id, amount };
 
 		Ok((Some(origin).into(), call))
+	}
+
+	fn name(
+		id: FungibleTokenIdOf<Runtime>,
+		target_gas: Option<u64>,
+	) -> Result<PrecompileOutput, PrecompileFailure> {
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+		let name: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_name(id);
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write::<Bytes>(name.as_slice().into()).build(),
+			logs: vec![],
+		})
+	}
+
+	fn symbol(
+		id: FungibleTokenIdOf<Runtime>,
+		target_gas: Option<u64>,
+	) -> Result<PrecompileOutput, PrecompileFailure> {
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+		let symbol: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_symbol(id);
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write::<Bytes>(symbol.as_slice().into()).build(),
+			logs: vec![],
+		})
+	}
+
+	fn decimals(
+		id: FungibleTokenIdOf<Runtime>,
+		target_gas: Option<u64>,
+	) -> Result<PrecompileOutput, PrecompileFailure> {
+		let mut gasometer = Gasometer::new(target_gas);
+		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+		let decimals: u8 = pallet_token_fungible::Pallet::<Runtime>::token_decimals(id);
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(decimals).build(),
+			logs: vec![],
+		})
 	}
 }

@@ -150,12 +150,10 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn total_supply)]
 	pub(super) type TotalSupply<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::NonFungibleTokenId, u32, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn token_by_index)]
 	pub(super) type AllTokens<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -178,7 +176,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn token_of_owner_by_index)]
 	pub(super) type OwnedTokens<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -375,7 +372,11 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
+	pub fn exists(id: T::NonFungibleTokenId) -> bool {
+		Tokens::<T>::contains_key(id)
+	}
+
+	pub fn token_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
 		Owners::<T>::contains_key(id, token_id)
 	}
 
@@ -454,7 +455,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(!Self::exists(id, token_id), Error::<T>::TokenAlreadyMinted);
+		ensure!(!Self::token_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
 

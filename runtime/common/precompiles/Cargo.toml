@@ -26,6 +26,7 @@ evm = { version = "0.33.0", default-features = false, features = ["with-codec"] 
 pallet-token-fungible = { path = "../../../pallets/token-fungible", default-features = false }
 pallet-token-non-fungible = { path = "../../../pallets/token-non-fungible", default-features = false }
 pallet-token-multi = { path = "../../../pallets/token-multi", default-features = false }
+pallet-support = { path = "../../../pallets/support", default-features = false }
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 precompile-utils = { path = "./utils", default-features = false }
 
@@ -49,6 +50,7 @@ std = [
 	"pallet-token-fungible/std",
 	"pallet-token-non-fungible/std",
 	"pallet-token-multi/std",
+	"pallet-support/std",
 	"primitives/std",
 	"precompile-utils/std",
 ]

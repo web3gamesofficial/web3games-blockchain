@@ -26,24 +26,17 @@ use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use pallet_support::AccountMapping;
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
 
 mod token_fungible;
 mod token_multi;
+mod token_non_fungible;
 
 pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
-
-/// This trait ensure we can convert EVM Address to FungibleTokenId,
-/// NonFungibleTokenId, or MultiTokenId.
-/// We will require each mod to have this trait implemented
-pub trait TokenIdConversion<A> {
-	/// Try to convert an evm address into token ID. Might not succeed.
-	fn try_from_address(address: H160) -> Option<A>;
-	/// Convert into an evm address. This is infallible.
-	fn into_address(id: A) -> H160;
-}
+pub use token_non_fungible::NonFungibleTokenExtension;
 
 /// Function Selector of "create": 0x42ecabc0
 pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
@@ -89,6 +82,7 @@ where
 	<R as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
 	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
 	<R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
+	R: AccountMapping<R::AccountId>,
 {
 	fn execute(
 		&self,
@@ -123,6 +117,9 @@ where
 			// Web3Games precompiles
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(FungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
+			}
+			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
+				Some(NonFungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
 			}
 			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))

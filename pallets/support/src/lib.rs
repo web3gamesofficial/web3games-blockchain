@@ -19,7 +19,31 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use primitives::{TokenId, TokenIndex};
+use sp_core::H160;
 use sp_std::prelude::*;
+
+/// This trait ensure we can convert EVM Address to FungibleTokenId,
+/// NonFungibleTokenId, or MultiTokenId.
+/// We will require each mod to have this trait implemented
+pub trait TokenIdConversion<A> {
+	/// Try to convert an evm address into token ID. Might not succeed.
+	fn try_from_address(address: H160) -> Option<A>;
+	/// Convert into an evm address. This is infallible.
+	fn into_address(id: A) -> H160;
+}
+
+pub trait AccountMapping<A> {
+	/// Convert account ID into an evm address.
+	fn into_evm_address(account: A) -> H160;
+}
+
+pub trait FungibleMetadata {
+	type FungibleTokenId;
+
+	fn token_name(id: Self::FungibleTokenId) -> Vec<u8>;
+	fn token_symbol(id: Self::FungibleTokenId) -> Vec<u8>;
+	fn token_decimals(id: Self::FungibleTokenId) -> u8;
+}
 
 pub trait NonFungibleMetadata {
 	type NonFungibleTokenId;
