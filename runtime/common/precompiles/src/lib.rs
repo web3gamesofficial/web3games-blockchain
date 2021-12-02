@@ -45,6 +45,9 @@ pub trait TokenIdConversion<A> {
 	fn into_address(id: A) -> H160;
 }
 
+/// Function Selector of "create": 0x42ecabc0
+pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
+
 /// Fungible Token prefix with 0xFFFFFFFF.
 pub const FT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
 
