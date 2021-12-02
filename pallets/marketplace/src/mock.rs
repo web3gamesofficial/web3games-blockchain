@@ -97,7 +97,7 @@ impl pallet_balances::Config for Test {
 parameter_types! {
 	pub const TokenNonFungiblePalletId: PalletId = PalletId(*b"w3g/tnfp");
 	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tmpi");
-	pub const CollectionsPalletId: PalletId = PalletId(*b"w3g/mpct");
+	pub const MarketPlacePalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub const StringLimit: u32 = 50;
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
@@ -124,7 +124,7 @@ impl pallet_token_multi::Config for Test {
 impl pallet_marketplace::Config for Test {
 	type Event = Event;
 	type StringLimit = StringLimit;
-	type PalletId = CollectionsPalletId;
+	type PalletId = MarketPlacePalletId;
 	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
 }
