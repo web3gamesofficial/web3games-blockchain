@@ -76,9 +76,7 @@ pallet-marketplace = { path = "../../pallets/marketplace", default-features = fa
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
 
 [features]
-default = ["std", "aura"]
-aura = []
-manual-seal = []
+default = ["std"]
 std = [
 	"codec/std",
 	"scale-info/std",
