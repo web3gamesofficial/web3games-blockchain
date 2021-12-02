@@ -325,6 +325,7 @@ impl<T: Config> Pallet<T> {
 			let currency_amount =
 				Self::get_buy_price(token_amount_out, currency_reserve, token_reserve)?;
 
+			// println!("currency_amount{}",currency_amount.clone());
 			total_refund_currency = total_refund_currency.saturating_sub(currency_amount);
 
 			currency_amounts_in[i] = currency_amount;
@@ -486,7 +487,6 @@ impl<T: Config> Pallet<T> {
 			if total_liquidity > Zero::zero() {
 				let currency_reserve = Self::currency_reserves(id, token_id);
 				let token_reserve = token_reserves[i];
-
 				let (currency_amount, rounded) = Self::div_round(
 					U256::from(amount).saturating_mul(U256::from(currency_reserve)),
 					U256::from(token_reserve).saturating_sub(U256::from(amount)),
@@ -527,7 +527,7 @@ impl<T: Config> Pallet<T> {
 				})?;
 			} else {
 				let max_currency = max_currencies[i];
-
+				// more think about this size
 				// Otherwise rounding error could end up being significant on second deposit
 				ensure!(
 					max_currency >= Balance::from(1000000000u128),
@@ -705,10 +705,10 @@ impl<T: Config> Pallet<T> {
 		reserve_out: Balance,
 	) -> Result<Balance, DispatchError> {
 		ensure!(reserve_in > Zero::zero() && reserve_out > Zero::zero(), Error::<T>::EmptyReserve);
-
 		let numerator: U256 = U256::from(reserve_in)
 			.saturating_mul(U256::from(amount_out))
 			.saturating_mul(U256::from(1000u128));
+		// must reserve_out less token_amounts_out
 		let denominator: U256 = (U256::from(reserve_out).saturating_sub(U256::from(amount_out)))
 			.saturating_mul(U256::from(995u128));
 		let (amount_in, _) = Self::div_round(numerator, denominator);

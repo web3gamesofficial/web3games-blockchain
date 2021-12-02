@@ -28,16 +28,21 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
 use pallet_evm::FeeCalculator;
-use pallet_grandpa::fg_primitives;
-use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
+use pallet_grandpa::{
+	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
+};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::crypto::Public;
-use sp_core::{crypto::KeyTypeId, OpaqueMetadata, H160, H256, U256};
-use sp_runtime::traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor, Zero};
+use sp_core::{
+	crypto::{KeyTypeId, Public},
+	OpaqueMetadata, H160, H256, U256,
+};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdConversion, Dispatchable, PostDispatchInfoOf},
+	traits::{
+		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable,
+		NumberFor, PostDispatchInfoOf, Zero,
+	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult,
 };
@@ -254,12 +259,9 @@ parameter_types! {
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
+	type OnTimestampSet = Aura;
 	type MinimumPeriod = MinimumPeriod;
 	type WeightInfo = ();
-	#[cfg(feature = "aura")]
-	type OnTimestampSet = Aura;
-	#[cfg(feature = "manual-seal")]
-	type OnTimestampSet = ();
 }
 
 parameter_types! {
@@ -479,6 +481,7 @@ parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
 	pub const ExchangeNftPalletId: PalletId = PalletId(*b"w3g/exnp");
+	pub const CollectionsPalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
 }
@@ -537,6 +540,7 @@ impl pallet_exchange_nft::Config for Runtime {
 impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
 	type StringLimit = StringLimit;
+	type PalletId = CollectionsPalletId;
 	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
 }

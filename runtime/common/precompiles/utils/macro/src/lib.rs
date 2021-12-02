@@ -74,7 +74,6 @@ pub fn keccak256(input: TokenStream) -> TokenStream {
 /// 	Tata = 1414311903u32,
 /// }
 /// ```
-///
 #[proc_macro_attribute]
 pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenStream {
 	let item = parse_macro_input!(input as ItemEnum);

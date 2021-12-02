@@ -195,7 +195,6 @@ pub mod pallet {
 
 			ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
-			Self::maybe_check_permission(id, &who)?;
 			ensure!(
 				Balances::<T>::get(id, who.clone()) == amount,
 				Error::<T>::InsufficientAuthorizedTokens
@@ -222,7 +221,6 @@ pub mod pallet {
 
 			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
-			Self::maybe_check_permission(id, &who)?;
 			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientTokens);
 
 			Self::do_transfer(id, &who, &recipient, amount)?;
@@ -264,8 +262,6 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::maybe_check_permission(id, &who)?;
 
 			Self::do_burn(id, &who, amount)?;
 

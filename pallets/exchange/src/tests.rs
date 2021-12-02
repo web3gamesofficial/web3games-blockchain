@@ -61,27 +61,23 @@ fn test_add_liquidity_works() {
 		let amount: Balance = 1000000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1000000);
-
 		let origin = Origin::signed(2);
 		let name: Vec<u8> = "KING".to_string().into();
 		let symbol: Vec<u8> = "KIN".to_string().into();
 		let decimals: u8 = 18;
 		assert_ok!(TokenFungible::create_token(origin.clone(), name, symbol, decimals));
 		assert_eq!(TokenFungible::next_token_id(), 2);
-
 		let id: u32 = 1;
 		let account: u64 = 1;
 		let amount: Balance = 1000000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1000000);
-
 		let who = &1u64;
 		let token_a: FungibleTokenId = 0;
 		let token_b: FungibleTokenId = 1;
 		assert_ok!(Exchange::do_create_pool(who, token_a, token_b));
 		assert_eq!(Exchange::get_pool((token_a, token_b)), 0);
 		assert_eq!(Exchange::next_pool_id(), 1);
-
 		let origin = Origin::signed(1);
 		let id: PoolId = 0;
 		let amount_a_desired: Balance = 1000000u128;
@@ -116,27 +112,23 @@ fn test_swap_exact_tokens_for_tokens_works() {
 		let amount: Balance = 1200000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1200000);
-
 		let origin = Origin::signed(2);
 		let name: Vec<u8> = "KING".to_string().into();
 		let symbol: Vec<u8> = "KIN".to_string().into();
 		let decimals: u8 = 18;
 		assert_ok!(TokenFungible::create_token(origin.clone(), name, symbol, decimals));
 		assert_eq!(TokenFungible::next_token_id(), 2);
-
 		let id: u32 = 1;
 		let account: u64 = 1;
 		let amount: Balance = 1000000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1000000);
-
 		let who = &1u64;
 		let token_a: FungibleTokenId = 0;
 		let token_b: FungibleTokenId = 1;
 		assert_ok!(Exchange::do_create_pool(who, token_a, token_b));
 		assert_eq!(Exchange::get_pool((token_a, token_b)), 0);
 		assert_eq!(Exchange::next_pool_id(), 1);
-
 		let origin = Origin::signed(1);
 		let id: PoolId = 0;
 		let amount_a_desired: Balance = 1000000u128;
@@ -184,27 +176,23 @@ fn test_swap_tokens_for_exact_tokens_works() {
 		let amount: Balance = 1200000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1200000);
-
 		let origin = Origin::signed(2);
 		let name: Vec<u8> = "KING".to_string().into();
 		let symbol: Vec<u8> = "KIN".to_string().into();
 		let decimals: u8 = 18;
 		assert_ok!(TokenFungible::create_token(origin.clone(), name, symbol, decimals));
 		assert_eq!(TokenFungible::next_token_id(), 2);
-
 		let id: u32 = 1;
 		let account: u64 = 1;
 		let amount: Balance = 1000000u128;
 		assert_ok!(TokenFungible::mint(origin, id, account, amount));
 		assert_eq!(TokenFungible::balance_of(id, account), 1000000);
-
 		let who = &1u64;
 		let token_a: FungibleTokenId = 0;
 		let token_b: FungibleTokenId = 1;
 		assert_ok!(Exchange::do_create_pool(who, token_a, token_b));
 		assert_eq!(Exchange::get_pool((token_a, token_b)), 0);
 		assert_eq!(Exchange::next_pool_id(), 1);
-
 		let origin = Origin::signed(1);
 		let id: PoolId = 0;
 		let amount_a_desired: Balance = 1000000u128;
