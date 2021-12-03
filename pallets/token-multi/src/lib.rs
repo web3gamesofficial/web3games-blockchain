@@ -25,6 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
+use pallet_support::MultiMetadata;
 use primitives::{Balance, TokenId};
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -159,40 +160,6 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			Self::do_create_token(&who, uri)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn mint(
-			origin: OriginFor<T>,
-			id: T::MultiTokenId,
-			to: T::AccountId,
-			token_id: TokenId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_mint(id, &to, token_id, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn batch_mint(
-			origin: OriginFor<T>,
-			id: T::MultiTokenId,
-			to: T::AccountId,
-			token_ids: Vec<TokenId>,
-			amounts: Vec<Balance>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_batch_mint(id, &to, token_ids, amounts)?;
 
 			Ok(())
 		}
@@ -333,6 +300,40 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			id: T::MultiTokenId,
+			to: T::AccountId,
+			token_id: TokenId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
+
+			Self::do_mint(id, &to, token_id, amount)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn mint_batch(
+			origin: OriginFor<T>,
+			id: T::MultiTokenId,
+			to: T::AccountId,
+			token_ids: Vec<TokenId>,
+			amounts: Vec<Balance>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
+
+			Self::do_batch_mint(id, &to, token_ids, amounts)?;
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn burn(
 			origin: OriginFor<T>,
 			id: T::MultiTokenId,
@@ -347,7 +348,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn batch_burn(
+		pub fn burn_batch(
 			origin: OriginFor<T>,
 			id: T::MultiTokenId,
 			token_ids: Vec<TokenId>,
@@ -558,5 +559,15 @@ impl<T: Config> Pallet<T> {
 	fn has_permission(id: T::MultiTokenId, who: &T::AccountId) -> bool {
 		let token = Tokens::<T>::get(id).unwrap();
 		*who == token.owner
+	}
+}
+
+impl<T: Config> MultiMetadata for Pallet<T> {
+	type MultiTokenId = T::MultiTokenId;
+
+	fn uri(id: Self::MultiTokenId, token_id: TokenId) -> Vec<u8> {
+		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().uri.to_vec();
+		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }

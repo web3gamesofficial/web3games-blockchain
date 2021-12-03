@@ -55,7 +55,7 @@ fn test_batch_mint_works() {
 		let to: u64 = 1;
 		let token_ids: Vec<TokenId> = vec![1, 2, 3];
 		let amounts: Vec<Balance> = vec![1, 1, 1];
-		assert_ok!(TokenMulti::batch_mint(origin, id, to, token_ids, amounts));
+		assert_ok!(TokenMulti::mint_batch(origin, id, to, token_ids, amounts));
 	})
 }
 
@@ -103,7 +103,7 @@ fn test_batch_transfer_works() {
 		let to: u64 = 1;
 		let token_ids: Vec<TokenId> = vec![1, 2, 3];
 		let amounts: Vec<Balance> = vec![1, 1, 1];
-		assert_ok!(TokenMulti::batch_mint(
+		assert_ok!(TokenMulti::mint_batch(
 			origin.clone(),
 			id,
 			to,
@@ -155,7 +155,7 @@ fn test_batch_transfer_from_works() {
 		let to: u64 = 1;
 		let token_ids: Vec<TokenId> = vec![1, 2, 3];
 		let amounts: Vec<Balance> = vec![1, 1, 1];
-		assert_ok!(TokenMulti::batch_mint(
+		assert_ok!(TokenMulti::mint_batch(
 			origin.clone(),
 			id,
 			to,
@@ -200,13 +200,13 @@ fn test_batch_burn_works() {
 		let to: u64 = 1;
 		let token_ids: Vec<TokenId> = vec![1, 2, 3];
 		let amounts: Vec<Balance> = vec![1, 1, 1];
-		assert_ok!(TokenMulti::batch_mint(
+		assert_ok!(TokenMulti::mint_batch(
 			origin.clone(),
 			id,
 			to,
 			token_ids.clone(),
 			amounts.clone()
 		));
-		assert_ok!(TokenMulti::batch_burn(origin, id, token_ids, amounts));
+		assert_ok!(TokenMulti::burn_batch(origin, id, token_ids, amounts));
 	})
 }

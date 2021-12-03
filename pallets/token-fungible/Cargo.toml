@@ -17,11 +17,10 @@ sp-core = { git = "https://github.com/paritytech/substrate", default-features = 
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
+pallet-support = { path = "../support", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate" }
-
-
 
 [features]
 default = ["std"]
@@ -37,4 +36,5 @@ std = [
 	"sp-runtime/std",
 	"primitives/std",
 	"sp-core/std",
+	"pallet-support/std",
 ]

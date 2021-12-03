@@ -25,6 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
+use pallet_support::{NonFungibleEnumerable, NonFungibleMetadata};
 use primitives::{TokenId, TokenIndex};
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -32,7 +33,6 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
-// use log::{log,Level};
 
 pub use pallet::*;
 
@@ -150,12 +150,10 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn total_supply)]
 	pub(super) type TotalSupply<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::NonFungibleTokenId, u32, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn token_by_index)]
 	pub(super) type AllTokens<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -178,7 +176,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn token_of_owner_by_index)]
 	pub(super) type OwnedTokens<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
@@ -376,7 +373,8 @@ impl<T: Config> Pallet<T> {
 	pub fn exists(id: T::NonFungibleTokenId) -> bool {
 		Tokens::<T>::contains_key(id)
 	}
-	pub fn tokens_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
+
+	pub fn token_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
 		Owners::<T>::contains_key(id, token_id)
 	}
 
@@ -387,7 +385,6 @@ impl<T: Config> Pallet<T> {
 		base_uri: Vec<u8>,
 	) -> Result<T::NonFungibleTokenId, DispatchError> {
 		let deposit = T::CreateTokenDeposit::get();
-		// println!("{:?}",deposit);
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =
@@ -456,7 +453,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(!Self::tokens_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
+		ensure!(!Self::token_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
 
@@ -616,5 +613,45 @@ impl<T: Config> Pallet<T> {
 		TotalSupply::<T>::insert(id, new_total_supply);
 
 		Ok(())
+	}
+}
+
+impl<T: Config> NonFungibleMetadata for Pallet<T>
+// where
+// 	T::NonFungibleTokenId: Into<u32>,
+{
+	type NonFungibleTokenId = T::NonFungibleTokenId;
+
+	fn token_name(id: Self::NonFungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).unwrap().name.to_vec()
+	}
+
+	fn token_symbol(id: Self::NonFungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).unwrap().symbol.to_vec()
+	}
+
+	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8> {
+		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
+		// let token_id: Vec<u8> = id.into().to_be_bytes().to_vec();
+		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
+	}
+}
+
+impl<T: Config> NonFungibleEnumerable<T::AccountId> for Pallet<T> {
+	type NonFungibleTokenId = T::NonFungibleTokenId;
+
+	fn total_supply(id: Self::NonFungibleTokenId) -> u32 {
+		TotalSupply::<T>::get(id)
+	}
+	fn token_by_index(id: Self::NonFungibleTokenId, index: TokenIndex) -> TokenId {
+		AllTokens::<T>::get(id, index)
+	}
+	fn token_of_owner_by_index(
+		id: Self::NonFungibleTokenId,
+		owner: T::AccountId,
+		index: TokenIndex,
+	) -> TokenId {
+		OwnedTokens::<T>::get(id, (owner, index))
 	}
 }

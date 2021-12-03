@@ -1,5 +1,5 @@
 [package]
-name = "pallet-token-multi"
+name = "pallet-support"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -7,8 +7,7 @@ edition = "2021"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
-serde = { version = "1.0.124", optional = true }
-
+log = { version = "0.4.14", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -17,23 +16,18 @@ sp-core = { git = "https://github.com/paritytech/substrate", default-features = 
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
-pallet-support = { path = "../support", default-features = false }
-
-[dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]
 std = [
-	"serde/std",
 	"codec/std",
 	"scale-info/std",
+	"log/std",
 	"frame-support/std",
 	"frame-system/std",
+	"sp-std/std",
 	"sp-io/std",
 	"sp-runtime/std",
-	"sp-core/std",
-	"sp-std/std",
 	"primitives/std",
-	"pallet-support/std",
+	"sp-core/std",
 ]
