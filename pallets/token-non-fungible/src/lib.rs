@@ -619,8 +619,8 @@ impl<T: Config> Pallet<T> {
 }
 
 impl<T: Config> NonFungibleMetadata for Pallet<T>
-where
-	T::NonFungibleTokenId: Into<u32>,
+// where
+// 	T::NonFungibleTokenId: Into<u32>,
 {
 	type NonFungibleTokenId = T::NonFungibleTokenId;
 
@@ -632,10 +632,11 @@ where
 		Tokens::<T>::get(id).unwrap().symbol.to_vec()
 	}
 
-	fn token_uri(id: Self::NonFungibleTokenId) -> Vec<u8> {
-		let base_uri: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
-		let token_id: Vec<u8> = id.into().to_be_bytes().to_vec();
-		base_uri.into_iter().chain(token_id).collect::<Vec<_>>()
+	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8> {
+		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
+		// let token_id: Vec<u8> = id.into().to_be_bytes().to_vec();
+		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }
 

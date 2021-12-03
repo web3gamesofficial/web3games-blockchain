@@ -50,7 +50,7 @@ pub trait NonFungibleMetadata {
 
 	fn token_name(id: Self::NonFungibleTokenId) -> Vec<u8>;
 	fn token_symbol(id: Self::NonFungibleTokenId) -> Vec<u8>;
-	fn token_uri(id: Self::NonFungibleTokenId) -> Vec<u8>;
+	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8>;
 }
 
 pub trait NonFungibleEnumerable<AccountId> {
@@ -63,4 +63,10 @@ pub trait NonFungibleEnumerable<AccountId> {
 		owner: AccountId,
 		index: TokenIndex,
 	) -> TokenId;
+}
+
+pub trait MultiMetadata {
+	type MultiTokenId;
+
+	fn uri(id: Self::MultiTokenId, token_id: TokenId) -> Vec<u8>;
 }
