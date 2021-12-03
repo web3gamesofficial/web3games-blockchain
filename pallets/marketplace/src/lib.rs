@@ -79,8 +79,6 @@ pub mod pallet {
 		#[pallet::constant]
 		type StringLimit: Get<u32>;
 
-
-
 		/// The minimum balance to create collection
 		#[pallet::constant]
 		type CreateCollectionDeposit: Get<BalanceOf<Self>>;
