@@ -490,6 +490,7 @@ parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
 	pub const ExchangeNftPalletId: PalletId = PalletId(*b"w3g/exnp");
+	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
 }
@@ -548,6 +549,7 @@ impl pallet_exchange_nft::Config for Runtime {
 impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
 	type StringLimit = StringLimit;
+	type PalletId = MarketplacePalletId;
 	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
 }
