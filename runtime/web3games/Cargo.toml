@@ -71,6 +71,7 @@ pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features 
 pallet-exchange = { path = "../../pallets/exchange", default-features = false }
 pallet-exchange-nft = { path = "../../pallets/exchange-nft", default-features = false }
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
+pallet-support = { path = "../../pallets/support", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate" }
@@ -127,6 +128,7 @@ std = [
 	"pallet-exchange/std",
 	"pallet-exchange-nft/std",
 	"pallet-marketplace/std",
+	"pallet-support/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking",

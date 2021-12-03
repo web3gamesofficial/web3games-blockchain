@@ -4601,6 +4601,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-support"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-primitives",
+]
+
+[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
@@ -4626,6 +4642,7 @@ dependencies = [
  "frame-system",
  "log",
  "pallet-balances",
+ "pallet-support",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4643,6 +4660,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-balances",
+ "pallet-support",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4661,6 +4679,7 @@ dependencies = [
  "frame-system",
  "log",
  "pallet-balances",
+ "pallet-support",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -5144,7 +5163,10 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-support",
+ "pallet-token-fungible",
  "pallet-token-multi",
+ "pallet-token-non-fungible",
  "parity-scale-codec",
  "precompile-utils",
  "rustc-hex",
@@ -8940,6 +8962,7 @@ dependencies = [
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
+ "pallet-support",
  "pallet-timestamp",
  "pallet-token-fungible",
  "pallet-token-multi",

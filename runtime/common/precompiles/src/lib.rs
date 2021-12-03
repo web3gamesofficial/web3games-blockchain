@@ -26,12 +26,29 @@ use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use pallet_support::AccountMapping;
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
 
-pub mod token_multi;
+mod token_fungible;
+mod token_multi;
+mod token_non_fungible;
 
+pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
+pub use token_non_fungible::NonFungibleTokenExtension;
+
+/// Function Selector of "create": 0x42ecabc0
+pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
+
+/// Fungible Token prefix with 0xFFFFFFFF.
+pub const FT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
+
+/// Non Fungible Token prefix with 0xFEFFFFFF.
+pub const NFT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[254u8, 255u8, 255u8, 255u8];
+
+/// Multi Token prefix with 0xFDFFFFFF.
+pub const MT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[253u8, 255u8, 255u8, 255u8];
 
 #[derive(Debug, Clone, Copy)]
 pub struct Web3GamesPrecompiles<R>(PhantomData<R>);
@@ -55,9 +72,17 @@ impl<R> PrecompileSet for Web3GamesPrecompiles<R>
 where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
-	R: pallet_evm::Config + pallet_token_multi::Config,
+	R: pallet_evm::Config
+		+ pallet_token_fungible::Config
+		+ pallet_token_non_fungible::Config
+		+ pallet_token_multi::Config,
+	R::Call: From<pallet_token_fungible::Call<R>>,
+	R::Call: From<pallet_token_non_fungible::Call<R>>,
 	R::Call: From<pallet_token_multi::Call<R>>,
+	<R as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
+	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
 	<R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
+	R: AccountMapping<R::AccountId>,
 {
 	fn execute(
 		&self,
@@ -90,7 +115,13 @@ where
 			}
 
 			// Web3Games precompiles
-			a if a == hash(2048) => {
+			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
+				Some(FungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
+			}
+			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
+				Some(NonFungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
+			}
+			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))
 			}
 

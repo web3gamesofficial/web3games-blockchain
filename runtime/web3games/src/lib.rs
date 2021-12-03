@@ -71,6 +71,7 @@ pub use pallet_balances::Call as BalancesCall;
 use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
+use pallet_support::AccountMapping;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
 use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
@@ -353,6 +354,16 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 			return Some(H160::from_slice(&authority_id.to_raw_vec()[4..24]));
 		}
 		None
+	}
+}
+
+impl AccountMapping<AccountId> for Runtime
+where
+	AccountId: Into<[u8; 32]>,
+{
+	fn into_evm_address(account: AccountId) -> H160 {
+		let data: [u8; 32] = account.into();
+		H160::from_slice(&data[0..20])
 	}
 }
 

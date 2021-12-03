@@ -25,6 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
+use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -44,7 +45,7 @@ mod tests;
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+#[derive(Clone, Encode, Decode, Eq, PartialEq, Default, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Token<AccountId, BoundedString> {
 	owner: AccountId,
 	name: BoundedString,
@@ -58,6 +59,10 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
+
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	pub struct Pallet<T>(_);
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -84,16 +89,15 @@ pub mod pallet {
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 	}
 
-	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
-	pub struct Pallet<T>(_);
-
 	#[pallet::storage]
 	pub(super) type Tokens<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
 		T::FungibleTokenId,
 		Token<T::AccountId, BoundedVec<u8, T::StringLimit>>,
+		ValueQuery,
+		GetDefault,
+		ConstU32<300_000>,
 	>;
 
 	#[pallet::storage]
@@ -169,22 +173,6 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn mint(
-			origin: OriginFor<T>,
-			id: T::FungibleTokenId,
-			account: T::AccountId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::maybe_check_permission(id, &who)?;
-
-			Self::do_mint(id, &account, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
 		pub fn approve(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -196,7 +184,7 @@ pub mod pallet {
 			ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
 			ensure!(
-				Balances::<T>::get(id, who.clone()) == amount,
+				Balances::<T>::get(id, who.clone()) >= amount,
 				Error::<T>::InsufficientAuthorizedTokens
 			);
 
@@ -221,7 +209,7 @@ pub mod pallet {
 
 			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
-			ensure!(Balances::<T>::get(id, who.clone()) == amount, Error::<T>::InsufficientTokens);
+			ensure!(Balances::<T>::get(id, who.clone()) >= amount, Error::<T>::InsufficientTokens);
 
 			Self::do_transfer(id, &who, &recipient, amount)?;
 
@@ -241,7 +229,7 @@ pub mod pallet {
 			ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
 			ensure!(
-				Allowances::<T>::get(id, (&sender, &who)) == amount,
+				Allowances::<T>::get(id, (&sender, &who)) >= amount,
 				Error::<T>::InsufficientAuthorizedTokens
 			);
 
@@ -252,6 +240,22 @@ pub mod pallet {
 			})?;
 
 			Self::do_transfer(id, &sender, &recipient, amount)?;
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
+			account: T::AccountId,
+			amount: Balance,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			Self::maybe_check_permission(id, &who)?;
+
+			Self::do_mint(id, &account, amount)?;
+
 			Ok(())
 		}
 
@@ -275,9 +279,8 @@ impl<T: Config> Pallet<T> {
 		Tokens::<T>::contains_key(id)
 	}
 
-	pub fn total_supply(id: T::FungibleTokenId) -> Result<Balance, DispatchError> {
-		let token = Tokens::<T>::get(id).ok_or(Error::<T>::InvalidId)?;
-		Ok(token.total_supply)
+	pub fn total_supply(id: T::FungibleTokenId) -> Balance {
+		Tokens::<T>::get(id).total_supply
 	}
 
 	pub fn do_create_token(
@@ -286,8 +289,8 @@ impl<T: Config> Pallet<T> {
 		symbol: Vec<u8>,
 		decimals: u8,
 	) -> Result<T::FungibleTokenId, DispatchError> {
-		let deposit = T::CreateTokenDeposit::get();
-		T::Currency::reserve(&who, deposit.clone())?;
+		// let deposit = T::CreateTokenDeposit::get();
+		// T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =
 			name.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
@@ -334,7 +337,7 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+		Tokens::<T>::try_mutate_exists(id, |maybe_token| -> DispatchResult {
 			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
 			Self::increase_balance(id, account, amount)?;
@@ -354,7 +357,7 @@ impl<T: Config> Pallet<T> {
 		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+		Tokens::<T>::try_mutate_exists(id, |maybe_token| -> DispatchResult {
 			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
 			Self::decrease_balance(id, account, amount)?;
@@ -374,7 +377,6 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		// println!("{}",amount);
 		Balances::<T>::try_mutate(id, to, |balance| -> DispatchResult {
 			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
@@ -388,7 +390,6 @@ impl<T: Config> Pallet<T> {
 		from: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		// println!("{}",amount);
 		Balances::<T>::try_mutate(id, from, |balance| -> DispatchResult {
 			*balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
@@ -398,9 +399,25 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
-		let token = Tokens::<T>::get(id).ok_or(Error::<T>::InvalidId)?;
+		let token = Tokens::<T>::get(id);
 		ensure!(*who == token.owner, Error::<T>::NoPermission);
 
 		Ok(())
+	}
+}
+
+impl<T: Config> FungibleMetadata for Pallet<T> {
+	type FungibleTokenId = T::FungibleTokenId;
+
+	fn token_name(id: Self::FungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).name.to_vec()
+	}
+
+	fn token_symbol(id: Self::FungibleTokenId) -> Vec<u8> {
+		Tokens::<T>::get(id).symbol.to_vec()
+	}
+
+	fn token_decimals(id: Self::FungibleTokenId) -> u8 {
+		Tokens::<T>::get(id).decimals
 	}
 }
