@@ -23,7 +23,6 @@ use frame_support::assert_ok;
 type MultiTokenId = u32;
 type FungibleTokenId = u32;
 
-
 #[test]
 fn test_create_pool_works() {
 	new_test_ext().execute_with(|| {
