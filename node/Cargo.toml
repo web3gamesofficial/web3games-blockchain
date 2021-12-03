@@ -53,8 +53,8 @@ sc-basic-authorship = { git = "https://github.com/paritytech/substrate" }
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate" }
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate" }
 
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e" }
-pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e" }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
+pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 
 # These dependencies are used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
