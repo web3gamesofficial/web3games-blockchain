@@ -271,7 +271,7 @@ pub mod pallet {
 
 			let owner = Owners::<T>::get(id, token_id);
 
-			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 			ensure!(to != owner, Error::<T>::ApproveToCurrentOwner);
 
 			ensure!(
@@ -315,7 +315,7 @@ pub mod pallet {
 			ensure!(who != to, Error::<T>::ConfuseBehavior);
 
 			let owner = Owners::<T>::get(id, token_id);
-			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(owner == who, Error::<T>::NotTokenOwner);
 
@@ -334,21 +334,19 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			ensure!(Self::is_approved_or_owner(id, &who, token_id), Error::<T>::NotOwnerOrApproved);
+			ensure!(from != to, Error::<T>::ConfuseBehavior);
 
 			let owner = Owners::<T>::get(id, token_id);
-			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(
-				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
+				who == owner
+					|| OperatorApprovals::<T>::get(id, (&owner, &who))
+					|| Self::is_approved_or_owner(id, &from, token_id),
 				Error::<T>::NotOwnerOrApproved
 			);
 
-			ensure!(owner == from, Error::<T>::NotTokenOwner);
-
-			Self::do_transfer_from(id, &from, &to, token_id)?;
+			Self::do_transfer_from(id, &owner, &to, token_id)?;
 
 			Ok(())
 		}
@@ -363,7 +361,7 @@ pub mod pallet {
 
 			let owner = Owners::<T>::get(id, token_id);
 
-			ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
 
 			ensure!(who == owner, Error::<T>::NotTokenOwner);
 
@@ -375,7 +373,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
+	pub fn exists(id: T::NonFungibleTokenId) -> bool {
+		Tokens::<T>::contains_key(id)
+	}
+	pub fn tokens_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
 		Owners::<T>::contains_key(id, token_id)
 	}
 
@@ -455,7 +456,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(!Self::exists(id, token_id), Error::<T>::TokenAlreadyMinted);
+		ensure!(!Self::tokens_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
 

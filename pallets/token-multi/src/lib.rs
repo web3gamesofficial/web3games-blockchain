@@ -534,7 +534,6 @@ impl<T: Config> Pallet<T> {
 			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
 		})?;
-
 		Ok(())
 	}
 
