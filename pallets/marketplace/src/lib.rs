@@ -66,12 +66,14 @@ pub struct Collection<AccountId, BoundedString> {
 pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
+	use frame_support::PalletId;
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		type PalletId: Get<PalletId>;
 		/// The maximum length of metadata stored on-chain.
 		#[pallet::constant]
 		type StringLimit: Get<u32>;

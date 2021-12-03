@@ -19,6 +19,7 @@
 use super::*;
 use crate::mock::*;
 use frame_support::assert_ok;
+use crate::NftType::{MultiToken, NonFungibleToken};
 
 #[test]
 fn test_create_collection_works() {
