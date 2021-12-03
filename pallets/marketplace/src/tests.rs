@@ -217,7 +217,7 @@ fn test_accept_offer_works() {
 			amount
 		));
 		let origin = Origin::signed(1);
-		let sale_id: SaleId = 0;
+		let sale_id: u32 = 0;
 		let price: Balance = 2000;
 		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
 		let origin = Origin::signed(0);
