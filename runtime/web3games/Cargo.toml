@@ -40,9 +40,9 @@ frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate"
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 # Contract
-pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e", default-features = false }
-pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
 
 # Used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true }
