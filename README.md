@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://web3games-public.oss-ap-northeast-1.aliyuncs.com/logo-set/web3game-logo-icon-black.png" width="200">
+  <img src="https://user-images.githubusercontent.com/26602057/144711927-22cb7b89-6eb3-4794-b8e1-ac455f0957b1.png" width="200">
 </p>
 
 <div align="center">
