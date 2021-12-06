@@ -286,8 +286,8 @@ impl<T: Config> Pallet<T> {
 		symbol: Vec<u8>,
 		decimals: u8,
 	) -> Result<T::FungibleTokenId, DispatchError> {
-		// let deposit = T::CreateTokenDeposit::get();
-		// T::Currency::reserve(&who, deposit.clone())?;
+		let deposit = T::CreateTokenDeposit::get();
+		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =
 			name.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;

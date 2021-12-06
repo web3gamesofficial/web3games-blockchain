@@ -285,8 +285,8 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		uri: Vec<u8>,
 	) -> Result<T::MultiTokenId, DispatchError> {
-		// let deposit = T::CreateTokenDeposit::get();
-		// T::Currency::reserve(&who, deposit.clone())?;
+		let deposit = T::CreateTokenDeposit::get();
+		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_uri: BoundedVec<u8, T::StringLimit> =
 			uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
