@@ -374,10 +374,10 @@ impl<T: Config> Pallet<T> {
 		if nft_type == NonFungibleToken {
 			let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
 				nft_id.into();
-			pallet_token_non_fungible::Pallet::<T>::approve(
-				origin.clone(),
+			pallet_token_non_fungible::Pallet::<T>::do_approve(
+				&who,
 				nft_id,
-				escrow_account,
+				&escrow_account,
 				token_id,
 			)?;
 			new_sale = Sale {
@@ -389,10 +389,10 @@ impl<T: Config> Pallet<T> {
 			};
 		} else if nft_type == MultiToken {
 			let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = nft_id.into();
-			pallet_token_multi::Pallet::<T>::set_approval_for_all(
-				origin.clone(),
+			pallet_token_multi::Pallet::<T>::do_set_approval_for_all(
+				&who,
 				nft_id,
-				escrow_account,
+				&escrow_account,
 				true,
 			)?;
 			new_sale = Sale {
@@ -478,6 +478,7 @@ impl<T: Config> Pallet<T> {
 		if bid_price == None {
 			let who = ensure_signed(origin.clone())?;
 			let sale_price = CollectionSale::<T>::get(collection_id, sale_id).unwrap().price;
+			let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
 			let escrow_account = Collections::<T>::get(collection_id).unwrap().escrow_account;
 			let nft_type = Collections::<T>::get(collection_id).unwrap().nft_type;
 			let nft_id = Collections::<T>::get(collection_id).unwrap().nft_id;
@@ -490,22 +491,22 @@ impl<T: Config> Pallet<T> {
 				if nft_type == NonFungibleToken {
 					let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
 						nft_id.into();
-					pallet_token_non_fungible::Pallet::<T>::transfer_from(
-						origin,
+					pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
+						&escrow_account,
 						nft_id,
-						escrow_account.clone(),
-						who,
+						&owner_id,
+						&who,
 						token_id,
 					)?;
 					CollectionSale::<T>::remove(collection_id, sale_id);
 				} else if nft_type == MultiToken {
 					let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = nft_id.into();
 					let amount = CollectionSale::<T>::get(collection_id, sale_id).unwrap().amount;
-					pallet_token_multi::Pallet::<T>::transfer_from(
-						origin,
+					pallet_token_multi::Pallet::<T>::do_transfer_from(
+						&escrow_account,
 						nft_id,
-						escrow_account.clone(),
-						who,
+						&owner_id,
+						&who,
 						token_id,
 						amount,
 					)?;
@@ -541,6 +542,7 @@ impl<T: Config> Pallet<T> {
 		let who = ensure_signed(origin.clone())?;
 		let price =
 			CollectionSale::<T>::get(collection_id, sale_id).unwrap().bid.bid_price.unwrap();
+		let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
 		let sale_price =
 			BalanceOf::<T>::try_from(price).map_err(|_| "balance expect u128 type").unwrap();
 		let escrow_account = Collections::<T>::get(collection_id).unwrap().escrow_account;
@@ -551,22 +553,22 @@ impl<T: Config> Pallet<T> {
 		if nft_type == NonFungibleToken {
 			let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
 				nft_id.into();
-			pallet_token_non_fungible::Pallet::<T>::transfer_from(
-				origin,
+			pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
+				&escrow_account,
 				nft_id,
-				escrow_account.clone(),
-				who.clone(),
+				&owner_id,
+				&who,
 				token_id,
 			)?;
 			CollectionSale::<T>::remove(collection_id, sale_id);
 		} else if nft_type == MultiToken {
 			let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = nft_id.into();
 			let amount = CollectionSale::<T>::get(collection_id, sale_id).unwrap().amount;
-			pallet_token_multi::Pallet::<T>::transfer_from(
-				origin,
+			pallet_token_multi::Pallet::<T>::do_transfer_from(
+				&escrow_account,
 				nft_id,
-				escrow_account.clone(),
-				who.clone(),
+				&owner_id,
+				&who,
 				token_id,
 				amount,
 			)?;
