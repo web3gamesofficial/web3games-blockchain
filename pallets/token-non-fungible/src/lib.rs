@@ -251,17 +251,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let owner = Self::owner_of(id, token_id);
-			ensure!(to != owner, Error::<T>::ApproveToCurrentOwner);
+			Self::do_approve(&who, id, &to, token_id)?;
 
-			ensure!(
-				who == owner || Self::is_approved_for_all(id, (&owner, &who)),
-				Error::<T>::NotOwnerOrApproved
-			);
-
-			TokenApprovals::<T>::insert(id, token_id, &to);
-
-			Self::deposit_event(Event::Approval(id, owner, to, token_id));
 			Ok(())
 		}
 
@@ -274,11 +265,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(operator != who, Error::<T>::ApproveToCaller);
-
-			OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
-
-			Self::deposit_event(Event::ApprovalForAll(id, who, operator, approved));
+			Self::do_set_approve_for_all(&who, id, &operator, approved)?;
 
 			Ok(())
 		}
@@ -371,6 +358,42 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::TokenCreated(id, who.clone()));
 
 		Ok(id)
+	}
+
+	pub fn do_approve(
+		who: &T::AccountId,
+		id: T::NonFungibleTokenId,
+		to: &T::AccountId,
+		token_id: TokenId,
+	) -> DispatchResult {
+		let owner = Self::owner_of(id, token_id);
+		ensure!(to != &owner, Error::<T>::ApproveToCurrentOwner);
+
+		ensure!(
+			who == &owner || Self::is_approved_for_all(id, (&owner, who)),
+			Error::<T>::NotOwnerOrApproved
+		);
+
+		TokenApprovals::<T>::insert(id, token_id, to);
+
+		Self::deposit_event(Event::Approval(id, owner, to.clone(), token_id));
+
+		Ok(())
+	}
+
+	pub fn do_set_approve_for_all(
+		who: &T::AccountId,
+		id: T::NonFungibleTokenId,
+		operator: &T::AccountId,
+		approved: bool,
+	) -> DispatchResult {
+		ensure!(operator != who, Error::<T>::ApproveToCaller);
+
+		OperatorApprovals::<T>::insert(id, (who, operator), approved);
+
+		Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
+
+		Ok(())
 	}
 
 	pub fn do_transfer_from(

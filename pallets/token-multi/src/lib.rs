@@ -175,11 +175,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
-
-			Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
+			Self::do_set_approval_for_all(&who, id, &operator, approved)?;
 
 			Ok(())
 		}
@@ -305,6 +301,21 @@ impl<T: Config> Pallet<T> {
 		Self::deposit_event(Event::TokenCreated(id, who.clone()));
 
 		Ok(id)
+	}
+
+	pub fn do_set_approval_for_all(
+		who: &T::AccountId,
+		id: T::MultiTokenId,
+		operator: &T::AccountId,
+		approved: bool,
+	) -> DispatchResult {
+		ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
+
+		OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
+
+		Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
+
+		Ok(())
 	}
 
 	pub fn do_mint(
