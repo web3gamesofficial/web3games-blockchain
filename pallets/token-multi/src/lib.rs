@@ -137,6 +137,7 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		Unknown,
 		NoAvailableTokenId,
 		NumOverflow,
 		LengthMismatch,
@@ -315,7 +316,15 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
 
-		Self::increase_balance(id, to, token_id, amount)?;
+		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+			Self::increase_balance(id, to, token_id, amount)?;
+
+			let new_total_supply = token.total_supply.saturating_add(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
 
 		Self::deposit_event(Event::Mint(id, to.clone(), token_id, amount));
 
@@ -337,7 +346,15 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::increase_balance(id, to, token_id, amount)?;
+			Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+				let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+				Self::increase_balance(id, to, token_id, amount)?;
+
+				let new_total_supply = token.total_supply.saturating_add(amount);
+				token.total_supply = new_total_supply;
+				Ok(())
+			})?;
 		}
 
 		Self::deposit_event(Event::BatchMint(id, to.clone(), token_ids, amounts));
@@ -351,7 +368,15 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::decrease_balance(id, who, token_id, amount)?;
+		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+			Self::decrease_balance(id, who, token_id, amount)?;
+
+			let new_total_supply = token.total_supply.saturating_sub(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
 
 		Self::deposit_event(Event::Burn(id, who.clone(), token_id, amount));
 
@@ -371,7 +396,15 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::decrease_balance(id, who, token_id, amount)?;
+			Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+				let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+				Self::decrease_balance(id, who, token_id, amount)?;
+
+				let new_total_supply = token.total_supply.saturating_sub(amount);
+				token.total_supply = new_total_supply;
+				Ok(())
+			})?;
 		}
 
 		Self::deposit_event(Event::BatchBurn(id, who.clone(), token_ids, amounts));
