@@ -48,6 +48,7 @@ type BalanceOf<T> =
 pub struct Token<AccountId, BoundedString> {
 	owner: AccountId,
 	uri: BoundedString,
+	total_supply: Balance,
 }
 
 #[frame_support::pallet]
@@ -295,7 +296,8 @@ impl<T: Config> Pallet<T> {
 			Ok(current_id)
 		})?;
 
-		let token = Token { owner: who.clone(), uri: bounded_uri };
+		let token =
+			Token { owner: who.clone(), uri: bounded_uri, total_supply: Balance::default() };
 
 		Tokens::<T>::insert(id, token);
 
@@ -313,7 +315,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
 
-		Self::add_balance_to(id, to, token_id, amount)?;
+		Self::increase_balance(id, to, token_id, amount)?;
 
 		Self::deposit_event(Event::Mint(id, to.clone(), token_id, amount));
 
@@ -335,7 +337,7 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::add_balance_to(id, to, token_id, amount)?;
+			Self::increase_balance(id, to, token_id, amount)?;
 		}
 
 		Self::deposit_event(Event::BatchMint(id, to.clone(), token_ids, amounts));
@@ -349,7 +351,7 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::remove_balance_from(id, who, token_id, amount)?;
+		Self::decrease_balance(id, who, token_id, amount)?;
 
 		Self::deposit_event(Event::Burn(id, who.clone(), token_id, amount));
 
@@ -369,7 +371,7 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::remove_balance_from(id, who, token_id, amount)?;
+			Self::decrease_balance(id, who, token_id, amount)?;
 		}
 
 		Self::deposit_event(Event::BatchBurn(id, who.clone(), token_ids, amounts));
@@ -395,9 +397,9 @@ impl<T: Config> Pallet<T> {
 			return Ok(());
 		}
 
-		Self::remove_balance_from(id, from, token_id, amount)?;
+		Self::decrease_balance(id, from, token_id, amount)?;
 
-		Self::add_balance_to(id, to, token_id, amount)?;
+		Self::increase_balance(id, to, token_id, amount)?;
 
 		Self::deposit_event(Event::Transferred(id, from.clone(), to.clone(), token_id, amount));
 
@@ -429,9 +431,9 @@ impl<T: Config> Pallet<T> {
 				Error::<T>::InsufficientTokens
 			);
 
-			Self::remove_balance_from(id, from, token_id, amount)?;
+			Self::decrease_balance(id, from, token_id, amount)?;
 
-			Self::add_balance_to(id, to, token_id, amount)?;
+			Self::increase_balance(id, to, token_id, amount)?;
 		}
 
 		Self::deposit_event(Event::BatchTransferred(
@@ -465,7 +467,7 @@ impl<T: Config> Pallet<T> {
 		Ok(batch_balances)
 	}
 
-	fn add_balance_to(
+	fn increase_balance(
 		id: T::MultiTokenId,
 		to: &T::AccountId,
 		token_id: TokenId,
@@ -478,7 +480,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn remove_balance_from(
+	fn decrease_balance(
 		id: T::MultiTokenId,
 		from: &T::AccountId,
 		token_id: TokenId,
