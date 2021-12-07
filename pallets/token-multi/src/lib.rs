@@ -48,6 +48,7 @@ type BalanceOf<T> =
 pub struct Token<AccountId, BoundedString> {
 	owner: AccountId,
 	uri: BoundedString,
+	total_supply: Balance,
 }
 
 #[frame_support::pallet]
@@ -136,6 +137,7 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		Unknown,
 		NoAvailableTokenId,
 		NumOverflow,
 		LengthMismatch,
@@ -173,67 +175,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
-
-			Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn transfer(
-			origin: OriginFor<T>,
-			id: T::MultiTokenId,
-			to: T::AccountId,
-			token_id: TokenId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			ensure!(
-				Balances::<T>::get(id, (token_id, who.clone())) == amount,
-				Error::<T>::InsufficientTokens
-			);
-
-			Self::do_transfer_from(id, &who, &to, token_id, amount)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn batch_transfer(
-			origin: OriginFor<T>,
-			id: T::MultiTokenId,
-			to: T::AccountId,
-			token_ids: Vec<TokenId>,
-			amounts: Vec<Balance>,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
-
-			let n = token_ids.len();
-			for i in 0..n {
-				let token_id = token_ids[i];
-				let amount = amounts[i];
-
-				ensure!(
-					Balances::<T>::get(id, (token_id, who.clone())) == amount,
-					Error::<T>::InsufficientTokens
-				);
-			}
-
-			Self::do_batch_transfer_from(id, &who, &to, token_ids, amounts)?;
+			Self::do_set_approval_for_all(&who, id, &operator, approved)?;
 
 			Ok(())
 		}
@@ -249,17 +191,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			ensure!(Self::owner_or_approved(id, &who, &from), Error::<T>::NotOwnerOrApproved);
-			ensure!(
-				Balances::<T>::get(id, (token_id, who.clone())) == amount,
-				Error::<T>::InsufficientTokens
-			);
-
-			Self::do_transfer_from(id, &from, &to, token_id, amount)?;
+			Self::do_transfer_from(&who, id, &from, &to, token_id, amount)?;
 
 			Ok(())
 		}
@@ -275,26 +207,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
-
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			ensure!(Self::owner_or_approved(id, &who, &from), Error::<T>::NotOwnerOrApproved);
-
-			ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
-
-			let n = token_ids.len();
-			for i in 0..n {
-				let token_id = token_ids[i];
-				let amount = amounts[i];
-
-				ensure!(
-					Balances::<T>::get(id, (token_id, who.clone())) == amount,
-					Error::<T>::InsufficientTokens
-				);
-			}
-
-			Self::do_batch_transfer_from(id, &from, &to, token_ids, amounts)?;
+			Self::do_batch_transfer_from(&who, id, &from, &to, token_ids, amounts)?;
 
 			Ok(())
 		}
@@ -309,9 +222,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_mint(id, &to, token_id, amount)?;
+			Self::do_mint(&who, id, &to, token_id, amount)?;
 
 			Ok(())
 		}
@@ -326,9 +237,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_batch_mint(id, &to, token_ids, amounts)?;
+			Self::do_batch_mint(&who, id, &to, token_ids, amounts)?;
 
 			Ok(())
 		}
@@ -342,7 +251,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_burn(id, &who, token_id, amount)?;
+			Self::do_burn(&who, id, token_id, amount)?;
 
 			Ok(())
 		}
@@ -356,7 +265,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_batch_burn(id, &who, token_ids, amounts)?;
+			Self::do_batch_burn(&who, id, token_ids, amounts)?;
 
 			Ok(())
 		}
@@ -372,8 +281,8 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		uri: Vec<u8>,
 	) -> Result<T::MultiTokenId, DispatchError> {
-		// let deposit = T::CreateTokenDeposit::get();
-		// T::Currency::reserve(&who, deposit.clone())?;
+		let deposit = T::CreateTokenDeposit::get();
+		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_uri: BoundedVec<u8, T::StringLimit> =
 			uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
@@ -384,7 +293,8 @@ impl<T: Config> Pallet<T> {
 			Ok(current_id)
 		})?;
 
-		let token = Token { owner: who.clone(), uri: bounded_uri };
+		let token =
+			Token { owner: who.clone(), uri: bounded_uri, total_supply: Balance::default() };
 
 		Tokens::<T>::insert(id, token);
 
@@ -393,13 +303,39 @@ impl<T: Config> Pallet<T> {
 		Ok(id)
 	}
 
+	pub fn do_set_approval_for_all(
+		who: &T::AccountId,
+		id: T::MultiTokenId,
+		operator: &T::AccountId,
+		approved: bool,
+	) -> DispatchResult {
+		ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId,);
+
+		OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
+
+		Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
+
+		Ok(())
+	}
+
 	pub fn do_mint(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
 		to: &T::AccountId,
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::add_balance_to(id, to, token_id, amount)?;
+		ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
+
+		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+			Self::increase_balance(id, to, token_id, amount)?;
+
+			let new_total_supply = token.total_supply.saturating_add(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
 
 		Self::deposit_event(Event::Mint(id, to.clone(), token_id, amount));
 
@@ -407,11 +343,13 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_batch_mint(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
 		to: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		amounts: Vec<Balance>,
 	) -> DispatchResult {
+		ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
 		ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
 
 		let n = token_ids.len();
@@ -419,7 +357,15 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::add_balance_to(id, to, token_id, amount)?;
+			Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+				let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+				Self::increase_balance(id, to, token_id, amount)?;
+
+				let new_total_supply = token.total_supply.saturating_add(amount);
+				token.total_supply = new_total_supply;
+				Ok(())
+			})?;
 		}
 
 		Self::deposit_event(Event::BatchMint(id, to.clone(), token_ids, amounts));
@@ -428,21 +374,29 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_burn(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
-		account: &T::AccountId,
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::remove_balance_from(id, account, token_id, amount)?;
+		Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+			let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
-		Self::deposit_event(Event::Burn(id, account.clone(), token_id, amount));
+			Self::decrease_balance(id, who, token_id, amount)?;
+
+			let new_total_supply = token.total_supply.saturating_sub(amount);
+			token.total_supply = new_total_supply;
+			Ok(())
+		})?;
+
+		Self::deposit_event(Event::Burn(id, who.clone(), token_id, amount));
 
 		Ok(())
 	}
 
 	pub fn do_batch_burn(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
-		account: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		amounts: Vec<Balance>,
 	) -> DispatchResult {
@@ -453,24 +407,43 @@ impl<T: Config> Pallet<T> {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::remove_balance_from(id, account, token_id, amount)?;
+			Tokens::<T>::try_mutate(id, |maybe_token| -> DispatchResult {
+				let token = maybe_token.as_mut().ok_or(Error::<T>::Unknown)?;
+
+				Self::decrease_balance(id, who, token_id, amount)?;
+
+				let new_total_supply = token.total_supply.saturating_sub(amount);
+				token.total_supply = new_total_supply;
+				Ok(())
+			})?;
 		}
 
-		Self::deposit_event(Event::BatchBurn(id, account.clone(), token_ids, amounts));
+		Self::deposit_event(Event::BatchBurn(id, who.clone(), token_ids, amounts));
 
 		Ok(())
 	}
 
 	pub fn do_transfer_from(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
 		from: &T::AccountId,
 		to: &T::AccountId,
 		token_id: TokenId,
 		amount: Balance,
 	) -> DispatchResult {
-		Self::remove_balance_from(id, from, token_id, amount)?;
+		ensure!(Self::owner_or_approved(id, &who, &from), Error::<T>::NotOwnerOrApproved);
+		ensure!(
+			Balances::<T>::get(id, (token_id, from.clone())) >= amount,
+			Error::<T>::InsufficientTokens
+		);
 
-		Self::add_balance_to(id, to, token_id, amount)?;
+		if from == to {
+			return Ok(());
+		}
+
+		Self::decrease_balance(id, from, token_id, amount)?;
+
+		Self::increase_balance(id, to, token_id, amount)?;
 
 		Self::deposit_event(Event::Transferred(id, from.clone(), to.clone(), token_id, amount));
 
@@ -478,20 +451,33 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_batch_transfer_from(
+		who: &T::AccountId,
 		id: T::MultiTokenId,
 		from: &T::AccountId,
 		to: &T::AccountId,
 		token_ids: Vec<TokenId>,
 		amounts: Vec<Balance>,
 	) -> DispatchResult {
+		ensure!(Self::owner_or_approved(id, &who, &from), Error::<T>::NotOwnerOrApproved);
+		ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
+
+		if from == to {
+			return Ok(());
+		}
+
 		let n = token_ids.len();
 		for i in 0..n {
 			let token_id = token_ids[i];
 			let amount = amounts[i];
 
-			Self::remove_balance_from(id, from, token_id, amount)?;
+			ensure!(
+				Balances::<T>::get(id, (token_id, from.clone())) >= amount,
+				Error::<T>::InsufficientTokens
+			);
 
-			Self::add_balance_to(id, to, token_id, amount)?;
+			Self::decrease_balance(id, from, token_id, amount)?;
+
+			Self::increase_balance(id, to, token_id, amount)?;
 		}
 
 		Self::deposit_event(Event::BatchTransferred(
@@ -525,7 +511,7 @@ impl<T: Config> Pallet<T> {
 		Ok(batch_balances)
 	}
 
-	fn add_balance_to(
+	fn increase_balance(
 		id: T::MultiTokenId,
 		to: &T::AccountId,
 		token_id: TokenId,
@@ -538,7 +524,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn remove_balance_from(
+	fn decrease_balance(
 		id: T::MultiTokenId,
 		from: &T::AccountId,
 		token_id: TokenId,

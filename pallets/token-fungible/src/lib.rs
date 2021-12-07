@@ -45,7 +45,7 @@ mod tests;
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-#[derive(Clone, Encode, Decode, Eq, PartialEq, Default, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Token<AccountId, BoundedString> {
 	owner: AccountId,
 	name: BoundedString,
@@ -95,9 +95,6 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::FungibleTokenId,
 		Token<T::AccountId, BoundedVec<u8, T::StringLimit>>,
-		ValueQuery,
-		GetDefault,
-		ConstU32<300_000>,
 	>;
 
 	#[pallet::storage]
@@ -280,7 +277,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn total_supply(id: T::FungibleTokenId) -> Balance {
-		Tokens::<T>::get(id).total_supply
+		Tokens::<T>::get(id).unwrap().total_supply
 	}
 
 	pub fn do_create_token(
@@ -289,8 +286,8 @@ impl<T: Config> Pallet<T> {
 		symbol: Vec<u8>,
 		decimals: u8,
 	) -> Result<T::FungibleTokenId, DispatchError> {
-		// let deposit = T::CreateTokenDeposit::get();
-		// T::Currency::reserve(&who, deposit.clone())?;
+		let deposit = T::CreateTokenDeposit::get();
+		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_name: BoundedVec<u8, T::StringLimit> =
 			name.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
@@ -400,7 +397,7 @@ impl<T: Config> Pallet<T> {
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
 		let token = Tokens::<T>::get(id);
-		ensure!(*who == token.owner, Error::<T>::NoPermission);
+		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
 
 		Ok(())
 	}
@@ -410,14 +407,14 @@ impl<T: Config> FungibleMetadata for Pallet<T> {
 	type FungibleTokenId = T::FungibleTokenId;
 
 	fn token_name(id: Self::FungibleTokenId) -> Vec<u8> {
-		Tokens::<T>::get(id).name.to_vec()
+		Tokens::<T>::get(id).unwrap().name.to_vec()
 	}
 
 	fn token_symbol(id: Self::FungibleTokenId) -> Vec<u8> {
-		Tokens::<T>::get(id).symbol.to_vec()
+		Tokens::<T>::get(id).unwrap().symbol.to_vec()
 	}
 
 	fn token_decimals(id: Self::FungibleTokenId) -> u8 {
-		Tokens::<T>::get(id).decimals
+		Tokens::<T>::get(id).unwrap().decimals
 	}
 }

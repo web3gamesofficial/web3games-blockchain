@@ -221,6 +221,7 @@ pub mod pallet {
 		ApproveToCaller,
 		BadMetadata,
 		ConfuseBehavior,
+		TransferTokenNotOwn,
 	}
 
 	#[pallet::hooks]
@@ -242,22 +243,6 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn mint(
-			origin: OriginFor<T>,
-			id: T::NonFungibleTokenId,
-			to: T::AccountId,
-			token_id: TokenId,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
-
-			Self::do_mint(id, &to, token_id)?;
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
 		pub fn approve(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -266,19 +251,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let owner = Owners::<T>::get(id, token_id);
+			Self::do_approve(&who, id, &to, token_id)?;
 
-			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
-			ensure!(to != owner, Error::<T>::ApproveToCurrentOwner);
-
-			ensure!(
-				who == owner || OperatorApprovals::<T>::get(id, (&owner, &who)),
-				Error::<T>::NotOwnerOrApproved
-			);
-
-			TokenApprovals::<T>::insert(id, token_id, &to);
-
-			Self::deposit_event(Event::Approval(id, owner, to, token_id));
 			Ok(())
 		}
 
@@ -291,32 +265,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(operator != who, Error::<T>::ApproveToCaller);
-
-			OperatorApprovals::<T>::insert(id, (&who, &operator), approved);
-
-			Self::deposit_event(Event::ApprovalForAll(id, who, operator, approved));
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn transfer(
-			origin: OriginFor<T>,
-			id: T::NonFungibleTokenId,
-			to: T::AccountId,
-			token_id: TokenId,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			ensure!(who != to, Error::<T>::ConfuseBehavior);
-
-			let owner = Owners::<T>::get(id, token_id);
-			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
-
-			ensure!(owner == who, Error::<T>::NotTokenOwner);
-
-			Self::do_transfer_from(id, &who, &to, token_id)?;
+			Self::do_set_approve_for_all(&who, id, &operator, approved)?;
 
 			Ok(())
 		}
@@ -331,19 +280,21 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(from != to, Error::<T>::ConfuseBehavior);
+			Self::do_transfer_from(&who, id, &from, &to, token_id)?;
 
-			let owner = Owners::<T>::get(id, token_id);
-			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
+			Ok(())
+		}
 
-			ensure!(
-				who == owner
-					|| OperatorApprovals::<T>::get(id, (&owner, &who))
-					|| Self::is_approved_or_owner(id, &from, token_id),
-				Error::<T>::NotOwnerOrApproved
-			);
+		#[pallet::weight(10_000)]
+		pub fn mint(
+			origin: OriginFor<T>,
+			id: T::NonFungibleTokenId,
+			to: T::AccountId,
+			token_id: TokenId,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
-			Self::do_transfer_from(id, &owner, &to, token_id)?;
+			Self::do_mint(&who, id, &to, token_id)?;
 
 			Ok(())
 		}
@@ -356,13 +307,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let owner = Owners::<T>::get(id, token_id);
-
-			// ensure!(owner != T::AccountId::default(), Error::<T>::TokenNonExistent);
-
-			ensure!(who == owner, Error::<T>::NotTokenOwner);
-
-			Self::do_burn(id, &who, token_id)?;
+			Self::do_burn(&who, id, token_id)?;
 
 			Ok(())
 		}
@@ -415,12 +360,67 @@ impl<T: Config> Pallet<T> {
 		Ok(id)
 	}
 
+	pub fn do_approve(
+		who: &T::AccountId,
+		id: T::NonFungibleTokenId,
+		to: &T::AccountId,
+		token_id: TokenId,
+	) -> DispatchResult {
+		let owner = Self::owner_of(id, token_id);
+		ensure!(to != &owner, Error::<T>::ApproveToCurrentOwner);
+
+		ensure!(
+			who == &owner || Self::is_approved_for_all(id, (&owner, who)),
+			Error::<T>::NotOwnerOrApproved
+		);
+
+		TokenApprovals::<T>::insert(id, token_id, to);
+
+		Self::deposit_event(Event::Approval(id, owner, to.clone(), token_id));
+
+		Ok(())
+	}
+
+	pub fn do_set_approve_for_all(
+		who: &T::AccountId,
+		id: T::NonFungibleTokenId,
+		operator: &T::AccountId,
+		approved: bool,
+	) -> DispatchResult {
+		ensure!(operator != who, Error::<T>::ApproveToCaller);
+
+		OperatorApprovals::<T>::insert(id, (who, operator), approved);
+
+		Self::deposit_event(Event::ApprovalForAll(id, who.clone(), operator.clone(), approved));
+
+		Ok(())
+	}
+
 	pub fn do_transfer_from(
+		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
 		from: &T::AccountId,
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
+		ensure!(Self::token_exists(id, token_id), Error::<T>::TokenNonExistent);
+		ensure!(Self::is_approved_or_owner(id, &who, token_id), Error::<T>::NotOwnerOrApproved);
+		Self::do_transfer(id, from, to, token_id)?;
+		Ok(())
+	}
+
+	pub fn do_transfer(
+		id: T::NonFungibleTokenId,
+		from: &T::AccountId,
+		to: &T::AccountId,
+		token_id: TokenId,
+	) -> DispatchResult {
+		ensure!(Owners::<T>::get(id, token_id) == from.clone(), Error::<T>::TransferTokenNotOwn);
+
+		if from == to {
+			return Ok(());
+		}
+
 		let balance_from = Self::balance_of(id, from);
 		let balance_to = Self::balance_of(id, to);
 
@@ -449,10 +449,12 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_mint(
+		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
+		ensure!(Self::has_permission(id, who), Error::<T>::NoPermission);
 		ensure!(!Self::token_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
 		let balance = Self::balance_of(id, to);
@@ -479,11 +481,13 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn do_burn(
+		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
-		account: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		let owner = account;
+		let owner = Self::owner_of(id, token_id);
+		ensure!(who == &owner, Error::<T>::NotTokenOwner);
+
 		let balance = Self::balance_of(id, &owner);
 
 		let new_balance = match balance.checked_sub(One::one()) {
@@ -499,12 +503,7 @@ impl<T: Config> Pallet<T> {
 		Balances::<T>::insert(id, &owner, new_balance);
 		Owners::<T>::remove(id, token_id);
 
-		Self::deposit_event(Event::Transfer(
-			id.clone(),
-			owner.clone(),
-			T::AccountId::default(),
-			token_id,
-		));
+		Self::deposit_event(Event::Transfer(id.clone(), owner, T::AccountId::default(), token_id));
 
 		Ok(())
 	}
@@ -616,10 +615,7 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> NonFungibleMetadata for Pallet<T>
-// where
-// 	T::NonFungibleTokenId: Into<u32>,
-{
+impl<T: Config> NonFungibleMetadata for Pallet<T> {
 	type NonFungibleTokenId = T::NonFungibleTokenId;
 
 	fn token_name(id: Self::NonFungibleTokenId) -> Vec<u8> {
@@ -632,7 +628,6 @@ impl<T: Config> NonFungibleMetadata for Pallet<T>
 
 	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
-		// let token_id: Vec<u8> = id.into().to_be_bytes().to_vec();
 		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}

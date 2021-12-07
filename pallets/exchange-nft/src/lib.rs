@@ -354,6 +354,7 @@ impl<T: Config> Pallet<T> {
 
 		// Send Tokens all tokens purchased
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			&pool.vault,
 			pool.token,
 			&pool.vault,
 			who,
@@ -383,6 +384,7 @@ impl<T: Config> Pallet<T> {
 
 		// Transfer the tokens to vault account
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			&pool.vault,
 			pool.token,
 			who,
 			&pool.vault,
@@ -460,6 +462,7 @@ impl<T: Config> Pallet<T> {
 
 		// Transfer all tokens to this contract
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			&pool.vault,
 			pool.token,
 			provider,
 			&pool.vault,
@@ -556,6 +559,7 @@ impl<T: Config> Pallet<T> {
 
 		// Mint liquidity pool tokens
 		pallet_token_multi::Pallet::<T>::do_batch_mint(
+			&pool.vault,
 			pool.lp_token,
 			provider,
 			token_ids.clone(),
@@ -593,6 +597,7 @@ impl<T: Config> Pallet<T> {
 
 		// Transfer the liquidity pool tokens to burn to this contract
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			&pool.vault,
 			pool.lp_token,
 			provider,
 			&pool.vault,
@@ -659,8 +664,8 @@ impl<T: Config> Pallet<T> {
 
 		// Burn liquidity pool tokens for offchain supplies
 		pallet_token_multi::Pallet::<T>::do_batch_burn(
-			pool.lp_token,
 			&pool.vault,
+			pool.lp_token,
 			token_ids.clone(),
 			liquidities,
 		)?;
@@ -675,6 +680,7 @@ impl<T: Config> Pallet<T> {
 
 		// Transfer all tokens to provider
 		pallet_token_multi::Pallet::<T>::do_batch_transfer_from(
+			&pool.vault,
 			pool.lp_token,
 			&pool.vault,
 			provider,

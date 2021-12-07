@@ -78,50 +78,6 @@ fn set_approval_for_all_works() {
 }
 
 #[test]
-fn test_transfer_works() {
-	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(1);
-		let uri: Vec<u8> = vec![1, 2, 3];
-		assert_ok!(TokenMulti::create_token(origin.clone(), uri));
-		let id: u32 = 0;
-		let to: u64 = 1;
-		let token_id: TokenId = 1u32;
-		let amount: Balance = 1u128;
-		assert_ok!(TokenMulti::mint(origin.clone(), id, to, token_id.clone(), amount.clone()));
-		let to: u64 = 2;
-		assert_ok!(TokenMulti::transfer(origin.clone(), id, to, token_id.clone(), amount.clone()));
-	})
-}
-
-#[test]
-fn test_batch_transfer_works() {
-	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(1);
-		let uri: Vec<u8> = vec![1, 2, 3];
-		assert_ok!(TokenMulti::create_token(origin.clone(), uri));
-		let id: u32 = 0;
-		let to: u64 = 1;
-		let token_ids: Vec<TokenId> = vec![1, 2, 3];
-		let amounts: Vec<Balance> = vec![1, 1, 1];
-		assert_ok!(TokenMulti::mint_batch(
-			origin.clone(),
-			id,
-			to,
-			token_ids.clone(),
-			amounts.clone()
-		));
-		let to: u64 = 2;
-		assert_ok!(TokenMulti::batch_transfer(
-			origin.clone(),
-			id,
-			to,
-			token_ids.clone(),
-			amounts.clone()
-		));
-	})
-}
-
-#[test]
 fn test_transfer_from_works() {
 	new_test_ext().execute_with(|| {
 		let origin = Origin::signed(1);
