@@ -561,6 +561,11 @@ impl<T: Config> Pallet<T> {
 				token_id,
 			)?;
 			CollectionSale::<T>::remove(collection_id, sale_id);
+			// CollectionSale::<T>::try_mutate(
+			// 	(collection_id,sale_id),
+			//
+			// )
+
 		} else if nft_type == MultiToken {
 			let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = nft_id.into();
 			let amount = CollectionSale::<T>::get(collection_id, sale_id).unwrap().amount;

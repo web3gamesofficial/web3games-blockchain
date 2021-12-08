@@ -17,7 +17,10 @@ randomness = { package = "pallet-randomness-collective-flip", git = "https://git
 pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
-pallet-token-multi = { default-features = false, path = "../../../pallets/token-multi" }
+
+pallet-token-fungible = { path = "../../../pallets/token-fungible", default-features = false }
+pallet-token-non-fungible = { path = "../../../pallets/token-non-fungible", default-features = false }
+pallet-token-multi = { path = "../../../pallets/token-multi" ,default-features = false}
 
 [features]
 default = ["std"]
@@ -31,5 +34,7 @@ std = [
 	"randomness/std",
 	"pallet-contracts/std",
 	"primitives/std",
-	"pallet-token-multi/std",
+	"pallet-token-fungible/std",
+	"pallet-token-non-fungible/std",
+	"pallet-token-multi/std"
 ]
