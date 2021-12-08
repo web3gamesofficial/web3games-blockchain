@@ -27,19 +27,21 @@ use sp_runtime::DispatchError;
 use sp_std::marker::PhantomData;
 
 mod token_fungible;
-mod token_non_fungible;
 mod token_multi;
+mod token_non_fungible;
 
 pub use token_fungible::FungibleTokenExtension;
-pub use token_non_fungible::NonFungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
-
+pub use token_non_fungible::NonFungibleTokenExtension;
 
 pub struct Web3GamesChainExtensions<C>(PhantomData<C>);
 
 impl<C> ChainExtension<C> for Web3GamesChainExtensions<C>
 where
-	C: pallet_contracts::Config + pallet_token_fungible::Config + pallet_token_non_fungible::Config +pallet_token_multi::Config,
+	C: pallet_contracts::Config
+		+ pallet_token_fungible::Config
+		+ pallet_token_non_fungible::Config
+		+ pallet_token_multi::Config,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
@@ -64,7 +66,7 @@ where
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call random"))?;
 
 				Ok(RetVal::Converging(0))
-			}
+			},
 			// 0x10001-0x10040(65537-65600): token-fungible
 			id if id >= 65537 && id < 65600 => FungibleTokenExtension::call(func_id, env),
 
@@ -75,8 +77,8 @@ where
 			id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+				return Err(DispatchError::Other("Unimplemented func_id"))
+			},
 		}
 	}
 

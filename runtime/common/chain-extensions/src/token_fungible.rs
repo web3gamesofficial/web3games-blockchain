@@ -1,274 +1,264 @@
 use codec::Encode;
 use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
-    ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
+	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
-use primitives::{Balance};
+use primitives::Balance;
 use sp_runtime::DispatchError;
 use sp_std::vec::Vec;
 
 pub struct FungibleTokenExtension;
 
 impl<C> ChainExtension<C> for FungibleTokenExtension
-    where
-        C: pallet_contracts::Config + pallet_token_fungible::Config,
-        <C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
+where
+	C: pallet_contracts::Config + pallet_token_fungible::Config,
+	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
 {
-    fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
-        where
-            E: Ext<T = C>,
-            <E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
-    {
-        match func_id {
-            // create_token
-            65537 => {
-                log::info!("func id 65537");
+	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
+	where
+		E: Ext<T = C>,
+		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
+	{
+		match func_id {
+			// create_token
+			65537 => {
+				log::info!("func id 65537");
 
-                let mut env = env.buf_in_buf_out();
-                let caller = env.ext().caller().clone();
-                log::info!("caller {:?}", caller);
+				let mut env = env.buf_in_buf_out();
+				let caller = env.ext().caller().clone();
+				log::info!("caller {:?}", caller);
 
-                let in_len = env.in_len();
-                log::debug!("in_len {}", in_len);
+				let in_len = env.in_len();
+				log::debug!("in_len {}", in_len);
 
-                let name: Vec<u8> = env.read_as_unbounded(in_len)?;
-                log::info!("name {:?}", name);
+				let name: Vec<u8> = env.read_as_unbounded(in_len)?;
+				log::info!("name {:?}", name);
 
-                let in_len = env.in_len();
-                log::debug!("in_len {}", in_len);
+				let in_len = env.in_len();
+				log::debug!("in_len {}", in_len);
 
-                let symbol: Vec<u8> = env.read_as_unbounded(in_len)?;
-                log::info!("symbol {:?}", symbol);
+				let symbol: Vec<u8> = env.read_as_unbounded(in_len)?;
+				log::info!("symbol {:?}", symbol);
 
+				let decimals: u8 = env.read_as()?;
+				log::info!("decimals {:?}", decimals);
 
+				env.charge_weight(10000)?;
 
-                let decimals: u8 = env.read_as()?;
-                log::info!("decimals {:?}", decimals);
+				let id = pallet_token_fungible::Pallet::<E::T>::do_create_token(
+					&caller, name, symbol, decimals,
+				)?;
 
-                env.charge_weight(10000)?;
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
 
-                let id = pallet_token_fungible::Pallet::<E::T>::do_create_token(&caller, name, symbol, decimals)?;
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call create token")
+				})?;
+			},
 
-                let id_slice = id.encode();
-                log::info!("id slice {:?}", id_slice);
+			// approve
+			65538 => {
+				log::info!("func id 65538");
+				let mut env = env.buf_in_buf_out();
 
-                env.write(&id_slice, false, None).map_err(|_| {
-                    DispatchError::Other("ChainExtension failed to call create token")
-                })?;
-            }
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let spender: <E::T as SysConfig>::AccountId = env.read_as()?;
+				let amount: Balance = env.read_as()?;
 
-            // approve
-            65538 => {
-                log::info!("func id 65538");
-                let mut env = env.buf_in_buf_out();
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
+						E::T,
+					>::approve {
+						id,
+						spender,
+						amount,
+					});
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-                let spender: <E::T as SysConfig>::AccountId = env.read_as()?;
-                let amount: Balance = env.read_as()?;
+				let dispatch_info = call.get_dispatch_info();
+				let charged = env.charge_weight(dispatch_info.weight)?;
+				let result = env.ext().call_runtime(call);
+				let actual_weight = extract_actual_weight(&result, &dispatch_info);
+				env.adjust_weight(charged, actual_weight);
 
+				match result {
+					Ok(_) => {},
+					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
+				}
+			},
 
-                let call =
-                    <E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-                        E::T,
-                    >::approve {
-                        id,
-                        spender,
-                        amount,
-                    });
+			// transfer
+			65539 => {
+				log::info!("func id 65539");
+				let mut env = env.buf_in_buf_out();
 
-                let dispatch_info = call.get_dispatch_info();
-                let charged = env.charge_weight(dispatch_info.weight)?;
-                let result = env.ext().call_runtime(call);
-                let actual_weight = extract_actual_weight(&result, &dispatch_info);
-                env.adjust_weight(charged, actual_weight);
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
+				let amount: Balance = env.read_as()?;
 
-                match result {
-                    Ok(_) => {}
-                    Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-                }
-            }
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
+						E::T,
+					>::transfer {
+						id,
+						recipient,
+						amount,
+					});
 
-            // transfer
-            65539 => {
-                log::info!("func id 65539");
-                let mut env = env.buf_in_buf_out();
+				let dispatch_info = call.get_dispatch_info();
+				let charged = env.charge_weight(dispatch_info.weight)?;
+				let result = env.ext().call_runtime(call);
+				let actual_weight = extract_actual_weight(&result, &dispatch_info);
+				env.adjust_weight(charged, actual_weight);
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-                let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
-                let amount: Balance = env.read_as()?;
+				match result {
+					Ok(_) => {},
+					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
+				}
+			},
 
+			// transfer_from
+			65540 => {
+				log::info!("func id 65540");
+				let mut env = env.buf_in_buf_out();
 
-                let call =
-                    <E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-                        E::T,
-                    >::transfer {
-                        id,
-                        recipient,
-                        amount
-                    });
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let sender: <E::T as SysConfig>::AccountId = env.read_as()?;
+				let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
+				let amount: Balance = env.read_as()?;
 
-                let dispatch_info = call.get_dispatch_info();
-                let charged = env.charge_weight(dispatch_info.weight)?;
-                let result = env.ext().call_runtime(call);
-                let actual_weight = extract_actual_weight(&result, &dispatch_info);
-                env.adjust_weight(charged, actual_weight);
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
+						E::T,
+					>::transfer_from {
+						id,
+						sender,
+						recipient,
+						amount,
+					});
 
-                match result {
-                    Ok(_) => {}
-                    Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-                }
-            }
+				let dispatch_info = call.get_dispatch_info();
+				let charged = env.charge_weight(dispatch_info.weight)?;
+				let result = env.ext().call_runtime(call);
+				let actual_weight = extract_actual_weight(&result, &dispatch_info);
+				env.adjust_weight(charged, actual_weight);
 
-            // transfer_from
-            65540 => {
-                log::info!("func id 65540");
-                let mut env = env.buf_in_buf_out();
+				match result {
+					Ok(_) => {},
+					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
+				}
+			},
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-                let sender: <E::T as SysConfig>::AccountId = env.read_as()?;
-                let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
-                let amount: Balance = env.read_as()?;
+			// mint
+			65541 => {
+				log::info!("func id 65541");
+				let mut env = env.buf_in_buf_out();
 
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let account: <E::T as SysConfig>::AccountId = env.read_as()?;
+				let amount: Balance = env.read_as()?;
 
-                let call =
-                    <E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-                        E::T,
-                    >::transfer_from {
-                        id,
-                        sender,
-                        recipient,
-                        amount
-                    });
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
+						E::T,
+					>::mint {
+						id,
+						account,
+						amount,
+					});
 
-                let dispatch_info = call.get_dispatch_info();
-                let charged = env.charge_weight(dispatch_info.weight)?;
-                let result = env.ext().call_runtime(call);
-                let actual_weight = extract_actual_weight(&result, &dispatch_info);
-                env.adjust_weight(charged, actual_weight);
+				let dispatch_info = call.get_dispatch_info();
+				let charged = env.charge_weight(dispatch_info.weight)?;
+				let result = env.ext().call_runtime(call);
+				let actual_weight = extract_actual_weight(&result, &dispatch_info);
+				env.adjust_weight(charged, actual_weight);
 
-                match result {
-                    Ok(_) => {}
-                    Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-                }
-            }
+				match result {
+					Ok(_) => {},
+					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
+				}
+			},
 
-            // mint
-            65541 => {
-                log::info!("func id 65541");
-                let mut env = env.buf_in_buf_out();
+			// burn
+			65542 => {
+				log::info!("func id 65542");
+				let mut env = env.buf_in_buf_out();
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-                let account: <E::T as SysConfig>::AccountId = env.read_as()?;
-                let amount: Balance = env.read_as()?;
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let amount: Balance = env.read_as()?;
 
+				let call =
+					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
+						E::T,
+					>::burn {
+						id,
+						amount,
+					});
 
-                let call =
-                    <E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-                        E::T,
-                    >::mint {
-                        id,
-                        account,
-                        amount
-                    });
+				let dispatch_info = call.get_dispatch_info();
+				let charged = env.charge_weight(dispatch_info.weight)?;
+				let result = env.ext().call_runtime(call);
+				let actual_weight = extract_actual_weight(&result, &dispatch_info);
+				env.adjust_weight(charged, actual_weight);
 
-                let dispatch_info = call.get_dispatch_info();
-                let charged = env.charge_weight(dispatch_info.weight)?;
-                let result = env.ext().call_runtime(call);
-                let actual_weight = extract_actual_weight(&result, &dispatch_info);
-                env.adjust_weight(charged, actual_weight);
+				match result {
+					Ok(_) => {},
+					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
+				}
+			},
 
-                match result {
-                    Ok(_) => {}
-                    Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-                }
-            }
+			// exists
+			65543 => {
+				log::info!("func id 65543");
+				let mut env = env.buf_in_buf_out();
 
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
 
-            // burn
-            65542 => {
-                log::info!("func id 65542");
-                let mut env = env.buf_in_buf_out();
+				let exists: bool = pallet_token_fungible::Pallet::<E::T>::exists(id);
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-                let amount: Balance = env.read_as()?;
+				let exists_slice = exists.encode();
 
-
-                let call =
-                    <E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-                        E::T,
-                    >::burn {
-                        id,
-                        amount
-                    });
-
-                let dispatch_info = call.get_dispatch_info();
-                let charged = env.charge_weight(dispatch_info.weight)?;
-                let result = env.ext().call_runtime(call);
-                let actual_weight = extract_actual_weight(&result, &dispatch_info);
-                env.adjust_weight(charged, actual_weight);
-
-                match result {
-                    Ok(_) => {}
-                    Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-                }
-            }
-
-            // exists
-            65543 => {
-                log::info!("func id 65543");
-                let mut env = env.buf_in_buf_out();
-
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-
-
-                let exists: bool =
-                    pallet_token_fungible::Pallet::<E::T>::exists(id);
-
-                let exists_slice = exists.encode();
-
-                log::trace!(
+				log::trace!(
 					target: "runtime",
 					"[ChainExtension]|call|func_id:{:}",
 					func_id
 				);
 
-                env.write(&exists_slice, false, None).map_err(|_| {
-                    DispatchError::Other("ChainExtension failed to call create collection")
-                })?;
-            }
+				env.write(&exists_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call create collection")
+				})?;
+			},
 
-            // total_supply
-            65544 => {
-                log::info!("func id 65544");
-                let mut env = env.buf_in_buf_out();
+			// total_supply
+			65544 => {
+				log::info!("func id 65544");
+				let mut env = env.buf_in_buf_out();
 
-                let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
 
+				let exists: Balance = pallet_token_fungible::Pallet::<E::T>::total_supply(id);
 
-                let exists: Balance =
-                    pallet_token_fungible::Pallet::<E::T>::total_supply(id);
+				let exists_slice = exists.encode();
 
-                let exists_slice = exists.encode();
-
-                log::trace!(
+				log::trace!(
 					target: "runtime",
 					"[ChainExtension]|call|func_id:{:}",
 					func_id
 				);
 
-                env.write(&exists_slice, false, None).map_err(|_| {
-                    DispatchError::Other("ChainExtension failed to call create collection")
-                })?;
-            }
-            _ => {
-                log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-                return Err(DispatchError::Other("Unimplemented func_id"));
-            }
-        }
-        Ok(RetVal::Converging(0))
-    }
+				env.write(&exists_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call create collection")
+				})?;
+			},
+			_ => {
+				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
+				return Err(DispatchError::Other("Unimplemented func_id"))
+			},
+		}
+		Ok(RetVal::Converging(0))
+	}
 
-    fn enabled() -> bool {
-        true
-    }
+	fn enabled() -> bool {
+		true
+	}
 }
