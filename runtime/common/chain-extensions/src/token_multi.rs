@@ -62,7 +62,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			},
+			}
 			// set_approval_for_all
 			65666 => {
 				log::info!("func id 65666");
@@ -89,10 +89,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// transfer_from
 			65667 => {
@@ -123,10 +123,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			//batch_transfer_from
 			65668 => {
@@ -162,10 +162,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			//mint
 			65669 => {
@@ -195,10 +195,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			//mint_batch
 			65670 => {
@@ -232,10 +232,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			//burn
 			65671 => {
@@ -263,10 +263,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			//mint_batch
 			65672 => {
@@ -298,10 +298,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// exists
 			65673 => {
@@ -323,7 +323,7 @@ where
 				env.write(&exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 
 			// balance_of_batch
 			65674 => {
@@ -353,7 +353,7 @@ where
 				env.write(&balance_of_batch_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			// balance_of
 			65675 => {
 				log::info!("func id 65675");
@@ -377,11 +377,11 @@ where
 				env.write(&balance_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"))
-			},
+				return Err(DispatchError::Other("Unimplemented func_id"));
+			}
 		}
 		Ok(RetVal::Converging(0))
 	}

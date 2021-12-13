@@ -58,7 +58,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			},
+			}
 
 			// approve
 			65602 => {
@@ -81,10 +81,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// set_approve_for_all
 			65603 => {
@@ -111,10 +111,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// transfer_from
 			65604 => {
@@ -143,10 +143,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// mint
 			65605 => {
@@ -169,10 +169,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// burn
 			65606 => {
@@ -194,10 +194,10 @@ where
 				env.adjust_weight(charged, actual_weight);
 
 				match result {
-					Ok(_) => {},
+					Ok(_) => {}
 					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
 				}
-			},
+			}
 
 			// exists
 			65607 => {
@@ -220,7 +220,7 @@ where
 				env.write(&exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			// token_exists
 			65608 => {
 				log::info!("func id 65607");
@@ -244,11 +244,11 @@ where
 				env.write(&token_exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"))
-			},
+				return Err(DispatchError::Other("Unimplemented func_id"));
+			}
 		}
 		Ok(RetVal::Converging(0))
 	}
