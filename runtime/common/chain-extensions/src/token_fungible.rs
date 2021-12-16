@@ -4,10 +4,17 @@ use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::Balance;
-use sp_runtime::DispatchError;
+use sp_runtime::{DispatchError};
 use sp_std::vec::Vec;
 
 pub struct FungibleTokenExtension;
+
+
+// pub fn to_account_id(account: &[u8]) -> Result<AccountId32> {
+// 	AccountId32::try_from(account)
+// 		.map_err(|_| DispatchError::Other("Cannot be converted into AccountId32"))
+// }
+
 
 impl<C> ChainExtension<C> for FungibleTokenExtension
 where
@@ -26,22 +33,8 @@ where
 
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				log::info!("caller {:?}", caller);
 
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let name: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("name {:?}", name);
-
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let symbol: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("symbol {:?}", symbol);
-
-				let decimals: u8 = env.read_as()?;
-				log::info!("decimals {:?}", decimals);
+				let (name,symbol,decimals):(Vec<u8>,Vec<u8>,u8) = env.read_as_unbounded(env.in_len())?;
 
 				env.charge_weight(10000)?;
 
@@ -62,9 +55,10 @@ where
 				log::info!("func id 65538");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-				let spender: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
+
+				let (id,spender,amount):
+					(<E::T as pallet_token_fungible::Config>::FungibleTokenId,<E::T as SysConfig>::AccountId,Balance)
+					= env.read_as_unbounded(env.in_len())?;
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
@@ -92,9 +86,10 @@ where
 				log::info!("func id 65539");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-				let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
+
+				let (id,recipient,amount):
+					(<E::T as pallet_token_fungible::Config>::FungibleTokenId,<E::T as SysConfig>::AccountId,Balance)
+					= env.read_as_unbounded(env.in_len())?;
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
@@ -122,10 +117,9 @@ where
 				log::info!("func id 65540");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-				let sender: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let recipient: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
+				let (id,sender,recipient,amount):
+					(<E::T as pallet_token_fungible::Config>::FungibleTokenId,<E::T as SysConfig>::AccountId,<E::T as SysConfig>::AccountId,Balance)
+					= env.read_as_unbounded(env.in_len())?;
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
@@ -154,9 +148,11 @@ where
 				log::info!("func id 65541");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-				let account: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
+
+				let (id,account,amount):(<E::T as pallet_token_fungible::Config>::FungibleTokenId,<E::T as SysConfig>::AccountId,Balance) = env.read_as_unbounded(env.in_len())?;
+
+				log::info!("{:#?} {:#?} {:#?}",id,account,amount);
+
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
@@ -170,6 +166,7 @@ where
 				let dispatch_info = call.get_dispatch_info();
 				let charged = env.charge_weight(dispatch_info.weight)?;
 				let result = env.ext().call_runtime(call);
+
 				let actual_weight = extract_actual_weight(&result, &dispatch_info);
 				env.adjust_weight(charged, actual_weight);
 
@@ -184,8 +181,9 @@ where
 				log::info!("func id 65542");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
+				let (id,amount):
+					(<E::T as pallet_token_fungible::Config>::FungibleTokenId,Balance)
+					= env.read_as_unbounded(env.in_len())?;
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
