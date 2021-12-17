@@ -27,7 +27,7 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-				let (name, symbol, decimals): (Vec<u8>,Vec<u8>,u8) =
+				let (name, symbol, decimals): (Vec<u8>, Vec<u8>, u8) =
 					env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
@@ -146,15 +146,13 @@ where
 				log::info!("func id 65541");
 				let mut env = env.buf_in_buf_out();
 
-
 				let (id, account, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
-				log::info!("{:#?} {:#?} {:#?}",id,account,amount);
-
+				log::info!("{:#?} {:#?} {:#?}",id, account, amount);
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
