@@ -152,7 +152,7 @@ where
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
-				log::info!("{:#?} {:#?} {:#?}",id, account, amount);
+				log::info!("{:#?} {:#?} {:#?}", id, account, amount);
 
 				let call =
 					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
