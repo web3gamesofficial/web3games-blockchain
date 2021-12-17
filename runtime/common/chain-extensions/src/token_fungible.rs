@@ -27,8 +27,7 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-
-				let (name, symbol, decimals):(Vec<u8>,Vec<u8>,u8) =
+				let (name, symbol, decimals): (Vec<u8>,Vec<u8>,u8) =
 					env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
@@ -49,10 +48,10 @@ where
 				log::info!("func id 65538");
 				let mut env = env.buf_in_buf_out();
 
-
 				let (id, spender, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
-					<E::T as SysConfig>::AccountId,Balance
+					<E::T as SysConfig>::AccountId,
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
 				let call =
@@ -81,10 +80,10 @@ where
 				log::info!("func id 65539");
 				let mut env = env.buf_in_buf_out();
 
-
 				let (id, recipient, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
-					<E::T as SysConfig>::AccountId,Balance
+					<E::T as SysConfig>::AccountId,
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
 				let call =
@@ -116,7 +115,8 @@ where
 				let (id, sender, recipient, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as SysConfig>::AccountId,Balance
+					<E::T as SysConfig>::AccountId,
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
 				let call =
@@ -147,9 +147,10 @@ where
 				let mut env = env.buf_in_buf_out();
 
 
-				let (id, account, amount):(
+				let (id, account, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
-					<E::T as SysConfig>::AccountId,Balance
+					<E::T as SysConfig>::AccountId,
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
 				log::info!("{:#?} {:#?} {:#?}",id,account,amount);
@@ -184,7 +185,7 @@ where
 
 				let (id, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
-					Balance
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 
 				let call =
