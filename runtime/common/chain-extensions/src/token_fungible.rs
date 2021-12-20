@@ -1,5 +1,4 @@
 use codec::Encode;
-use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
@@ -47,64 +46,51 @@ where
 			65538 => {
 				log::info!("func id 65538");
 				let mut env = env.buf_in_buf_out();
-
+				let caller = env.ext().caller().clone();
 				let (id, spender, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-						E::T,
-					>::approve {
-						id,
-						spender,
-						amount,
-					});
+				let id = pallet_token_fungible::Pallet::<E::T>::do_approve(
+					id,&caller, &spender, amount,
+				)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call approve")
+				})?;
 			}
 
 			// transfer
 			65539 => {
 				log::info!("func id 65539");
 				let mut env = env.buf_in_buf_out();
-
+				let caller = env.ext().caller().clone();
 				let (id, recipient, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-						E::T,
-					>::transfer {
-						id,
-						recipient,
-						amount,
-					});
+				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
+					id,&caller, &recipient, amount
+				)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				log::info!("{:#?}", id);
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call do_mint")
+				})?;
+
 			}
 
 			// transfer_from
@@ -118,62 +104,46 @@ where
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-						E::T,
-					>::transfer_from {
-						id,
-						sender,
-						recipient,
-						amount,
-					});
+				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
+					id,&sender, &recipient, amount
+				)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				log::info!("{:#?}", id);
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call do_mint")
+				})?;
 			}
 
 			// mint
 			65541 => {
 				log::info!("func id 65541");
 				let mut env = env.buf_in_buf_out();
-
+				let caller = env.ext().caller().clone();
 				let (id, account, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				log::info!("{:#?} {:#?} {:#?}", id, account, amount);
+				let id = pallet_token_fungible::Pallet::<E::T>::do_mint(
+					id, &caller,account, amount
+				)?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-						E::T,
-					>::mint {
-						id,
-						account,
-						amount,
-					});
+				log::info!("{:#?}", id);
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
 
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
-
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call do_mint")
+				})?;
 			}
 
 			// burn
@@ -181,29 +151,24 @@ where
 				log::info!("func id 65542");
 				let mut env = env.buf_in_buf_out();
 
-				let (id, amount): (
+				let (id, account, amount): (
 					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_fungible::Call::<
-						E::T,
-					>::burn {
-						id,
-						amount,
-					});
+				let id = pallet_token_fungible::Pallet::<E::T>::do_burn(id, &account,amount)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				log::info!("{:#?}", id);
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call do_mint")
+				})?;
+
 			}
 
 			// exists
