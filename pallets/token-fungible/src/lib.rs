@@ -183,6 +183,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+
 		#[pallet::weight(10_000)]
 		pub fn transfer(
 			origin: OriginFor<T>,
@@ -192,7 +193,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_transfer(id,&who,&recipient,amount);
+			let _ = Self::do_transfer(id,&who,&recipient,amount);
 
 			Ok(())
 		}
@@ -207,7 +208,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_transfer_from(id,who,sender,recipient,amount);
+			let _ = Self::do_transfer_from(id,who,sender,recipient,amount);
 
 			Ok(())
 		}

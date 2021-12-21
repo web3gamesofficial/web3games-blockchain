@@ -26,26 +26,12 @@ where
 
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				log::info!("caller {:?}", caller);
 
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let name: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("name {:?}", name);
-
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let symbol: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("symbol {:?}", symbol);
-
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let base_uri: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("base_uri {:?}", base_uri);
-
+				let (name, symbol, base_uri): (
+					Vec<u8>,
+					Vec<u8>,
+					Vec<u8>
+				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_non_fungible::Pallet::<E::T>::do_create_token(
@@ -65,25 +51,26 @@ where
 				log::info!("func id 65602");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-					env.read_as()?;
-				let to: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
+				let caller = env.ext().caller().clone();
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_non_fungible::Call::<E::T>::approve { id, to, token_id },
-				);
+				let (id, to, token_id): (
+					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as SysConfig>::AccountId,
+					TokenId
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_approve(
+					&caller, id, &to, token_id,
+				)?;
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call approve")
+				})?;
+
 			}
 
 			// set_approve_for_all
@@ -91,29 +78,26 @@ where
 				log::info!("func id 65603");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-					env.read_as()?;
-				let operator: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let approved: bool = env.read_as()?;
+				let caller = env.ext().caller().clone();
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_non_fungible::Call::<E::T>::set_approve_for_all {
-						id,
-						operator,
-						approved,
-					},
-				);
+				let (id, operator, approved): (
+					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as SysConfig>::AccountId,
+					bool
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_set_approve_for_all(
+					&caller, id, &operator, approved,
+				)?;
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
+				})?;
+
 			}
 
 			// transfer_from
@@ -121,31 +105,28 @@ where
 				log::info!("func id 65604");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-					env.read_as()?;
-				let from: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let to: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
+				let caller = env.ext().caller().clone();
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_non_fungible::Call::<E::T>::transfer_from {
-						id,
-						from,
-						to,
-						token_id,
-					},
-				);
+				let (id, from, to, token_id): (
+					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as SysConfig>::AccountId,
+					<E::T as SysConfig>::AccountId,
+					TokenId
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_transfer_from(
+					&caller, id, &from, &to,token_id
+				)?;
+
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
+				})?;
+
 			}
 
 			// mint
@@ -153,25 +134,26 @@ where
 				log::info!("func id 65605");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-					env.read_as()?;
-				let to: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_non_fungible::Call::<E::T>::mint { id, to, token_id },
-				);
+				let caller = env.ext().caller().clone();
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let (id, to, token_id): (
+					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as SysConfig>::AccountId,
+					TokenId
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_mint(
+					&caller, id, &to, token_id
+				)?;
+
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call mint")
+				})?;
 			}
 
 			// burn
@@ -179,24 +161,24 @@ where
 				log::info!("func id 65606");
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-					env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
+				let caller = env.ext().caller().clone();
 
-				let call = <E::T as pallet_contracts::Config>::Call::from(
-					pallet_token_non_fungible::Call::<E::T>::burn { id, token_id },
-				);
+				let (id, token_id): (
+					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					TokenId
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_burn(
+					&caller, id, token_id
+				)?;
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
+				let id_slice = id.encode();
+				log::info!("id slice {:?}", id_slice);
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call burn")
+				})?;
 			}
 
 			// exists
