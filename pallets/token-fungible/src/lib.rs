@@ -441,7 +441,7 @@ impl<T: Config> Pallet<T> {
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
 		let token = Tokens::<T>::get(id);
-		println!("who{:?} token_owner{:?}", who, token.clone().unwrap().owner);
+		// println!("who{:?} token_owner{:?}", who, token.clone().unwrap().owner);
 		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
 
 		Ok(())
