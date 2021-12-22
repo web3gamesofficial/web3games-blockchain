@@ -55,15 +55,14 @@ where
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_fungible::Pallet::<E::T>::do_approve(
-					id,&caller, &spender, amount,
+					id, &caller, &spender, amount,
 				)?;
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call approve")
-				})?;
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call approve"))?;
 			}
 
 			// transfer
@@ -79,7 +78,7 @@ where
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
-					id,&caller, &recipient, amount
+					id, &caller, &recipient, amount,
 				)?;
 
 				log::info!("{:#?}", id);
@@ -87,10 +86,8 @@ where
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call do_mint")
-				})?;
-
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
 			}
 
 			// transfer_from
@@ -107,7 +104,7 @@ where
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
-					id,&sender, &recipient, amount
+					id, &sender, &recipient, amount,
 				)?;
 
 				log::info!("{:#?}", id);
@@ -115,9 +112,8 @@ where
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call do_mint")
-				})?;
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
 			}
 
 			// mint
@@ -132,18 +128,16 @@ where
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_mint(
-					id, &caller,account, amount
-				)?;
+				let id =
+					pallet_token_fungible::Pallet::<E::T>::do_mint(id, &caller, account, amount)?;
 
 				log::info!("{:#?}", id);
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call do_mint")
-				})?;
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
 			}
 
 			// burn
@@ -158,17 +152,15 @@ where
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_burn(id, &account,amount)?;
+				let id = pallet_token_fungible::Pallet::<E::T>::do_burn(id, &account, amount)?;
 
 				log::info!("{:#?}", id);
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call do_mint")
-				})?;
-
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
 			}
 
 			// exists

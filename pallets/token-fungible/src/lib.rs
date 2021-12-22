@@ -183,7 +183,6 @@ pub mod pallet {
 			Ok(())
 		}
 
-
 		#[pallet::weight(10_000)]
 		pub fn transfer(
 			origin: OriginFor<T>,
@@ -193,7 +192,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let _ = Self::do_transfer(id,&who,&recipient,amount);
+			let _ = Self::do_transfer(id, &who, &recipient, amount);
 
 			Ok(())
 		}
@@ -208,7 +207,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let _ = Self::do_transfer_from(id,who,sender,recipient,amount);
+			let _ = Self::do_transfer_from(id, who, sender, recipient, amount);
 
 			Ok(())
 		}
@@ -222,7 +221,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_mint(id, &who, account,amount)?;
+			Self::do_mint(id, &who, account, amount)?;
 			Ok(())
 		}
 
@@ -285,20 +284,18 @@ impl<T: Config> Pallet<T> {
 		Ok(id)
 	}
 
-
 	pub fn do_approve(
 		id: T::FungibleTokenId,
 		who: &T::AccountId,
 		spender: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-
 		ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
 		ensure!(
-				Balances::<T>::get(id, who.clone()) >= amount,
-				Error::<T>::InsufficientAuthorizedTokens
-			);
+			Balances::<T>::get(id, who.clone()) >= amount,
+			Error::<T>::InsufficientAuthorizedTokens
+		);
 
 		Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
 			*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
@@ -310,20 +307,19 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-
 	pub fn do_transfer_from(
 		id: T::FungibleTokenId,
-		who:T::AccountId,
+		who: T::AccountId,
 		sender: T::AccountId,
 		recipient: T::AccountId,
 		amount: Balance,
-	) -> DispatchResult{
+	) -> DispatchResult {
 		ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
 		ensure!(
-				Allowances::<T>::get(id, (&sender, &who)) >= amount,
-				Error::<T>::InsufficientAuthorizedTokens
-			);
+			Allowances::<T>::get(id, (&sender, &who)) >= amount,
+			Error::<T>::InsufficientAuthorizedTokens
+		);
 
 		// over flow check
 		Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
@@ -337,27 +333,25 @@ impl<T: Config> Pallet<T> {
 	}
 	pub fn do_transfer(
 		id: T::FungibleTokenId,
-		who:&T::AccountId,
+		who: &T::AccountId,
 		recipient: &T::AccountId,
 		amount: Balance,
-	) -> DispatchResult{
+	) -> DispatchResult {
 		ensure!(who != recipient, Error::<T>::ConfuseBehavior);
 
 		ensure!(Balances::<T>::get(id, who.clone()) >= amount, Error::<T>::InsufficientTokens);
 
-		Self::internal_transfer(id, who,recipient, amount)?;
+		Self::internal_transfer(id, who, recipient, amount)?;
 
 		Ok(())
 	}
 
-
-	 fn internal_transfer(
+	fn internal_transfer(
 		id: T::FungibleTokenId,
 		sender: &T::AccountId,
 		recipient: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-
 		Self::decrease_balance(id, sender, amount)?;
 		Self::increase_balance(id, recipient, amount)?;
 
@@ -368,7 +362,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_mint(
 		id: T::FungibleTokenId,
-		who:&T::AccountId,
+		who: &T::AccountId,
 		account: T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
@@ -378,7 +372,6 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
-
 
 	fn internal_mint(
 		id: T::FungibleTokenId,
@@ -448,6 +441,7 @@ impl<T: Config> Pallet<T> {
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
 		let token = Tokens::<T>::get(id);
+		println!("who{:?} token_owner{:?}", who, token.clone().unwrap().owner);
 		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
 
 		Ok(())

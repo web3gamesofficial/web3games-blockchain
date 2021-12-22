@@ -67,10 +67,9 @@ where
 				let (id, operator, approved): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
-					bool
+					bool,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
-
 
 				let id = pallet_token_multi::Pallet::<E::T>::do_set_approval_for_all(
 					&caller, id, &operator, approved,
@@ -96,12 +95,12 @@ where
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
 					TokenId,
-					Balance
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_multi::Pallet::<E::T>::do_transfer_from(
-					&caller, id, &from, &to,token_id,amount
+					&caller, id, &from, &to, token_id, amount,
 				)?;
 
 				let id_slice = id.encode();
@@ -118,7 +117,6 @@ where
 
 				let mut env = env.buf_in_buf_out();
 
-
 				let caller = env.ext().caller().clone();
 
 				let (id, from, to, token_ids, amounts): (
@@ -126,13 +124,12 @@ where
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
 					Vec<TokenId>,
-					Vec<Balance>
+					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-
 				let id = pallet_token_multi::Pallet::<E::T>::do_batch_transfer_from(
-					&caller, id, &from, &to,token_ids,amounts
+					&caller, id, &from, &to, token_ids, amounts,
 				)?;
 
 				let id_slice = id.encode();
@@ -141,7 +138,6 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call batch_transfer_from")
 				})?;
-
 			}
 
 			//mint
@@ -156,21 +152,19 @@ where
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					TokenId,
-					Balance
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_multi::Pallet::<E::T>::do_mint(
-					&caller, id, &to, token_id,amount
+					&caller, id, &to, token_id, amount,
 				)?;
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call mint")
-				})?;
-
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call mint"))?;
 			}
 
 			//mint_batch
@@ -179,20 +173,18 @@ where
 
 				let mut env = env.buf_in_buf_out();
 
-
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_ids, amounts): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					Vec<TokenId>,
-					Vec<Balance>
+					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-
 				let id = pallet_token_multi::Pallet::<E::T>::do_batch_mint(
-					&caller, id, &to, token_ids,amounts
+					&caller, id, &to, token_ids, amounts,
 				)?;
 
 				let id_slice = id.encode();
@@ -214,22 +206,18 @@ where
 				let (id, token_id, amount): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					TokenId,
-					Balance
+					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_burn(
-					&caller, id,  token_id,amount
-				)?;
+				let id =
+					pallet_token_multi::Pallet::<E::T>::do_burn(&caller, id, token_id, amount)?;
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call burn")
-				})?;
-
-
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call burn"))?;
 			}
 
 			//burn_batch
@@ -238,18 +226,17 @@ where
 
 				let mut env = env.buf_in_buf_out();
 
-
 				let caller = env.ext().caller().clone();
 
 				let (id, token_ids, amounts): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					Vec<TokenId>,
-					Vec<Balance>
+					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_multi::Pallet::<E::T>::do_batch_burn(
-					&caller, id,  token_ids,amounts
+					&caller, id, token_ids, amounts,
 				)?;
 
 				let id_slice = id.encode();
@@ -258,7 +245,6 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call burn_batch")
 				})?;
-
 			}
 
 			// exists

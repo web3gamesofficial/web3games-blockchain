@@ -509,7 +509,7 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token,who, to.clone(), liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, who, to.clone(), liquidity)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 

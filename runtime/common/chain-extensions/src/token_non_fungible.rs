@@ -27,11 +27,8 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-				let (name, symbol, base_uri): (
-					Vec<u8>,
-					Vec<u8>,
-					Vec<u8>
-				) = env.read_as_unbounded(env.in_len())?;
+				let (name, symbol, base_uri): (Vec<u8>, Vec<u8>, Vec<u8>) =
+					env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_non_fungible::Pallet::<E::T>::do_create_token(
@@ -56,7 +53,7 @@ where
 				let (id, to, token_id): (
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					TokenId
+					TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
@@ -67,10 +64,8 @@ where
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call approve")
-				})?;
-
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call approve"))?;
 			}
 
 			// set_approve_for_all
@@ -83,7 +78,7 @@ where
 				let (id, operator, approved): (
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					bool
+					bool,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
@@ -97,7 +92,6 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
 				})?;
-
 			}
 
 			// transfer_from
@@ -111,13 +105,12 @@ where
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					TokenId
+					TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-
 				let id = pallet_token_non_fungible::Pallet::<E::T>::do_transfer_from(
-					&caller, id, &from, &to,token_id
+					&caller, id, &from, &to, token_id,
 				)?;
 
 				let id_slice = id.encode();
@@ -126,7 +119,6 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
 				})?;
-
 			}
 
 			// mint
@@ -134,26 +126,23 @@ where
 				log::info!("func id 65605");
 				let mut env = env.buf_in_buf_out();
 
-
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_id): (
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					TokenId
+					TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_mint(
-					&caller, id, &to, token_id
-				)?;
+				let id =
+					pallet_token_non_fungible::Pallet::<E::T>::do_mint(&caller, id, &to, token_id)?;
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call mint")
-				})?;
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call mint"))?;
 			}
 
 			// burn
@@ -165,20 +154,17 @@ where
 
 				let (id, token_id): (
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
-					TokenId
+					TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_burn(
-					&caller, id, token_id
-				)?;
+				let id = pallet_token_non_fungible::Pallet::<E::T>::do_burn(&caller, id, token_id)?;
 
 				let id_slice = id.encode();
 				log::info!("id slice {:?}", id_slice);
 
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call burn")
-				})?;
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call burn"))?;
 			}
 
 			// exists
