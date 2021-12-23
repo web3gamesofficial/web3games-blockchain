@@ -97,19 +97,14 @@ where
 					Action::Name => return Self::name(fungible_token_id, target_gas),
 					Action::Symbol => return Self::symbol(fungible_token_id, target_gas),
 					Action::Decimals => return Self::decimals(fungible_token_id, target_gas),
-					Action::TotalSupply => {
-						return Self::total_supply(fungible_token_id, target_gas)
-					}
-					Action::BalanceOf => {
-						return Self::balance_of(fungible_token_id, input, target_gas)
-					}
+					Action::TotalSupply => return Self::total_supply(fungible_token_id, target_gas),
+					Action::BalanceOf =>
+						return Self::balance_of(fungible_token_id, input, target_gas),
 					// call methods (dispatchable)
-					Action::Transfer => {
-						Self::transfer(fungible_token_id, input, target_gas, context)?
-					}
-					Action::TransferFrom => {
-						Self::transfer_from(fungible_token_id, input, target_gas, context)?
-					}
+					Action::Transfer =>
+						Self::transfer(fungible_token_id, input, target_gas, context)?,
+					Action::TransferFrom =>
+						Self::transfer_from(fungible_token_id, input, target_gas, context)?,
 					Action::Mint => Self::mint(fungible_token_id, input, target_gas, context)?,
 					Action::Burn => Self::burn(fungible_token_id, input, target_gas, context)?,
 				};
@@ -129,18 +124,18 @@ where
 					cost: gasometer.used_gas(),
 					output: vec![],
 					logs: vec![],
-				});
+				})
 			} else {
 				// Action::Create = "create(bytes,bytes)"
 
 				let selector = &input[0..4];
 				if selector == CREATE_SELECTOR {
 					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
+					return Self::create(input, target_gas, context)
 				} else {
 					return Err(PrecompileFailure::Error {
 						exit_status: ExitError::Other("fungible token not exists".into()),
-					});
+					})
 				}
 			}
 		}

@@ -21,8 +21,6 @@ where
 		match func_id {
 			// create_token
 			65537 => {
-				log::info!("func id 65537");
-
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
@@ -35,16 +33,14 @@ where
 				)?;
 
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			}
+			},
 
 			// approve
 			65538 => {
-				log::info!("func id 65538");
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, spender, amount): (
@@ -59,15 +55,13 @@ where
 				)?;
 
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call approve"))?;
-			}
+			},
 
 			// transfer
 			65539 => {
-				log::info!("func id 65539");
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, recipient, amount): (
@@ -81,18 +75,14 @@ where
 					id, &caller, &recipient, amount,
 				)?;
 
-				log::info!("{:#?}", id);
-
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
-			}
+			},
 
 			// transfer_from
 			65540 => {
-				log::info!("func id 65540");
 				let mut env = env.buf_in_buf_out();
 
 				let (id, sender, recipient, amount): (
@@ -107,18 +97,14 @@ where
 					id, &sender, &recipient, amount,
 				)?;
 
-				log::info!("{:#?}", id);
-
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
-			}
+			},
 
 			// mint
 			65541 => {
-				log::info!("func id 65541");
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, account, amount): (
@@ -131,18 +117,14 @@ where
 				let id =
 					pallet_token_fungible::Pallet::<E::T>::do_mint(id, &caller, account, amount)?;
 
-				log::info!("{:#?}", id);
-
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
-			}
+			},
 
 			// burn
 			65542 => {
-				log::info!("func id 65542");
 				let mut env = env.buf_in_buf_out();
 
 				let (id, account, amount): (
@@ -154,18 +136,14 @@ where
 
 				let id = pallet_token_fungible::Pallet::<E::T>::do_burn(id, &account, amount)?;
 
-				log::info!("{:#?}", id);
-
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call do_mint"))?;
-			}
+			},
 
 			// exists
 			65543 => {
-				log::info!("func id 65543");
 				let mut env = env.buf_in_buf_out();
 
 				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
@@ -183,11 +161,10 @@ where
 				env.write(&exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			}
+			},
 
 			// total_supply
 			65544 => {
-				log::info!("func id 65544");
 				let mut env = env.buf_in_buf_out();
 
 				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
@@ -205,11 +182,11 @@ where
 				env.write(&exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			}
+			},
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+				return Err(DispatchError::Other("Unimplemented func_id"))
+			},
 		}
 		Ok(RetVal::Converging(0))
 	}

@@ -18,6 +18,8 @@ members = [
 [profile.release]
 panic = "unwind"
 
+# Build execution version
+
 [patch."https://github.com/paritytech/substrate"]
 frame-benchmarking = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 frame-benchmarking-cli = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }

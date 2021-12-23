@@ -66,7 +66,7 @@ where
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call random"))?;
 
 				Ok(RetVal::Converging(0))
-			}
+			},
 			// 0x10001-0x10040(65537-65600): token-fungible
 			id if id >= 65537 && id < 65600 => FungibleTokenExtension::call(func_id, env),
 
@@ -77,8 +77,8 @@ where
 			id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+				return Err(DispatchError::Other("Unimplemented func_id"))
+			},
 		}
 	}
 
