@@ -17,8 +17,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::*;
-use crate::mock::*;
-use crate::NftType::{MultiToken, NonFungibleToken};
+use crate::{
+	mock::*,
+	NftType::{MultiToken, NonFungibleToken},
+};
 use frame_support::assert_ok;
 
 #[test]

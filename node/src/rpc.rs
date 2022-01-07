@@ -200,8 +200,8 @@ where
 				// send EngineCommands to the background block authorship task.
 				ManualSealApi::to_delegate(ManualSeal::new(command_sink)),
 			);
-		}
-		_ => {}
+		},
+		_ => {},
 	}
 
 	io
