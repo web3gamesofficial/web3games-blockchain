@@ -478,10 +478,10 @@ impl<T: Config> Pallet<T> {
 			let who = ensure_signed(origin.clone())?;
 
 			let collections = Collections::<T>::get(collection_id).unwrap();
-			let collectionSale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
+			let collection_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
 
-			if collectionSale.bid.bid_price.unwrap() == price {
-				let sale_price = BalanceOf::<T>::try_from(collectionSale.bid.bid_price.unwrap())
+			if collection_sale.bid.bid_price.unwrap() == price {
+				let sale_price = BalanceOf::<T>::try_from(collection_sale.bid.bid_price.unwrap())
 					.map_err(|_| "balance expect u128 type")
 					.unwrap();
 				<T as Config>::Currency::transfer(
@@ -496,9 +496,9 @@ impl<T: Config> Pallet<T> {
 					pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
 						&collections.escrow_account,
 						nft_id,
-						&collectionSale.owner_id,
+						&collection_sale.owner_id,
 						&who,
-						collectionSale.token_id,
+						collection_sale.token_id,
 					)?;
 					CollectionSale::<T>::remove(collection_id, sale_id);
 				} else if collections.nft_type == MultiToken {
@@ -507,10 +507,10 @@ impl<T: Config> Pallet<T> {
 					pallet_token_multi::Pallet::<T>::do_transfer_from(
 						&collections.escrow_account,
 						nft_id,
-						&collectionSale.owner_id,
+						&collection_sale.owner_id,
 						&who,
-						collectionSale.token_id,
-						collectionSale.amount,
+						collection_sale.token_id,
+						collection_sale.amount,
 					)?;
 					CollectionSale::<T>::remove(collection_id, sale_id);
 				}
@@ -549,8 +549,8 @@ impl<T: Config> Pallet<T> {
 		let who = ensure_signed(origin.clone())?;
 
 		let collections = Collections::<T>::get(collection_id).unwrap();
-		let collectionSale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-		let sale_price = BalanceOf::<T>::try_from(collectionSale.bid.bid_price.unwrap())
+		let collection_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
+		let sale_price = BalanceOf::<T>::try_from(collection_sale.bid.bid_price.unwrap())
 			.map_err(|_| "balance expect u128 type")
 			.unwrap();
 
@@ -566,9 +566,9 @@ impl<T: Config> Pallet<T> {
 			pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
 				&collections.escrow_account,
 				nft_id,
-				&collectionSale.owner_id,
+				&collection_sale.owner_id,
 				&who,
-				collectionSale.token_id,
+				collection_sale.token_id,
 			)?;
 			CollectionSale::<T>::remove(collection_id, sale_id);
 		} else if collections.nft_type == MultiToken {
@@ -576,10 +576,10 @@ impl<T: Config> Pallet<T> {
 			pallet_token_multi::Pallet::<T>::do_transfer_from(
 				&collections.escrow_account,
 				nft_id,
-				&collectionSale.owner_id,
+				&collection_sale.owner_id,
 				&who,
-				collectionSale.token_id,
-				collectionSale.amount,
+				collection_sale.token_id,
+				collection_sale.amount,
 			)?;
 			CollectionSale::<T>::remove(collection_id, sale_id);
 		}

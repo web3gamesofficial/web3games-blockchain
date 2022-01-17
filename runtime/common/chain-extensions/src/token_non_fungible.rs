@@ -1,5 +1,4 @@
 use codec::Encode;
-use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
@@ -38,7 +37,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			},
+			}
 
 			// approve
 			65602 => {
@@ -61,7 +60,7 @@ where
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call approve"))?;
-			},
+			}
 
 			// set_approve_for_all
 			65603 => {
@@ -85,7 +84,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
 				})?;
-			},
+			}
 
 			// transfer_from
 			65604 => {
@@ -110,7 +109,7 @@ where
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
 				})?;
-			},
+			}
 
 			// mint
 			65605 => {
@@ -132,7 +131,7 @@ where
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call mint"))?;
-			},
+			}
 
 			// burn
 			65606 => {
@@ -152,7 +151,7 @@ where
 
 				env.write(&id_slice, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call burn"))?;
-			},
+			}
 
 			// exists
 			65607 => {
@@ -174,7 +173,7 @@ where
 				env.write(&exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			// token_exists
 			65608 => {
 				let mut env = env.buf_in_buf_out();
@@ -197,11 +196,11 @@ where
 				env.write(&token_exists_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			},
+			}
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));
-			},
+			}
 		}
 		Ok(RetVal::Converging(0))
 	}
