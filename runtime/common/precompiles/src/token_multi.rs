@@ -94,21 +94,28 @@ where
 
 				let (origin, call) = match selector {
 					// storage getters
-					Action::BalanceOf => return Self::balance_of(multi_token_id, input, target_gas),
-					Action::BalanceOfBatch =>
-						return Self::balance_of_batch(multi_token_id, input, target_gas),
+					Action::BalanceOf => {
+						return Self::balance_of(multi_token_id, input, target_gas)
+					},
+					Action::BalanceOfBatch => {
+						return Self::balance_of_batch(multi_token_id, input, target_gas)
+					},
 					Action::URI => return Self::uri(multi_token_id, input, target_gas),
 					// runtime methods (dispatchable)
-					Action::TransferFrom =>
-						Self::transfer_from(multi_token_id, input, target_gas, context)?,
-					Action::BatchTransferFrom =>
-						Self::batch_transfer_from(multi_token_id, input, target_gas, context)?,
+					Action::TransferFrom => {
+						Self::transfer_from(multi_token_id, input, target_gas, context)?
+					},
+					Action::BatchTransferFrom => {
+						Self::batch_transfer_from(multi_token_id, input, target_gas, context)?
+					},
 					Action::Mint => Self::mint(multi_token_id, input, target_gas, context)?,
-					Action::MintBatch =>
-						Self::mint_batch(multi_token_id, input, target_gas, context)?,
+					Action::MintBatch => {
+						Self::mint_batch(multi_token_id, input, target_gas, context)?
+					},
 					Action::Burn => Self::burn(multi_token_id, input, target_gas, context)?,
-					Action::BurnBatch =>
-						Self::burn_batch(multi_token_id, input, target_gas, context)?,
+					Action::BurnBatch => {
+						Self::burn_batch(multi_token_id, input, target_gas, context)?
+					},
 				};
 
 				// initialize gasometer
@@ -126,18 +133,18 @@ where
 					cost: gasometer.used_gas(),
 					output: vec![],
 					logs: vec![],
-				})
+				});
 			} else {
 				// Action::Create = "create(bytes)"
 
 				let selector = &input[0..4];
 				if selector == CREATE_SELECTOR {
 					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context)
+					return Self::create(input, target_gas, context);
 				} else {
 					return Err(PrecompileFailure::Error {
 						exit_status: ExitError::Other("multi token not exists".into()),
-					})
+					});
 				}
 			}
 		}

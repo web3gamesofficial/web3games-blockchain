@@ -169,7 +169,7 @@ where
 		if let Some(gas_limit) = target_gas {
 			let required_gas = Runtime::GasWeightMapping::weight_to_gas(dispatch_info.weight);
 			if required_gas > gas_limit {
-				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
+				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas });
 			}
 		}
 
@@ -236,8 +236,9 @@ impl Gasometer {
 			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		match self.target_gas {
-			Some(gas_limit) if self.used_gas > gas_limit =>
-				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas }),
+			Some(gas_limit) if self.used_gas > gas_limit => {
+				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
+			},
 			_ => Ok(()),
 		}
 	}

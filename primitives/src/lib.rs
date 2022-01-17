@@ -137,12 +137,12 @@ impl TryFrom<[u8; 32]> for CurrencyId {
 
 	fn try_from(v: [u8; 32]) -> Result<Self, Self::Error> {
 		if !v.starts_with(&[0u8; 29][..]) {
-			return Err(())
+			return Err(());
 		}
 
 		// token
 		if v[29] == 0 && v[31] == 0 {
-			return v[30].try_into().map(CurrencyId::Token)
+			return v[30].try_into().map(CurrencyId::Token);
 		}
 
 		Err(())
