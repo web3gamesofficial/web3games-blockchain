@@ -9,9 +9,9 @@
 <!-- TOC -->
 
 - [1. Introduction](#1-introduction)
-- [2. Overview](#2-overview)
-- [3. Building](#3-building)
-- [4. Run](#4-run)
+- [2. Building](#2-building)
+- [3. Run](#3-run)
+- [4. Docker](#4-run-in-docker)
 
 <!-- /TOC -->
 
@@ -19,9 +19,7 @@
 
 Web3Games is a new generation gaming ecosystem built on Substrate.
 
-## 2. Overview
-
-## 3. Building
+## 2. Building
 
 Install Rust:
 
@@ -41,7 +39,7 @@ Build Wasm and native code:
 cargo build --release
 ```
 
-## 4. Run
+## 3. Run
 
 ### Single Node Development Chain
 
@@ -92,7 +90,7 @@ cargo run -- \
   --validator
 ```
 
-## 5. Run in Docker
+## 4. Run in Docker
 
 First, install [Docker](https://docs.docker.com/get-docker/) and
 [Docker Compose](https://docs.docker.com/compose/install/).
