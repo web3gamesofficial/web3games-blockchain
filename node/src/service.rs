@@ -309,7 +309,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 					"Error hooking up remote keystore for {}: {}",
 					url, e
 				)))
-			}
+			},
 		};
 	}
 
@@ -471,7 +471,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 						Some("block-authoring"),
 						authorship_future,
 					);
-				}
+				},
 				Sealing::Instant => {
 					let authorship_future =
 						manual_seal::run_instant_seal(manual_seal::InstantSealParams {
@@ -493,7 +493,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 						Some("block-authoring"),
 						authorship_future,
 					);
-				}
+				},
 			};
 		}
 		log::info!("Manual Seal Ready");

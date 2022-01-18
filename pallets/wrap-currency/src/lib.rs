@@ -132,7 +132,12 @@ pub mod pallet {
 			WrapTokens::<T>::try_mutate(currency_id, |wrap_token| -> DispatchResult {
 				let token = wrap_token.as_mut().ok_or(Error::<T>::Unknown)?;
 
-				pallet_token_fungible::Pallet::<T>::do_mint(token.token_id, &who, amount)?;
+				pallet_token_fungible::Pallet::<T>::do_mint(
+					token.token_id,
+					&who,
+					who.clone(),
+					amount,
+				)?;
 
 				token.total_supply =
 					token.total_supply.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;

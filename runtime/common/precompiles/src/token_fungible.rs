@@ -99,17 +99,17 @@ where
 					Action::Decimals => return Self::decimals(fungible_token_id, target_gas),
 					Action::TotalSupply => {
 						return Self::total_supply(fungible_token_id, target_gas)
-					}
+					},
 					Action::BalanceOf => {
 						return Self::balance_of(fungible_token_id, input, target_gas)
-					}
+					},
 					// call methods (dispatchable)
 					Action::Transfer => {
 						Self::transfer(fungible_token_id, input, target_gas, context)?
-					}
+					},
 					Action::TransferFrom => {
 						Self::transfer_from(fungible_token_id, input, target_gas, context)?
-					}
+					},
 					Action::Mint => Self::mint(fungible_token_id, input, target_gas, context)?,
 					Action::Burn => Self::burn(fungible_token_id, input, target_gas, context)?,
 				};

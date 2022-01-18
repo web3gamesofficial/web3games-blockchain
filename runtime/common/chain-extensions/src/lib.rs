@@ -26,15 +26,24 @@ use pallet_contracts::chain_extension::{
 use sp_runtime::DispatchError;
 use sp_std::marker::PhantomData;
 
+mod token_fungible;
 mod token_multi;
+mod token_non_fungible;
 
+pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
+pub use token_non_fungible::NonFungibleTokenExtension;
 
 pub struct Web3GamesChainExtensions<C>(PhantomData<C>);
 
 impl<C> ChainExtension<C> for Web3GamesChainExtensions<C>
 where
-	C: pallet_contracts::Config + pallet_token_multi::Config,
+	C: pallet_contracts::Config
+		+ pallet_token_fungible::Config
+		+ pallet_token_non_fungible::Config
+		+ pallet_token_multi::Config,
+	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
+	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
@@ -43,7 +52,7 @@ where
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
 	{
 		match func_id {
-			// 0x00-0x1000(0-4096): substrate pallet
+			// 0x00-0x10000(0-65536): substrate pallet
 			1024 => {
 				let mut env = env.buf_in_buf_out();
 				let random_slice =
@@ -57,17 +66,19 @@ where
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call random"))?;
 
 				Ok(RetVal::Converging(0))
-			}
-			// 0x1000-0x1040: token-fungible
+			},
+			// 0x10001-0x10040(65537-65600): token-fungible
+			id if id >= 65537 && id < 65600 => FungibleTokenExtension::call(func_id, env),
 
-			// 0x1040-0x1080: token-non-fungible
+			// 0x10041-0x10080(65601-65664): token-non-fungible
+			id if id >= 65601 && id < 65664 => NonFungibleTokenExtension::call(func_id, env),
 
-			// 0x1080-0x10c0(4224-4288): token-multi
-			id if id >= 4224 && id < 4288 => MultiTokenExtension::call(func_id, env),
+			// 0x10081-0x100c1(65665-65729): token-multi
+			id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+			},
 		}
 	}
 

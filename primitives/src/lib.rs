@@ -157,7 +157,7 @@ impl Into<[u8; 32]> for CurrencyId {
 		match self {
 			CurrencyId::Token(token) => {
 				bytes[30] = token as u8;
-			}
+			},
 		}
 		bytes
 	}

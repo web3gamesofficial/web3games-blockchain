@@ -17,7 +17,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use codec::Encode;
-use frame_support::{dispatch::GetDispatchInfo, weights::extract_actual_weight};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
@@ -39,97 +38,245 @@ where
 	{
 		match func_id {
 			// create_token
-			4224 => {
-				log::info!("func id 4224");
-
+			65665 => {
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
-				log::info!("caller {:?}", caller);
 
-				let in_len = env.in_len();
-				log::debug!("in_len {}", in_len);
-
-				let uri: Vec<u8> = env.read_as_unbounded(in_len)?;
-				log::info!("uri {:?}", uri);
-
+				let uri: Vec<u8> = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_multi::Pallet::<E::T>::do_create_token(&caller, uri)?;
 
 				let id_slice = id.encode();
-				log::info!("id slice {:?}", id_slice);
 
 				env.write(&id_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create token")
 				})?;
-			}
+			},
+			// set_approval_for_all
+			65666 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, operator, approved): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as SysConfig>::AccountId,
+					bool,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_set_approval_for_all(
+					&caller, id, &operator, approved,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call set_approval_for_all")
+				})?;
+			},
+
 			// transfer_from
-			4226 => {
-				log::info!("func id 4226");
+			65667 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, from, to, token_id, amount): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as SysConfig>::AccountId,
+					<E::T as SysConfig>::AccountId,
+					TokenId,
+					Balance,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_transfer_from(
+					&caller, id, &from, &to, token_id, amount,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call transfer_from")
+				})?;
+			},
+
+			//batch_transfer_from
+			65668 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, from, to, token_ids, amounts): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as SysConfig>::AccountId,
+					<E::T as SysConfig>::AccountId,
+					Vec<TokenId>,
+					Vec<Balance>,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_batch_transfer_from(
+					&caller, id, &from, &to, token_ids, amounts,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call batch_transfer_from")
+				})?;
+			},
+
+			//mint
+			65669 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, to, token_id, amount): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as SysConfig>::AccountId,
+					TokenId,
+					Balance,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_mint(
+					&caller, id, &to, token_id, amount,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call mint"))?;
+			},
+
+			//mint_batch
+			65670 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, to, token_ids, amounts): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as SysConfig>::AccountId,
+					Vec<TokenId>,
+					Vec<Balance>,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_batch_mint(
+					&caller, id, &to, token_ids, amounts,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call mint_batch")
+				})?;
+			},
+
+			//burn
+			65671 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, token_id, amount): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					TokenId,
+					Balance,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id =
+					pallet_token_multi::Pallet::<E::T>::do_burn(&caller, id, token_id, amount)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call burn"))?;
+			},
+
+			//burn_batch
+			65672 => {
+				let mut env = env.buf_in_buf_out();
+
+				let caller = env.ext().caller().clone();
+
+				let (id, token_ids, amounts): (
+					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					Vec<TokenId>,
+					Vec<Balance>,
+				) = env.read_as_unbounded(env.in_len())?;
+				env.charge_weight(10000)?;
+
+				let id = pallet_token_multi::Pallet::<E::T>::do_batch_burn(
+					&caller, id, token_ids, amounts,
+				)?;
+
+				let id_slice = id.encode();
+
+				env.write(&id_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call burn_batch")
+				})?;
+			},
+
+			// exists
+			65673 => {
 				let mut env = env.buf_in_buf_out();
 
 				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
-				let from: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let to: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
-						E::T,
-					>::transfer_from {
-						id,
-						from,
-						to,
-						token_id,
-						amount,
-					});
+				let exists: bool = pallet_token_multi::Pallet::<E::T>::exists(id);
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let exists_slice = exists.encode();
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
-			}
-			// mint
-			4228 => {
-				log::info!("func id 4228");
+				log::trace!(
+					target: "runtime",
+					"[ChainExtension]|call|func_id:{:}",
+					func_id
+				);
+
+				env.write(&exists_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call create collection")
+				})?;
+			},
+
+			// balance_of_batch
+			65674 => {
 				let mut env = env.buf_in_buf_out();
 
 				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
-				let to: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
-				let amount: Balance = env.read_as()?;
 
-				let call =
-					<E::T as pallet_contracts::Config>::Call::from(pallet_token_multi::Call::<
-						E::T,
-					>::mint {
-						id,
-						to,
-						token_id,
-						amount,
-					});
+				let in_len = env.in_len();
 
-				let dispatch_info = call.get_dispatch_info();
-				let charged = env.charge_weight(dispatch_info.weight)?;
-				let result = env.ext().call_runtime(call);
-				let actual_weight = extract_actual_weight(&result, &dispatch_info);
-				env.adjust_weight(charged, actual_weight);
+				let token_ids: Vec<TokenId> = env.read_as_unbounded(in_len)?;
 
-				match result {
-					Ok(_) => {}
-					Err(_) => return Err(DispatchError::Other("Call runtime returned error")),
-				}
-			}
+				let in_len = env.in_len();
+
+				let accounts: Vec<<E::T as SysConfig>::AccountId> =
+					env.read_as_unbounded(in_len)?;
+
+				let balance_of_batch =
+					pallet_token_multi::Pallet::<E::T>::balance_of_batch(id, &accounts, token_ids);
+
+				let balance_of_batch_slice = balance_of_batch.encode();
+
+				log::trace!(
+					target: "runtime",
+					"[ChainExtension]|call|func_id:{:}",
+					func_id
+				);
+
+				env.write(&balance_of_batch_slice, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call create collection")
+				})?;
+			},
 			// balance_of
-			4232 => {
-				log::info!("func id 4232");
+			65675 => {
 				let mut env = env.buf_in_buf_out();
 
 				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
@@ -150,11 +297,11 @@ where
 				env.write(&balance_slice, false, None).map_err(|_| {
 					DispatchError::Other("ChainExtension failed to call create collection")
 				})?;
-			}
+			},
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));
-			}
+			},
 		}
 		Ok(RetVal::Converging(0))
 	}

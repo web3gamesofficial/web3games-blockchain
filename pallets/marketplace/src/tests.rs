@@ -17,8 +17,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::*;
-use crate::mock::*;
-use crate::NftType::{MultiToken, NonFungibleToken};
+use crate::{
+	mock::*,
+	NftType::{MultiToken, NonFungibleToken},
+};
 use frame_support::assert_ok;
 
 #[test]
@@ -157,111 +159,111 @@ fn test_update_amount_works() {
 	})
 }
 
-#[test]
-fn test_offer_works() {
-	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(0);
-		let name: Vec<u8> = "KING".to_string().into();
-		let symbol: Vec<u8> = "KIN".to_string().into();
-		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
-		let id: u32 = 0;
-		let to: u64 = 0;
-		let token_id: TokenId = 0;
-		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
-		let nft_type = NonFungibleToken;
-		let nft_id: u32 = 0;
-		let metadata: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
-		let collection_id: u32 = 0;
-		let price: Balance = 10000;
-		let amount: Balance = 1;
-		assert_ok!(Marketplace::add_sale(
-			origin.clone(),
-			collection_id.clone(),
-			token_id,
-			price.clone(),
-			amount
-		));
-
-		let origin1 = Origin::signed(1);
-		let sale_id: SaleId = 0;
-		assert_ok!(Marketplace::offer(origin1, collection_id, sale_id, price));
-	})
-}
-
-#[test]
-fn test_accept_offer_works() {
-	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(0);
-		let name: Vec<u8> = "KING".to_string().into();
-		let symbol: Vec<u8> = "KIN".to_string().into();
-		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
-		let id: u32 = 0;
-		let to: u64 = 0;
-		let token_id: TokenId = 0;
-		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
-		let nft_type = NonFungibleToken;
-		let nft_id: u32 = 0;
-		let metadata: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
-		let collection_id: u32 = 0;
-		let price: Balance = 10000;
-		let amount: Balance = 1;
-		assert_ok!(Marketplace::add_sale(
-			origin.clone(),
-			collection_id.clone(),
-			token_id,
-			price.clone(),
-			amount
-		));
-		let origin = Origin::signed(1);
-		let sale_id: u32 = 0;
-		let price: Balance = 2000;
-		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
-		let origin = Origin::signed(0);
-		assert_ok!(Marketplace::accept_offer(origin, collection_id, sale_id));
-	})
-}
-
-#[test]
-fn test_do_offer_check_works() {
-	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(0);
-		let name: Vec<u8> = "KING".to_string().into();
-		let symbol: Vec<u8> = "KIN".to_string().into();
-		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
-		let id: u32 = 0;
-		let to: u64 = 0;
-		let token_id: TokenId = 0;
-		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
-		let nft_type = NonFungibleToken;
-		let nft_id: u32 = 0;
-		let metadata: Vec<u8> = "www.nft.com".to_string().into();
-		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
-		let collection_id: u32 = 0;
-		let price: Balance = 10000;
-		let amount: Balance = 1;
-		assert_ok!(Marketplace::add_sale(
-			origin.clone(),
-			collection_id.clone(),
-			token_id,
-			price.clone(),
-			amount
-		));
-		let origin = Origin::signed(1);
-		let sale_id: SaleId = 0;
-		let price: Balance = 2000;
-		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
-
-		let origin = Origin::signed(2);
-		let sale_id: SaleId = 0;
-		let price: Balance = 3000;
-		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
-	})
-}
+// #[test]
+// fn test_offer_works() {
+// 	new_test_ext().execute_with(|| {
+// 		let origin = Origin::signed(0);
+// 		let name: Vec<u8> = "KING".to_string().into();
+// 		let symbol: Vec<u8> = "KIN".to_string().into();
+// 		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
+// 		let id: u32 = 0;
+// 		let to: u64 = 0;
+// 		let token_id: TokenId = 0;
+// 		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
+// 		let nft_type = NonFungibleToken;
+// 		let nft_id: u32 = 0;
+// 		let metadata: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
+// 		let collection_id: u32 = 0;
+// 		let price: Balance = 10000;
+// 		let amount: Balance = 1;
+// 		assert_ok!(Marketplace::add_sale(
+// 			origin.clone(),
+// 			collection_id.clone(),
+// 			token_id,
+// 			price.clone(),
+// 			amount
+// 		));
+//
+// 		let origin1 = Origin::signed(1);
+// 		let sale_id: SaleId = 0;
+// 		assert_ok!(Marketplace::offer(origin1, collection_id, sale_id, price));
+// 	})
+// }
+//
+// #[test]
+// fn test_accept_offer_works() {
+// 	new_test_ext().execute_with(|| {
+// 		let origin = Origin::signed(0);
+// 		let name: Vec<u8> = "KING".to_string().into();
+// 		let symbol: Vec<u8> = "KIN".to_string().into();
+// 		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
+// 		let id: u32 = 0;
+// 		let to: u64 = 0;
+// 		let token_id: TokenId = 0;
+// 		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
+// 		let nft_type = NonFungibleToken;
+// 		let nft_id: u32 = 0;
+// 		let metadata: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
+// 		let collection_id: u32 = 0;
+// 		let price: Balance = 10000;
+// 		let amount: Balance = 1;
+// 		assert_ok!(Marketplace::add_sale(
+// 			origin.clone(),
+// 			collection_id.clone(),
+// 			token_id,
+// 			price.clone(),
+// 			amount
+// 		));
+// 		let origin = Origin::signed(1);
+// 		let sale_id: u32 = 0;
+// 		let price: Balance = 2000;
+// 		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
+// 		let origin = Origin::signed(0);
+// 		assert_ok!(Marketplace::accept_offer(origin, collection_id, sale_id));
+// 	})
+// }
+//
+// #[test]
+// fn test_do_offer_check_works() {
+// 	new_test_ext().execute_with(|| {
+// 		let origin = Origin::signed(0);
+// 		let name: Vec<u8> = "KING".to_string().into();
+// 		let symbol: Vec<u8> = "KIN".to_string().into();
+// 		let base_uri: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(TokenNonFungible::create_token(origin.clone(), name, symbol, base_uri));
+// 		let id: u32 = 0;
+// 		let to: u64 = 0;
+// 		let token_id: TokenId = 0;
+// 		assert_ok!(TokenNonFungible::mint(origin.clone(), id.clone(), to, token_id.clone()));
+// 		let nft_type = NonFungibleToken;
+// 		let nft_id: u32 = 0;
+// 		let metadata: Vec<u8> = "www.nft.com".to_string().into();
+// 		assert_ok!(Marketplace::create_collection(origin.clone(), nft_type, nft_id, metadata));
+// 		let collection_id: u32 = 0;
+// 		let price: Balance = 10000;
+// 		let amount: Balance = 1;
+// 		assert_ok!(Marketplace::add_sale(
+// 			origin.clone(),
+// 			collection_id.clone(),
+// 			token_id,
+// 			price.clone(),
+// 			amount
+// 		));
+// 		let origin = Origin::signed(1);
+// 		let sale_id: SaleId = 0;
+// 		let price: Balance = 2000;
+// 		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
+//
+// 		let origin = Origin::signed(2);
+// 		let sale_id: SaleId = 0;
+// 		let price: Balance = 3000;
+// 		assert_ok!(Marketplace::offer(origin, collection_id, sale_id, price));
+// 	})
+// }
 
 #[test]
 fn test_destroy_collection_works() {
