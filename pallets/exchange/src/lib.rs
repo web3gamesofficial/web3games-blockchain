@@ -471,7 +471,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn mint(
-		_who: &T::AccountId,
+		who: &T::AccountId,
 		id: T::PoolId,
 		to: &T::AccountId,
 	) -> Result<Balance, DispatchError> {
@@ -497,7 +497,8 @@ impl<T: Config> Pallet<T> {
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
-				&T::AccountId::default(),
+				who,
+				T::AccountId::default(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
 		// println!("liquidity = {}",liquidity);
@@ -508,7 +509,7 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, to, liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, who, to.clone(), liquidity)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 

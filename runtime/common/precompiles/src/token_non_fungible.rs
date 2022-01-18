@@ -106,30 +106,30 @@ where
 					Action::Symbol => return Self::symbol(non_fungible_token_id, target_gas),
 					Action::TokenURI => {
 						return Self::token_uri(non_fungible_token_id, input, target_gas)
-					}
+					},
 					Action::TotalSupply => {
 						return Self::total_supply(non_fungible_token_id, target_gas)
-					}
+					},
 					Action::TokenByIndex => {
 						return Self::token_by_index(non_fungible_token_id, input, target_gas)
-					}
+					},
 					Action::TokenOfOwnerByIndex => {
 						return Self::token_of_owner_by_index(
 							non_fungible_token_id,
 							input,
 							target_gas,
 						)
-					}
+					},
 					Action::BalanceOf => {
 						return Self::balance_of(non_fungible_token_id, input, target_gas)
-					}
+					},
 					Action::OwnerOf => {
 						return Self::owner_of(non_fungible_token_id, input, target_gas)
-					}
+					},
 					// call methods (dispatchable)
 					Action::TransferFrom => {
 						Self::transfer_from(non_fungible_token_id, input, target_gas, context)?
-					}
+					},
 					Action::Mint => Self::mint(non_fungible_token_id, input, target_gas, context)?,
 					Action::Burn => Self::burn(non_fungible_token_id, input, target_gas, context)?,
 				};

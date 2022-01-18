@@ -363,7 +363,7 @@ fn read_address_array_size_too_big() {
 		Ok(_) => panic!("should not parse correctly"),
 		Err(PrecompileFailure::Error { exit_status: ExitError::Other(err) }) => {
 			assert_eq!(err, "tried to parse H160 out of bounds")
-		}
+		},
 		Err(_) => panic!("unexpected error"),
 	}
 }

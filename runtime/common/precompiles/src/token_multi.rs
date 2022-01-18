@@ -23,8 +23,7 @@ use fp_evm::{
 };
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
-use pallet_support::MultiMetadata;
-use pallet_support::TokenIdConversion;
+use pallet_support::{MultiMetadata, TokenIdConversion};
 use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
 use primitives::{Balance, TokenId};
 use sp_core::{H160, U256};
@@ -97,26 +96,26 @@ where
 					// storage getters
 					Action::BalanceOf => {
 						return Self::balance_of(multi_token_id, input, target_gas)
-					}
+					},
 					Action::BalanceOfBatch => {
 						return Self::balance_of_batch(multi_token_id, input, target_gas)
-					}
+					},
 					Action::URI => return Self::uri(multi_token_id, input, target_gas),
 					// runtime methods (dispatchable)
 					Action::TransferFrom => {
 						Self::transfer_from(multi_token_id, input, target_gas, context)?
-					}
+					},
 					Action::BatchTransferFrom => {
 						Self::batch_transfer_from(multi_token_id, input, target_gas, context)?
-					}
+					},
 					Action::Mint => Self::mint(multi_token_id, input, target_gas, context)?,
 					Action::MintBatch => {
 						Self::mint_batch(multi_token_id, input, target_gas, context)?
-					}
+					},
 					Action::Burn => Self::burn(multi_token_id, input, target_gas, context)?,
 					Action::BurnBatch => {
 						Self::burn_batch(multi_token_id, input, target_gas, context)?
-					}
+					},
 				};
 
 				// initialize gasometer

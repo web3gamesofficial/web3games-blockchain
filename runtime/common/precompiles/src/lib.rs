@@ -106,24 +106,24 @@ where
 			// Non-Web3Games specific nor Ethereum precompiles
 			a if a == hash(1024) => {
 				Some(Sha3FIPS256::execute(input, target_gas, context, is_static))
-			}
+			},
 			a if a == hash(1025) => {
 				Some(Dispatch::<R>::execute(input, target_gas, context, is_static))
-			}
+			},
 			a if a == hash(1026) => {
 				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static))
-			}
+			},
 
 			// Web3Games precompiles
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(FungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			}
+			},
 			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(NonFungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			}
+			},
 			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			}
+			},
 
 			// Not support
 			_ => None,
