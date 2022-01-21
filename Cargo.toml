@@ -7,6 +7,7 @@ members = [
 	"pallets/exchange-nft",
 	"pallets/wrap-currency",
 	"pallets/marketplace",
+	"pallets/player-id",
 	"primitives",
 	"runtime/common",
 	"runtime/common/chain-extensions",
@@ -54,6 +55,7 @@ pallet-grandpa = { git = "https://github.com/paritytech//substrate", rev = "b6d4
 # pallet-nicks = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # pallet-offences = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # pallet-proxy = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
+pallet-randomness-collective-flip = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # pallet-recovery = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 pallet-scheduler = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # pallet-session = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
@@ -81,7 +83,7 @@ sc-consensus-aura = { git = "https://github.com/paritytech//substrate", rev = "b
 # sc-consensus-babe = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # sc-consensus-babe-rpc = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 # sc-consensus-epochs = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
-# sc-consensus-manual-seal = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
+ sc-consensus-manual-seal = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 sc-consensus-slots = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 sc-cli = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }
 sc-executor = { git = "https://github.com/paritytech//substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985" }

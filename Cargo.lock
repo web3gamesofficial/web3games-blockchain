@@ -1688,14 +1688,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fork-tree"
-version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
-dependencies = [
- "parity-scale-codec",
-]
-
-[[package]]
 name = "form_urlencoded"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4538,9 +4530,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-player-id"
+version = "0.0.1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -6053,11 +6060,11 @@ dependencies = [
 [[package]]
 name = "sc-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
  "async-trait",
  "derive_more",
- "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
+ "fork-tree",
  "futures 0.3.18",
  "log",
  "merlin",
@@ -6096,9 +6103,9 @@ dependencies = [
 [[package]]
 name = "sc-consensus-epochs"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
- "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
+ "fork-tree",
  "parity-scale-codec",
  "sc-client-api",
  "sc-consensus",
@@ -6109,7 +6116,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-manual-seal"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -6254,7 +6261,7 @@ dependencies = [
  "derive_more",
  "dyn-clone",
  "finality-grandpa",
- "fork-tree 3.0.0 (git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985)",
+ "fork-tree",
  "futures 0.3.18",
  "futures-timer 3.0.2",
  "log",
@@ -6328,7 +6335,7 @@ dependencies = [
  "derive_more",
  "either",
  "fnv",
- "fork-tree 3.0.0 (git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985)",
+ "fork-tree",
  "futures 0.3.18",
  "futures-timer 3.0.2",
  "hex",
@@ -7223,7 +7230,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
  "async-trait",
  "merlin",
@@ -7258,7 +7265,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-vrf"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#b6d489ed3015646e0cd65861ec9381a44de76985"
+source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
 dependencies = [
  "parity-scale-codec",
  "schnorrkel",
@@ -8961,6 +8968,7 @@ dependencies = [
  "pallet-exchange-nft",
  "pallet-grandpa",
  "pallet-marketplace",
+ "pallet-player-id",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",

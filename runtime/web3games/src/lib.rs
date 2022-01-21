@@ -559,6 +559,11 @@ impl pallet_marketplace::Config for Runtime {
 	type Currency = Balances;
 }
 
+impl pallet_player_id::Config for Runtime {
+	type Event = Event;
+	type WeightInfo = ();
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -588,6 +593,7 @@ construct_runtime!(
 		Exchange: pallet_exchange,
 		ExchangeNft: pallet_exchange_nft,
 		Marketplace: pallet_marketplace,
+		PlayerId: pallet_player_id
 	}
 );
 
