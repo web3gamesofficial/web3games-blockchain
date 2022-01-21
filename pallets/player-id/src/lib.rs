@@ -13,7 +13,7 @@ pub use weights::WeightInfo;
 
 pub mod weights;
 
-// pub mod ethereum;
+pub mod ethereum;
 
 
 type Address = Vec<u8>;
@@ -33,6 +33,7 @@ pub mod pallet {
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use sp_core::crypto::AccountId32;
+	use crate::ethereum::EthereumSignature;
 	use crate::WeightInfo;
 
 	#[pallet::config]
@@ -72,6 +73,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		PlayerIDCreated(T::AccountId,Address,Chain,PlayerID),
+		PlayerIDCheck(T::AccountId,bool),
 	}
 
 	#[pallet::error]
@@ -111,16 +113,17 @@ pub mod pallet {
 			Ok(().into())
 		}
 
-		// #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		// pub fn valid_signature(
-		// 	origin: OriginFor<T>,
-		// 	signer: AccountId32,
-		// 	signature: EthereumSignature,
-		// 	msg:Vec<u8>
-		// ) -> DispatchResult {
-		// 	let _who = ensure_signed(origin)?;
-		// 	let _result = signature.verify(msg.as_slice(), &signer);
-		// 	Ok(())
-		// }
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn valid_signature(
+			origin: OriginFor<T>,
+			signer: AccountId32,
+			signature: EthereumSignature,
+			msg:Vec<u8>
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			let result = signature.verify(msg.as_slice(), &signer);
+			Self::deposit_event(Event::PlayerIDCheck(who,result));
+			Ok(())
+		}
 	}
 }
