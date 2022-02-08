@@ -509,55 +509,55 @@ impl pallet_token_fungible::Config for Runtime {
 	type Currency = Balances;
 }
 
-impl pallet_token_non_fungible::Config for Runtime {
-	type Event = Event;
-	type PalletId = TokenNonFungiblePalletId;
-	type NonFungibleTokenId = u32;
-	type StringLimit = StringLimit;
-	type CreateTokenDeposit = CreateTokenDeposit;
-	type Currency = Balances;
-}
+// impl pallet_token_non_fungible::Config for Runtime {
+// 	type Event = Event;
+// 	type PalletId = TokenNonFungiblePalletId;
+// 	type NonFungibleTokenId = u32;
+// 	type StringLimit = StringLimit;
+// 	type CreateTokenDeposit = CreateTokenDeposit;
+// 	type Currency = Balances;
+// }
 
-impl pallet_token_multi::Config for Runtime {
-	type Event = Event;
-	type PalletId = TokenMultiPalletId;
-	type MultiTokenId = u32;
-	type StringLimit = StringLimit;
-	type CreateTokenDeposit = CreateTokenDeposit;
-	type Currency = Balances;
-}
-
-impl pallet_wrap_currency::Config for Runtime {
-	type Event = Event;
-	type PalletId = WrapCurrencyPalletId;
-	type Currency = OrmlCurrencies;
-	type CreateWrapTokenDeposit = CreateCurrencyInstanceDeposit;
-	type GetNativeCurrencyId = GetNativeCurrencyId;
-}
-
-impl pallet_exchange::Config for Runtime {
-	type Event = Event;
-	type PalletId = ExchangePalletId;
-	type PoolId = u32;
-	type CreatePoolDeposit = CreatePoolDeposit;
-	type Currency = Balances;
-}
-
-impl pallet_exchange_nft::Config for Runtime {
-	type Event = Event;
-	type PalletId = ExchangeNftPalletId;
-	type NftPoolId = u32;
-	type CreatePoolDeposit = CreatePoolDeposit;
-	type Currency = Balances;
-}
-
-impl pallet_marketplace::Config for Runtime {
-	type Event = Event;
-	type StringLimit = StringLimit;
-	type PalletId = MarketplacePalletId;
-	type CreateCollectionDeposit = CreateCollectionDeposit;
-	type Currency = Balances;
-}
+// impl pallet_token_multi::Config for Runtime {
+// 	type Event = Event;
+// 	type PalletId = TokenMultiPalletId;
+// 	type MultiTokenId = u32;
+// 	type StringLimit = StringLimit;
+// 	type CreateTokenDeposit = CreateTokenDeposit;
+// 	type Currency = Balances;
+// }
+//
+// impl pallet_wrap_currency::Config for Runtime {
+// 	type Event = Event;
+// 	type PalletId = WrapCurrencyPalletId;
+// 	type Currency = OrmlCurrencies;
+// 	type CreateWrapTokenDeposit = CreateCurrencyInstanceDeposit;
+// 	type GetNativeCurrencyId = GetNativeCurrencyId;
+// }
+//
+// impl pallet_exchange::Config for Runtime {
+// 	type Event = Event;
+// 	type PalletId = ExchangePalletId;
+// 	type PoolId = u32;
+// 	type CreatePoolDeposit = CreatePoolDeposit;
+// 	type Currency = Balances;
+// }
+//
+// impl pallet_exchange_nft::Config for Runtime {
+// 	type Event = Event;
+// 	type PalletId = ExchangeNftPalletId;
+// 	type NftPoolId = u32;
+// 	type CreatePoolDeposit = CreatePoolDeposit;
+// 	type Currency = Balances;
+// }
+//
+// impl pallet_marketplace::Config for Runtime {
+// 	type Event = Event;
+// 	type StringLimit = StringLimit;
+// 	type PalletId = MarketplacePalletId;
+// 	type CreateCollectionDeposit = CreateCollectionDeposit;
+// 	type Currency = Balances;
+// }
 
 construct_runtime!(
 	pub enum Runtime where
@@ -582,12 +582,12 @@ construct_runtime!(
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
-		TokenNonFungible: pallet_token_non_fungible,
-		TokenMulti: pallet_token_multi,
-		WrapCurrency: pallet_wrap_currency,
-		Exchange: pallet_exchange,
-		ExchangeNft: pallet_exchange_nft,
-		Marketplace: pallet_marketplace,
+		// TokenNonFungible: pallet_token_non_fungible,
+		// TokenMulti: pallet_token_multi,
+		// WrapCurrency: pallet_wrap_currency,
+		// Exchange: pallet_exchange,
+		// ExchangeNft: pallet_exchange_nft,
+		// Marketplace: pallet_marketplace,
 	}
 );
 
