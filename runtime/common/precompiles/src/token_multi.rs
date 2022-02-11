@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{CREATE_SELECTOR, MT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::MT_PRECOMPILE_ADDRESS_PREFIX;
 use fp_evm::{
 	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
 	PrecompileResult,
@@ -136,16 +136,24 @@ where
 				});
 			} else {
 				// Action::Create = "create(bytes)"
+				let input = EvmDataReader::new(&input[4..]);
+				let (origin, call) = Self::create(multi_token_id,input, target_gas, context)?;
+				// initialize gasometer
+				let mut gasometer = Gasometer::new(target_gas);
+				// dispatch call (if enough gas).
+				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
+					origin,
+					call,
+					gasometer.remaining_gas()?,
+				)?;
+				gasometer.record_cost(used_gas)?;
 
-				let selector = &input[0..4];
-				if selector == CREATE_SELECTOR {
-					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
-				} else {
-					return Err(PrecompileFailure::Error {
-						exit_status: ExitError::Other("multi token not exists".into()),
-					});
-				}
+				return Ok(PrecompileOutput {
+					exit_status: ExitSucceed::Returned,
+					cost: gasometer.used_gas(),
+					output: vec![],
+					logs: vec![],
+				});
 			}
 		}
 
@@ -164,34 +172,30 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
 {
 	fn create(
+		id:MultiTokenIdOf<Runtime>,
 		mut input: EvmDataReader,
 		target_gas: Option<u64>,
 		context: &Context,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
+	) -> Result<
+		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
+		PrecompileFailure
+	> {
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_log_costs_manual(3, 32)?;
 
 		input.expect_arguments(3)?;
 
+
+		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+
 		let token_uri: Vec<u8> = input.read::<Bytes>()?.into();
 
-		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+		let call = pallet_token_multi::Call::<Runtime>::create_token{
+			id,
+			uri:token_uri
+		};
 
-		let id: u32 = pallet_token_multi::Pallet::<Runtime>::do_create_token(&caller, token_uri)
-			.map_err(|e| {
-				let err_msg: &str = e.into();
-				PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
-			})?
-			.into();
-
-		let output = U256::from(id);
-
-		Ok(PrecompileOutput {
-			exit_status: ExitSucceed::Returned,
-			cost: 0,
-			output: EvmDataWriter::new().write(output).build(),
-			logs: vec![],
-		})
+		Ok((Some(origin).into(), call))
 	}
 
 	fn balance_of(

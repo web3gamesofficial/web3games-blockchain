@@ -380,7 +380,7 @@ impl FeeCalculator for FixedGasPrice {
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 102;
+	pub const ChainId: u64 = 1337;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
@@ -509,23 +509,23 @@ impl pallet_token_fungible::Config for Runtime {
 	type Currency = Balances;
 }
 
-// impl pallet_token_non_fungible::Config for Runtime {
-// 	type Event = Event;
-// 	type PalletId = TokenNonFungiblePalletId;
-// 	type NonFungibleTokenId = u32;
-// 	type StringLimit = StringLimit;
-// 	type CreateTokenDeposit = CreateTokenDeposit;
-// 	type Currency = Balances;
-// }
+impl pallet_token_non_fungible::Config for Runtime {
+	type Event = Event;
+	type PalletId = TokenNonFungiblePalletId;
+	type NonFungibleTokenId = u32;
+	type StringLimit = StringLimit;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
+}
 
-// impl pallet_token_multi::Config for Runtime {
-// 	type Event = Event;
-// 	type PalletId = TokenMultiPalletId;
-// 	type MultiTokenId = u32;
-// 	type StringLimit = StringLimit;
-// 	type CreateTokenDeposit = CreateTokenDeposit;
-// 	type Currency = Balances;
-// }
+impl pallet_token_multi::Config for Runtime {
+	type Event = Event;
+	type PalletId = TokenMultiPalletId;
+	type MultiTokenId = u32;
+	type StringLimit = StringLimit;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
+}
 //
 // impl pallet_wrap_currency::Config for Runtime {
 // 	type Event = Event;
@@ -582,8 +582,8 @@ construct_runtime!(
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
-		// TokenNonFungible: pallet_token_non_fungible,
-		// TokenMulti: pallet_token_multi,
+		TokenNonFungible: pallet_token_non_fungible,
+		TokenMulti: pallet_token_multi,
 		// WrapCurrency: pallet_wrap_currency,
 		// Exchange: pallet_exchange,
 		// ExchangeNft: pallet_exchange_nft,

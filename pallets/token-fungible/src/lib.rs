@@ -25,6 +25,7 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
+use log::error;
 use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
@@ -98,10 +99,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn next_token_id)]
-	pub(super) type NextTokenId<T: Config> = StorageValue<_, T::FungibleTokenId, ValueQuery>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn balance_of)]
 	pub(super) type Balances<T: Config> = StorageDoubleMap<
 		_,
@@ -158,13 +155,14 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn create_token(
 			origin: OriginFor<T>,
+			fungible_token_id:T::FungibleTokenId,
 			name: Vec<u8>,
 			symbol: Vec<u8>,
 			decimals: u8,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_create_token(&who, name, symbol, decimals)?;
+			Self::do_create_token(&who, fungible_token_id,name, symbol, decimals)?;
 
 			Ok(())
 		}
@@ -251,10 +249,11 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
+		fungible_token_id:T::FungibleTokenId,
 		name: Vec<u8>,
 		symbol: Vec<u8>,
 		decimals: u8,
-	) -> Result<T::FungibleTokenId, DispatchError> {
+	) -> DispatchResult {
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
@@ -263,11 +262,7 @@ impl<T: Config> Pallet<T> {
 		let bounded_symbol: BoundedVec<u8, T::StringLimit> =
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
-		let id = NextTokenId::<T>::try_mutate(|id| -> Result<T::FungibleTokenId, DispatchError> {
-			let current_id = *id;
-			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
-			Ok(current_id)
-		})?;
+		ensure!(!Self::exists(fungible_token_id.clone()),Error::<T>::InvalidId);
 
 		let token = Token {
 			owner: who.clone(),
@@ -277,11 +272,11 @@ impl<T: Config> Pallet<T> {
 			total_supply: Balance::default(),
 		};
 
-		Tokens::<T>::insert(id, token);
+		Tokens::<T>::insert(fungible_token_id, token);
 
-		Self::deposit_event(Event::TokenCreated(id, who.clone()));
+		Self::deposit_event(Event::TokenCreated(fungible_token_id, who.clone()));
 
-		Ok(id)
+		Ok(())
 	}
 
 	pub fn do_approve(
@@ -331,6 +326,7 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
 	pub fn do_transfer(
 		id: T::FungibleTokenId,
 		who: &T::AccountId,

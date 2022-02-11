@@ -38,8 +38,8 @@ pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
 pub use token_non_fungible::NonFungibleTokenExtension;
 
-/// Function Selector of "create": 0x42ecabc0
-pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
+// /// Function Selector of "create": 0x42ecabc0
+// pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
 
 /// Fungible Token prefix with 0xFFFFFFFF.
 pub const FT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];
@@ -73,15 +73,15 @@ where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
 	R: pallet_evm::Config
-		+ pallet_token_fungible::Config,
-		// + pallet_token_non_fungible::Config
-		// + pallet_token_multi::Config,
+		+ pallet_token_fungible::Config
+		+ pallet_token_non_fungible::Config
+		+ pallet_token_multi::Config,
 	R::Call: From<pallet_token_fungible::Call<R>>,
-	// R::Call: From<pallet_token_non_fungible::Call<R>>,
-	// R::Call: From<pallet_token_multi::Call<R>>,
+	R::Call: From<pallet_token_non_fungible::Call<R>>,
+	R::Call: From<pallet_token_multi::Call<R>>,
 	<R as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
-	// <R as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
-	// <R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
+	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
+	<R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
 	R: AccountMapping<R::AccountId>,
 {
 	fn execute(
@@ -118,12 +118,12 @@ where
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
 				Some(FungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
 			},
-			// a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
-			// 	Some(NonFungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			// },
-			// a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
-			// 	Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))
-			// },
+			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
+				Some(NonFungibleTokenExtension::<R>::execute(input, target_gas, context, is_static))
+			},
+			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
+				Some(MultiTokenExtension::<R>::execute(input, target_gas, context, is_static))
+			},
 
 			// Not support
 			_ => None,

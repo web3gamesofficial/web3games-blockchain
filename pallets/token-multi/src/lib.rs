@@ -158,10 +158,10 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
-		pub fn create_token(origin: OriginFor<T>, uri: Vec<u8>) -> DispatchResult {
+		pub fn create_token(origin: OriginFor<T>, id:T::MultiTokenId, uri: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_create_token(&who, uri)?;
+			Self::do_create_token(&who, id,uri)?;
 
 			Ok(())
 		}
@@ -279,19 +279,17 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
+		id:T::MultiTokenId,
 		uri: Vec<u8>,
 	) -> Result<T::MultiTokenId, DispatchError> {
+
+		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
+
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
 		let bounded_uri: BoundedVec<u8, T::StringLimit> =
 			uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
-
-		let id = NextTokenId::<T>::try_mutate(|id| -> Result<T::MultiTokenId, DispatchError> {
-			let current_id = *id;
-			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
-			Ok(current_id)
-		})?;
 
 		let token =
 			Token { owner: who.clone(), uri: bounded_uri, total_supply: Balance::default() };

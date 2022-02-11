@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{CREATE_SELECTOR, NFT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::NFT_PRECOMPILE_ADDRESS_PREFIX;
 use fp_evm::{
 	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
 	PrecompileResult,
@@ -152,16 +152,24 @@ where
 				});
 			} else {
 				// Action::Create = "create(bytes,bytes)"
+				let input = EvmDataReader::new(&input[4..]);
+				let (origin, call) = Self::create(non_fungible_token_id,input, target_gas, context)?;
+				// initialize gasometer
+				let mut gasometer = Gasometer::new(target_gas);
+				// dispatch call (if enough gas).
+				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
+					origin,
+					call,
+					gasometer.remaining_gas()?,
+				)?;
+				gasometer.record_cost(used_gas)?;
 
-				let selector = &input[0..4];
-				if selector == CREATE_SELECTOR {
-					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
-				} else {
-					return Err(PrecompileFailure::Error {
-						exit_status: ExitError::Other("fungible token not exists".into()),
-					});
-				}
+				return Ok(PrecompileOutput {
+					exit_status: ExitSucceed::Returned,
+					cost: gasometer.used_gas(),
+					output: vec![],
+					logs: vec![],
+				});
 			}
 		}
 
@@ -181,10 +189,14 @@ where
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
+		id:NonFungibleTokenIdOf<Runtime>,
 		mut input: EvmDataReader,
 		target_gas: Option<u64>,
 		context: &Context,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
+	) -> Result<
+		(<Runtime::Call as Dispatchable>::Origin, pallet_token_non_fungible::Call<Runtime>),
+		PrecompileFailure
+	>  {
 		let mut gasometer = Gasometer::new(target_gas);
 		gasometer.record_log_costs_manual(3, 32)?;
 
@@ -194,25 +206,16 @@ where
 		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
 		let base_uri: Vec<u8> = input.read::<Bytes>()?.into();
 
-		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+		let origin = Runtime::AddressMapping::into_account_id(context.caller);
 
-		let id: u32 = pallet_token_non_fungible::Pallet::<Runtime>::do_create_token(
-			&caller, name, symbol, base_uri,
-		)
-		.map_err(|e| {
-			let err_msg: &str = e.into();
-			PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
-		})?
-		.into();
+		let call = pallet_token_non_fungible::Call::<Runtime>::create_token {
+			id,
+			name,
+			symbol,
+			base_uri,
+		};
 
-		let output = U256::from(id);
-
-		Ok(PrecompileOutput {
-			exit_status: ExitSucceed::Returned,
-			cost: 0,
-			output: EvmDataWriter::new().write(output).build(),
-			logs: vec![],
-		})
+		Ok((Some(origin).into(), call))
 	}
 
 	fn balance_of(

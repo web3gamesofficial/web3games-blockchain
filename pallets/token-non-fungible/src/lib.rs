@@ -97,10 +97,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn next_token_id)]
-	pub(super) type NextTokenId<T: Config> = StorageValue<_, T::NonFungibleTokenId, ValueQuery>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn owner_of)]
 	pub(super) type Owners<T: Config> = StorageDoubleMap<
 		_,
@@ -232,12 +228,13 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn create_token(
 			origin: OriginFor<T>,
+			id: T::NonFungibleTokenId,
 			name: Vec<u8>,
 			symbol: Vec<u8>,
 			base_uri: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_create_token(&who, name, symbol, base_uri)?;
+			Self::do_create_token(&who, id,name, symbol, base_uri)?;
 
 			Ok(())
 		}
@@ -325,10 +322,13 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
+		id: T::NonFungibleTokenId,
 		name: Vec<u8>,
 		symbol: Vec<u8>,
 		base_uri: Vec<u8>,
-	) -> Result<T::NonFungibleTokenId, DispatchError> {
+	) -> DispatchResult {
+		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
+
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
@@ -338,13 +338,6 @@ impl<T: Config> Pallet<T> {
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 		let bounded_base_uri: BoundedVec<u8, T::StringLimit> =
 			base_uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
-
-		let id =
-			NextTokenId::<T>::try_mutate(|id| -> Result<T::NonFungibleTokenId, DispatchError> {
-				let current_id = *id;
-				*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
-				Ok(current_id)
-			})?;
 
 		let token = Token {
 			owner: who.clone(),
@@ -357,7 +350,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::TokenCreated(id, who.clone()));
 
-		Ok(id)
+		Ok(())
 	}
 
 	pub fn do_approve(

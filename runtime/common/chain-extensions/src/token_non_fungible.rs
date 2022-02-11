@@ -42,12 +42,12 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-				let (name, symbol, base_uri): (Vec<u8>, Vec<u8>, Vec<u8>) =
+				let (non_fungible_token_id,name, symbol, base_uri): (<C as pallet_token_non_fungible::Config>::NonFungibleTokenId,Vec<u8>, Vec<u8>, Vec<u8>) =
 					env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id = pallet_token_non_fungible::Pallet::<E::T>::do_create_token(
-					&caller, name, symbol, base_uri,
+					&caller, non_fungible_token_id,name, symbol, base_uri,
 				)?;
 
 				let id_slice = id.encode();

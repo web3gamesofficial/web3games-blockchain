@@ -4455,47 +4455,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-fungible",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
-name = "pallet-exchange-nft"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-fungible",
- "pallet-token-multi",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech//substrate?rev=b6d489ed3015646e0cd65861ec9381a44de76985#b6d489ed3015646e0cd65861ec9381a44de76985"
@@ -4516,25 +4475,6 @@ dependencies = [
  "sp-session",
  "sp-staking",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-marketplace"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-multi",
- "pallet-token-non-fungible",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -4735,24 +4675,6 @@ dependencies = [
  "parity-scale-codec",
  "sp-api",
  "sp-runtime",
-]
-
-[[package]]
-name = "pallet-wrap-currency"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "orml-traits",
- "pallet-token-fungible",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -8957,10 +8879,7 @@ dependencies = [
  "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-exchange",
- "pallet-exchange-nft",
  "pallet-grandpa",
- "pallet-marketplace",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
@@ -8971,7 +8890,6 @@ dependencies = [
  "pallet-token-non-fungible",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "pallet-wrap-currency",
  "parity-scale-codec",
  "runtime-common",
  "scale-info",

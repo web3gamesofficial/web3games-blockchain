@@ -42,10 +42,11 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-				let uri: Vec<u8> = env.read_as_unbounded(env.in_len())?;
+				let (multi_token_id,uri): (<C as pallet_token_multi::Config>::MultiTokenId,Vec<u8>) =
+					env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_create_token(&caller, uri)?;
+				let id = pallet_token_multi::Pallet::<E::T>::do_create_token(&caller, multi_token_id,uri)?;
 
 				let id_slice = id.encode();
 
