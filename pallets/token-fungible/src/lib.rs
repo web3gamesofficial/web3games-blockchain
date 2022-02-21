@@ -126,7 +126,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		TokenCreated(T::FungibleTokenId, T::AccountId),
+		TokenCreated(T::FungibleTokenId, T::AccountId,Vec<u8>,Vec<u8>,u8),
 		Transfer(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 		Approval(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 	}
@@ -274,7 +274,7 @@ impl<T: Config> Pallet<T> {
 
 		Tokens::<T>::insert(fungible_token_id, token);
 
-		Self::deposit_event(Event::TokenCreated(fungible_token_id, who.clone()));
+		Self::deposit_event(Event::TokenCreated(fungible_token_id, who.clone(),name,symbol,decimals));
 
 		Ok(())
 	}
