@@ -18,8 +18,9 @@
 
 use crate as pallet_token_non_fungible;
 use frame_support::{
+	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
-	construct_runtime, parameter_types, PalletId,
+	PalletId,
 };
 use primitives::Balance;
 use sp_core::H256;

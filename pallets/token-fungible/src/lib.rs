@@ -242,8 +242,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn zero_account_id() -> T::AccountId {
-		T::AccountId::decode(&mut TrailingZeroInput::zeroes())
-			.expect("infinite input; qed")
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
 	}
 
 	pub fn exists(id: T::FungibleTokenId) -> bool {

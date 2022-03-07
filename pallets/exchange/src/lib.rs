@@ -30,7 +30,7 @@ use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero, TrailingZeroInput},
+	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput, Zero},
 	RuntimeDebug,
 };
 use sp_std::{cmp, prelude::*};
@@ -301,8 +301,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn zero_account_id() -> T::AccountId {
-		T::AccountId::decode(&mut TrailingZeroInput::zeroes())
-			.expect("infinite input; qed")
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
 	}
 
 	// The account ID of the vault
@@ -506,7 +505,6 @@ impl<T: Config> Pallet<T> {
 				Self::zero_account_id(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
-
 		} else {
 			liquidity =
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);

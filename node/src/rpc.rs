@@ -25,8 +25,8 @@ use fc_rpc::{
 	SchemaV2Override, SchemaV3Override, StorageOverride,
 };
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use jsonrpc_pubsub::manager::SubscriptionManager;
 use fp_storage::EthereumStorageSchema;
+use jsonrpc_pubsub::manager::SubscriptionManager;
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
 	client::BlockchainEvents,

@@ -57,8 +57,8 @@ use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		Contains, EqualPrivilegeOnly, Everything, FindAuthor, KeyOwnerProofSystem, Nothing,
-		Randomness, ConstU16, ConstU32,
+		ConstU16, ConstU32, Contains, EqualPrivilegeOnly, Everything, FindAuthor,
+		KeyOwnerProofSystem, Nothing, Randomness,
 	},
 	weights::{
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},

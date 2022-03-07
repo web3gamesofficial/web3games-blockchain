@@ -321,8 +321,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn zero_account_id() -> T::AccountId {
-		T::AccountId::decode(&mut TrailingZeroInput::zeroes())
-			.expect("infinite input; qed")
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
 	}
 
 	pub fn exists(id: T::NonFungibleTokenId) -> bool {
@@ -414,7 +413,10 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 	) -> DispatchResult {
 		ensure!(Self::token_exists(id, token_id), Error::<T>::TokenNonExistent);
-		ensure!(Self::is_approved_or_owner(id, &who, token_id).unwrap(), Error::<T>::NotOwnerOrApproved);
+		ensure!(
+			Self::is_approved_or_owner(id, &who, token_id).unwrap(),
+			Error::<T>::NotOwnerOrApproved
+		);
 		Self::do_transfer(id, from, to, token_id)?;
 		Ok(())
 	}
@@ -425,7 +427,10 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(Owners::<T>::get(id, token_id) == Some(from.clone()), Error::<T>::TransferTokenNotOwn);
+		ensure!(
+			Owners::<T>::get(id, token_id) == Some(from.clone()),
+			Error::<T>::TransferTokenNotOwn
+		);
 
 		if from == to {
 			return Ok(());
