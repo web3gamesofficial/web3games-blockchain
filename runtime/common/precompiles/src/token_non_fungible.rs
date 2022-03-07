@@ -251,7 +251,7 @@ where
 		let token_id = input.read::<TokenId>()?;
 
 		let owner_account_id: Runtime::AccountId =
-			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id);
+			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
 
 		let owner = Runtime::into_evm_address(owner_account_id);
 

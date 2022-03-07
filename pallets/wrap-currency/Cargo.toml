@@ -5,8 +5,8 @@ authors = ["Web3Games Developers"]
 edition = "2021"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 serde = { version = "1.0.124", optional = true }
 
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -16,7 +16,7 @@ sp-io = { git = "https://github.com/paritytech/substrate", default-features = fa
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.4" }
+orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 pallet-token-fungible = { path = "../token-fungible", default-features = false }
