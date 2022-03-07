@@ -9,8 +9,8 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 static_assertions = "1.1.0"
-codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 
 pallet-aura = { git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -34,15 +34,16 @@ sp-std = { git = "https://github.com/paritytech/substrate", default-features = f
 sp-transaction-pool = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-version = { git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-scheduler = { git = "https://github.com/paritytech/substrate", default-features = false }
+pallet-preimage = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false }
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 # Contract
-pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
-pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "b6d489ed3015646e0cd65861ec9381a44de76985", default-features = false }
+pallet-contracts-primitives = { git = "https://github.com/paritytech/substrate", rev = "32a4fe01f110a755bf22eb8f803cdfd7052d4f8b", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "32a4fe01f110a755bf22eb8f803cdfd7052d4f8b", default-features = false }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", rev = "32a4fe01f110a755bf22eb8f803cdfd7052d4f8b", default-features = false }
 
 # Used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true }
@@ -50,15 +51,16 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", d
 hex-literal = { version = "0.3.1", optional = true }
 
 # EVM
-pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
-fp-self-contained = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.4" }
+pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+pallet-base-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+fp-self-contained = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
 
 # Orml packages
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.4" }
-orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.4" }
-orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.4" }
+orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
+orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
+orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 runtime-common = { path = "../common", default-features = false }
@@ -105,6 +107,7 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"pallet-scheduler/std",
+	"pallet-preimage/std",
 	"frame-system/std",
 	"frame-system-rpc-runtime-api/std",
 	"frame-benchmarking/std",
@@ -117,6 +120,7 @@ std = [
 	"orml-tokens/std",
 	"pallet-ethereum/std",
 	"pallet-evm/std",
+	"pallet-base-fee/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
 	"primitives/std",

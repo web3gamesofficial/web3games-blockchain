@@ -29,7 +29,7 @@ use pallet_support::{NonFungibleEnumerable, NonFungibleMetadata};
 use primitives::{TokenId, TokenIndex};
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, CheckedAdd, One},
+	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
@@ -109,7 +109,9 @@ pub mod pallet {
 		Blake2_128Concat,
 		TokenId,
 		T::AccountId,
-		ValueQuery,
+		OptionQuery,
+		GetDefault,
+		ConstU32<300_000>,
 	>;
 
 	#[pallet::storage]
@@ -133,7 +135,9 @@ pub mod pallet {
 		Blake2_128Concat,
 		TokenId,
 		T::AccountId,
-		ValueQuery,
+		OptionQuery,
+		GetDefault,
+		ConstU32<300_000>,
 	>;
 
 	#[pallet::storage]
@@ -222,6 +226,7 @@ pub mod pallet {
 		BadMetadata,
 		ConfuseBehavior,
 		TransferTokenNotOwn,
+		NotFound,
 	}
 
 	#[pallet::hooks]
@@ -315,6 +320,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
+	fn zero_account_id() -> T::AccountId {
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
+	}
+
 	pub fn exists(id: T::NonFungibleTokenId) -> bool {
 		Tokens::<T>::contains_key(id)
 	}
@@ -366,7 +375,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		let owner = Self::owner_of(id, token_id);
+		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 		ensure!(to != &owner, Error::<T>::ApproveToCurrentOwner);
 
 		ensure!(
@@ -404,7 +413,10 @@ impl<T: Config> Pallet<T> {
 		token_id: TokenId,
 	) -> DispatchResult {
 		ensure!(Self::token_exists(id, token_id), Error::<T>::TokenNonExistent);
-		ensure!(Self::is_approved_or_owner(id, &who, token_id), Error::<T>::NotOwnerOrApproved);
+		ensure!(
+			Self::is_approved_or_owner(id, &who, token_id).unwrap(),
+			Error::<T>::NotOwnerOrApproved
+		);
 		Self::do_transfer(id, from, to, token_id)?;
 		Ok(())
 	}
@@ -415,7 +427,10 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		ensure!(Owners::<T>::get(id, token_id) == from.clone(), Error::<T>::TransferTokenNotOwn);
+		ensure!(
+			Owners::<T>::get(id, token_id) == Some(from.clone()),
+			Error::<T>::TransferTokenNotOwn
+		);
 
 		if from == to {
 			return Ok(());
@@ -472,7 +487,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::Transfer(
 			id.clone(),
-			T::AccountId::default(),
+			Self::zero_account_id(),
 			to.clone(),
 			token_id,
 		));
@@ -485,7 +500,7 @@ impl<T: Config> Pallet<T> {
 		id: T::NonFungibleTokenId,
 		token_id: TokenId,
 	) -> DispatchResult {
-		let owner = Self::owner_of(id, token_id);
+		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 		ensure!(who == &owner, Error::<T>::NotTokenOwner);
 
 		let balance = Self::balance_of(id, &owner);
@@ -503,7 +518,7 @@ impl<T: Config> Pallet<T> {
 		Balances::<T>::insert(id, &owner, new_balance);
 		Owners::<T>::remove(id, token_id);
 
-		Self::deposit_event(Event::Transfer(id.clone(), owner, T::AccountId::default(), token_id));
+		Self::deposit_event(Event::Transfer(id.clone(), owner, Self::zero_account_id(), token_id));
 
 		Ok(())
 	}
@@ -512,12 +527,12 @@ impl<T: Config> Pallet<T> {
 		id: T::NonFungibleTokenId,
 		spender: &T::AccountId,
 		token_id: TokenId,
-	) -> bool {
-		let owner = Self::owner_of(id, token_id);
+	) -> Result<bool, DispatchError> {
+		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 
-		*spender == owner
-			|| Self::get_approved(id, token_id) == *spender
-			|| Self::is_approved_for_all(id, (&owner, spender))
+		Ok(*spender == owner
+			|| Self::get_approved(id, token_id) == Some(spender.clone())
+			|| Self::is_approved_for_all(id, (&owner, spender)))
 	}
 
 	fn has_permission(id: T::NonFungibleTokenId, who: &T::AccountId) -> bool {
