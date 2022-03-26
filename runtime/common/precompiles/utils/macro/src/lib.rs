@@ -46,7 +46,10 @@ pub fn keccak256(input: TokenStream) -> TokenStream {
 	let bytes = Bytes(hash.to_vec());
 	let eval_str = format!("{:?}", bytes);
 	let eval_ts: proc_macro2::TokenStream = eval_str.parse().unwrap_or_else(|_| {
-		panic!("Failed to parse the string \"{}\" to TokenStream.", eval_str);
+		panic!(
+			"Failed to parse the string \"{}\" to TokenStream.",
+			eval_str
+		);
 	});
 	quote!(#eval_ts).into()
 }
@@ -74,11 +77,19 @@ pub fn keccak256(input: TokenStream) -> TokenStream {
 /// 	Tata = 1414311903u32,
 /// }
 /// ```
+///
 #[proc_macro_attribute]
 pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenStream {
 	let item = parse_macro_input!(input as ItemEnum);
 
-	let ItemEnum { attrs, vis, enum_token, ident, variants, .. } = item;
+	let ItemEnum {
+		attrs,
+		vis,
+		enum_token,
+		ident,
+		variants,
+		..
+	} = item;
 
 	let mut ident_expressions: Vec<Ident> = vec![];
 	let mut variant_expressions: Vec<Expr> = vec![];
@@ -86,9 +97,8 @@ pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenSt
 		match variant.discriminant {
 			Some((_, Expr::Lit(ExprLit { lit, .. }))) => {
 				if let Lit::Str(lit_str) = lit {
-					let selector = u32::from_be_bytes(
-						Keccak256::digest(lit_str.value().as_ref())[..4].try_into().unwrap(),
-					);
+					let digest = Keccak256::digest(lit_str.value().as_ref());
+					let selector = u32::from_be_bytes([digest[0], digest[1], digest[2], digest[3]]);
 					ident_expressions.push(variant.ident);
 					variant_expressions.push(Expr::Lit(ExprLit {
 						lit: Lit::Verbatim(Literal::u32_suffixed(selector)),
@@ -100,24 +110,25 @@ pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenSt
 					}
 					.into();
 				}
-			},
+			}
 			Some((_eg, expr)) => {
 				return quote_spanned! {
 					expr.span() => compile_error("Expected literal");
 				}
 				.into()
-			},
+			}
 			None => {
 				return quote_spanned! {
 					variant.span() => compile_error("Each variant must have a discriminant");
 				}
 				.into()
-			},
+			}
 		}
 	}
 
 	(quote! {
 		#(#attrs)*
+		#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
 		#[repr(u32)]
 		#vis #enum_token #ident {
 			#(
