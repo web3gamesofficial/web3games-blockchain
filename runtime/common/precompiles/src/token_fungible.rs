@@ -21,8 +21,9 @@ use fp_evm::{Context, ExitSucceed, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{FungibleMetadata, TokenIdConversion};
-use precompile_utils::{error, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer,
-	RuntimeHelper, LogsBuilder, keccak256, FunctionModifier,
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
 };
 use primitives::Balance;
 use sp_core::{H160, U256};
@@ -44,9 +45,7 @@ enum Action {
 	Burn = "burn(uint256)",
 }
 
-pub struct FungibleTokenExtension<Runtime>(
-	PhantomData<Runtime>,
-);
+pub struct FungibleTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<FungibleTokenIdOf<Runtime>> for FungibleTokenExtension<Runtime>
 where
@@ -97,10 +96,10 @@ where
 			if pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
 				let result = {
 					let (mut input, selector) =
-							match EvmDataReader::new_with_selector(gasometer, input) {
-								Ok((input, selector)) => (input, selector),
-								Err(e) => return Some(Err(e)),
-							};
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
 					let input = &mut input;
 
 					if let Err(err) = gasometer.check_function_modifier(
@@ -109,7 +108,7 @@ where
 						match selector {
 							Action::TransferFrom | Action::Mint | Action::Burn => {
 								FunctionModifier::NonPayable
-							}
+							},
 							_ => FunctionModifier::View,
 						},
 					) {
@@ -121,12 +120,8 @@ where
 						Action::Name => Self::name(fungible_token_id, gasometer),
 						Action::Symbol => Self::symbol(fungible_token_id, gasometer),
 						Action::Decimals => Self::decimals(fungible_token_id, gasometer),
-						Action::TotalSupply => {
-							Self::total_supply(fungible_token_id, gasometer)
-						},
-						Action::BalanceOf => {
-							Self::balance_of(fungible_token_id, input, gasometer)
-						},
+						Action::TotalSupply => Self::total_supply(fungible_token_id, gasometer),
+						Action::BalanceOf => Self::balance_of(fungible_token_id, input, gasometer),
 						// call methods (dispatchable)
 						Action::Transfer => {
 							Self::transfer(fungible_token_id, input, gasometer, context)
@@ -258,17 +253,14 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::transfer {
-					id,
-					recipient: to,
-					amount,
-				},
+				pallet_token_fungible::Call::<Runtime>::transfer { id, recipient: to, amount },
 				gasometer,
 			)?;
 		}
@@ -296,7 +288,8 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
@@ -335,17 +328,14 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::mint {
-					id,
-					account: to,
-					amount,
-				},
+				pallet_token_fungible::Call::<Runtime>::mint { id, account: to, amount },
 				gasometer,
 			)?;
 		}
@@ -371,15 +361,13 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::burn {
-					id,
-					amount,
-				},
+				pallet_token_fungible::Call::<Runtime>::burn { id, amount },
 				gasometer,
 			)?;
 		}

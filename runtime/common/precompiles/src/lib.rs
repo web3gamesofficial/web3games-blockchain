@@ -116,13 +116,16 @@ where
 
 			// Web3Games precompiles
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
-				FungibleTokenExtension::<R>::new().execute(address, input, target_gas, context, is_static)
+				FungibleTokenExtension::<R>::new()
+					.execute(address, input, target_gas, context, is_static)
 			},
 			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
-				NonFungibleTokenExtension::<R>::new().execute(address, input, target_gas, context, is_static)
+				NonFungibleTokenExtension::<R>::new()
+					.execute(address, input, target_gas, context, is_static)
 			},
 			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
-				MultiTokenExtension::<R>::new().execute(address, input, target_gas, context, is_static)
+				MultiTokenExtension::<R>::new()
+					.execute(address, input, target_gas, context, is_static)
 			},
 
 			// Not support

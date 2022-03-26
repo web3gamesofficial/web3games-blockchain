@@ -23,8 +23,9 @@ use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{
 	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
 };
-use precompile_utils::{error, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer,
-	RuntimeHelper, LogsBuilder, keccak256, FunctionModifier,
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
 };
 use primitives::{TokenId, TokenIndex};
 use sp_core::{H160, U256};
@@ -52,9 +53,7 @@ enum Action {
 	TokenByIndex = "tokenByIndex(uint256)",
 }
 
-pub struct NonFungibleTokenExtension<Runtime>(
-	PhantomData<Runtime>,
-);
+pub struct NonFungibleTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<NonFungibleTokenIdOf<Runtime>>
 	for NonFungibleTokenExtension<Runtime>
@@ -108,10 +107,10 @@ where
 			if pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
 				let result = {
 					let (mut input, selector) =
-							match EvmDataReader::new_with_selector(gasometer, input) {
-								Ok((input, selector)) => (input, selector),
-								Err(e) => return Some(Err(e)),
-							};
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
 					let input = &mut input;
 
 					if let Err(err) = gasometer.check_function_modifier(
@@ -120,7 +119,7 @@ where
 						match selector {
 							Action::TransferFrom | Action::Mint | Action::Burn => {
 								FunctionModifier::NonPayable
-							}
+							},
 							_ => FunctionModifier::View,
 						},
 					) {
@@ -134,31 +133,27 @@ where
 						Action::TokenURI => {
 							Self::token_uri(non_fungible_token_id, input, gasometer)
 						},
-						Action::TotalSupply => {
-							Self::total_supply(non_fungible_token_id, gasometer)
-						},
+						Action::TotalSupply => Self::total_supply(non_fungible_token_id, gasometer),
 						Action::TokenByIndex => {
 							Self::token_by_index(non_fungible_token_id, input, gasometer)
 						},
 						Action::TokenOfOwnerByIndex => {
-							Self::token_of_owner_by_index(
-								non_fungible_token_id,
-								input,
-								gasometer,
-							)
+							Self::token_of_owner_by_index(non_fungible_token_id, input, gasometer)
 						},
 						Action::BalanceOf => {
 							Self::balance_of(non_fungible_token_id, input, gasometer)
 						},
-						Action::OwnerOf => {
-							Self::owner_of(non_fungible_token_id, input, gasometer)
-						},
+						Action::OwnerOf => Self::owner_of(non_fungible_token_id, input, gasometer),
 						// call methods (dispatchable)
 						Action::TransferFrom => {
 							Self::transfer_from(non_fungible_token_id, input, gasometer, context)
 						},
-						Action::Mint => Self::mint(non_fungible_token_id, input, gasometer, context),
-						Action::Burn => Self::burn(non_fungible_token_id, input, gasometer, context),
+						Action::Mint => {
+							Self::mint(non_fungible_token_id, input, gasometer, context)
+						},
+						Action::Burn => {
+							Self::burn(non_fungible_token_id, input, gasometer, context)
+						},
 					}
 				};
 				return Some(result);
@@ -293,7 +288,8 @@ where
 		let token_id = input.read::<TokenId>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
@@ -315,12 +311,7 @@ where
 			cost: gasometer.used_gas(),
 			output: EvmDataWriter::new().write(true).build(),
 			logs: LogsBuilder::new(context.address)
-				.log3(
-					SELECTOR_LOG_TRANSFER,
-					from,
-					to,
-					EvmDataWriter::new().write(token_id).build(),
-				)
+				.log3(SELECTOR_LOG_TRANSFER, from, to, EvmDataWriter::new().write(token_id).build())
 				.build(),
 		})
 	}
@@ -339,17 +330,14 @@ where
 		let token_id = input.read::<TokenId>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::mint {
-					id,
-					to,
-					token_id,
-				},
+				pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id },
 				gasometer,
 			)?;
 		}
@@ -382,15 +370,13 @@ where
 		let token_id = input.read::<TokenId>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::burn {
-					id,
-					token_id,
-				},
+				pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id },
 				gasometer,
 			)?;
 		}

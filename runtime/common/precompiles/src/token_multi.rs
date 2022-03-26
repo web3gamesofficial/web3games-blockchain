@@ -21,8 +21,9 @@ use fp_evm::{Context, ExitSucceed, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{MultiMetadata, TokenIdConversion};
-use precompile_utils::{error, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer,
-	RuntimeHelper, LogsBuilder, keccak256, FunctionModifier,
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
 };
 use primitives::{Balance, TokenId};
 use sp_core::{H160, U256};
@@ -43,9 +44,7 @@ enum Action {
 	BurnBatch = "burnBatch(uint256[],uint256[])",
 	URI = "uri(uint256)",
 }
-pub struct MultiTokenExtension<Runtime>(
-	PhantomData<Runtime>,
-);
+pub struct MultiTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<MultiTokenIdOf<Runtime>> for MultiTokenExtension<Runtime>
 where
@@ -96,10 +95,10 @@ where
 			if pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id) {
 				let result = {
 					let (mut input, selector) =
-							match EvmDataReader::new_with_selector(gasometer, input) {
-								Ok((input, selector)) => (input, selector),
-								Err(e) => return Some(Err(e)),
-							};
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
 					let input = &mut input;
 
 					if let Err(err) = gasometer.check_function_modifier(
@@ -108,7 +107,7 @@ where
 						match selector {
 							Action::TransferFrom | Action::Mint | Action::Burn => {
 								FunctionModifier::NonPayable
-							}
+							},
 							_ => FunctionModifier::View,
 						},
 					) {
@@ -117,9 +116,7 @@ where
 
 					match selector {
 						// storage getters
-						Action::BalanceOf => {
-							Self::balance_of(multi_token_id, input, gasometer)
-						},
+						Action::BalanceOf => Self::balance_of(multi_token_id, input, gasometer),
 						Action::BalanceOfBatch => {
 							Self::balance_of_batch(multi_token_id, input, gasometer)
 						},
@@ -272,7 +269,8 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
@@ -314,7 +312,8 @@ where
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
@@ -355,18 +354,14 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_multi::Call::<Runtime>::mint {
-					id,
-					to,
-					token_id,
-					amount,
-				},
+				pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount },
 				gasometer,
 			)?;
 		}
@@ -394,18 +389,14 @@ where
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_multi::Call::<Runtime>::mint_batch {
-					id,
-					to,
-					token_ids,
-					amounts,
-				},
+				pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts },
 				gasometer,
 			)?;
 		}
@@ -432,16 +423,13 @@ where
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_multi::Call::<Runtime>::burn {
-					id,
-					token_id,
-					amount,
-				},
+				pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount },
 				gasometer,
 			)?;
 		}
@@ -468,16 +456,13 @@ where
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
-			let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_multi::Call::<Runtime>::burn_batch {
-					id,
-					token_ids,
-					amounts,
-				},
+				pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts },
 				gasometer,
 			)?;
 		}

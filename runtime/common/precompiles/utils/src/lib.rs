@@ -44,9 +44,7 @@ pub type EvmResult<T = ()> = Result<T, PrecompileFailure>;
 /// consumed all the gas limit and the error message is not easily
 /// retrievable.
 pub fn error<T: Into<alloc::borrow::Cow<'static, str>>>(text: T) -> PrecompileFailure {
-	PrecompileFailure::Error {
-		exit_status: ExitError::Other(text.into()),
-	}
+	PrecompileFailure::Error { exit_status: ExitError::Other(text.into()) }
 }
 
 /// Builder for PrecompileOutput.
@@ -60,10 +58,7 @@ impl LogsBuilder {
 	/// Create a new builder with no logs.
 	/// Takes the address of the precompile (usualy `context.address`).
 	pub fn new(address: H160) -> Self {
-		Self {
-			logs: vec![],
-			address,
-		}
+		Self { logs: vec![], address }
 	}
 
 	/// Returns the logs array.
@@ -76,11 +71,7 @@ impl LogsBuilder {
 	where
 		D: Into<Vec<u8>>,
 	{
-		self.logs.push(Log {
-			address: self.address,
-			data: data.into(),
-			topics: vec![],
-		});
+		self.logs.push(Log { address: self.address, data: data.into(), topics: vec![] });
 		self
 	}
 
@@ -182,9 +173,7 @@ where
 		if let Some(gas_limit) = gasometer.remaining_gas()? {
 			let required_gas = Runtime::GasWeightMapping::weight_to_gas(dispatch_info.weight);
 			if required_gas > gas_limit {
-				return Err(PrecompileFailure::Error {
-					exit_status: ExitError::OutOfGas,
-				});
+				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas });
 			}
 		}
 
@@ -256,10 +245,7 @@ impl Gasometer {
 	/// Create a new Gasometer with provided gas limit.
 	/// None is no limit.
 	pub fn new(target_gas: Option<u64>) -> Self {
-		Self {
-			target_gas,
-			used_gas: 0,
-		}
+		Self { target_gas, used_gas: 0 }
 	}
 
 	/// Get used gas.
@@ -273,14 +259,12 @@ impl Gasometer {
 		self.used_gas = self
 			.used_gas
 			.checked_add(cost)
-			.ok_or(PrecompileFailure::Error {
-				exit_status: ExitError::OutOfGas,
-			})?;
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		match self.target_gas {
-			Some(gas_limit) if self.used_gas > gas_limit => Err(PrecompileFailure::Error {
-				exit_status: ExitError::OutOfGas,
-			}),
+			Some(gas_limit) if self.used_gas > gas_limit => {
+				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
+			},
 			_ => Ok(()),
 		}
 	}
@@ -298,15 +282,11 @@ impl Gasometer {
 
 		let topic_cost = G_LOGTOPIC
 			.checked_mul(topics as u64)
-			.ok_or(PrecompileFailure::Error {
-				exit_status: ExitError::OutOfGas,
-			})?;
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		let data_cost = G_LOGDATA
 			.checked_mul(data_len as u64)
-			.ok_or(PrecompileFailure::Error {
-				exit_status: ExitError::OutOfGas,
-			})?;
+			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		self.record_cost(G_LOG)?;
 		self.record_cost(topic_cost)?;
@@ -332,11 +312,11 @@ impl Gasometer {
 	pub fn remaining_gas(&self) -> EvmResult<Option<u64>> {
 		Ok(match self.target_gas {
 			None => None,
-			Some(gas_limit) => Some(gas_limit.checked_sub(self.used_gas).ok_or(
-				PrecompileFailure::Error {
-					exit_status: ExitError::OutOfGas,
-				},
-			)?),
+			Some(gas_limit) => Some(
+				gas_limit
+					.checked_sub(self.used_gas)
+					.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?,
+			),
 		})
 	}
 
