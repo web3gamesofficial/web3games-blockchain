@@ -156,3 +156,8 @@ frame-system-benchmarking = { git = "https://github.com/paritytech//substrate", 
 # pallet-staking-reward-fn = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
 # sc-consensus-uncles = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
 sp-authorship = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
+
+pallet-contracts-primitives = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
+pallet-contracts = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
+pallet-contracts-rpc = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }
+pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech//substrate", rev = "69079b58579ea36812c4a375a118f27aac0fb281" }

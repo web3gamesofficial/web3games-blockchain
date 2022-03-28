@@ -670,7 +670,7 @@ checksum = "4acbb09d9ee8e23699b9634375c72795d095bf268439da88562cf9b501f181fa"
 dependencies = [
  "camino",
  "cargo-platform",
- "semver 1.0.6",
+ "semver 1.0.7",
  "serde",
  "serde_json",
 ]
@@ -1714,7 +1714,7 @@ dependencies = [
 [[package]]
 name = "fork-tree"
 version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -4303,7 +4303,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "bitflags",
  "frame-benchmarking",
@@ -4330,7 +4330,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-primitives"
 version = "6.0.0"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "bitflags",
  "parity-scale-codec",
@@ -4345,7 +4345,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4355,7 +4355,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "jsonrpc-core",
  "jsonrpc-core-client",
@@ -4374,7 +4374,7 @@ dependencies = [
 [[package]]
 name = "pallet-contracts-rpc-runtime-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "pallet-contracts-primitives",
  "parity-scale-codec",
@@ -4588,7 +4588,7 @@ dependencies = [
 [[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4986,9 +4986,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "pbkdf2"
@@ -5787,7 +5787,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.6",
+ "semver 1.0.7",
 ]
 
 [[package]]
@@ -6104,7 +6104,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "async-trait",
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
@@ -6147,7 +6147,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-epochs"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
  "parity-scale-codec",
@@ -6160,7 +6160,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-manual-seal"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -6904,9 +6904,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4a3381e03edd24287172047536f20cabde766e2cd3e65e6b00fb3af51c4f38d"
+checksum = "d65bd28f48be7196d222d95b9243287f48d27aca604e08497513019ff0502cc4"
 dependencies = [
  "serde",
 ]
@@ -7316,7 +7316,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "async-trait",
  "merlin",
@@ -7353,7 +7353,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-vrf"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "parity-scale-codec",
  "schnorrkel",
@@ -7436,7 +7436,7 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=master#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate?branch=master#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "kvdb",
  "parking_lot 0.12.0",
@@ -7650,7 +7650,7 @@ dependencies = [
 [[package]]
 name = "sp-sandbox"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
 dependencies = [
  "log",
  "parity-scale-codec",
@@ -8034,7 +8034,7 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#4b8cbaa8eb0e9734095425da0e9f952004b5450f"
+source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
 dependencies = [
  "ansi_term",
  "build-helper",
