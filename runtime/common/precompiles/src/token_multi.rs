@@ -17,14 +17,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{CREATE_SELECTOR, MT_PRECOMPILE_ADDRESS_PREFIX};
-use fp_evm::{
-	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
-	PrecompileResult,
-};
+use fp_evm::{Context, ExitSucceed, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
-use pallet_evm::AddressMapping;
+use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{MultiMetadata, TokenIdConversion};
-use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
+};
 use primitives::{Balance, TokenId};
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
@@ -32,7 +32,7 @@ use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 pub type MultiTokenIdOf<Runtime> = <Runtime as pallet_token_multi::Config>::MultiTokenId;
 
 #[precompile_utils::generate_function_selector]
-#[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
+#[derive(Debug, PartialEq)]
 enum Action {
 	BalanceOf = "balanceOf(address,uint256)",
 	BalanceOfBatch = "balanceOfBatch(address[],uint256[])",
@@ -44,7 +44,6 @@ enum Action {
 	BurnBatch = "burnBatch(uint256[],uint256[])",
 	URI = "uri(uint256)",
 }
-
 pub struct MultiTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<MultiTokenIdOf<Runtime>> for MultiTokenExtension<Runtime>
@@ -74,7 +73,7 @@ where
 	}
 }
 
-impl<Runtime> Precompile for MultiTokenExtension<Runtime>
+impl<Runtime> PrecompileSet for MultiTokenExtension<Runtime>
 where
 	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
@@ -83,75 +82,88 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
 {
 	fn execute(
+		&self,
+		address: H160,
 		input: &[u8], // reminder this is big-endian
 		target_gas: Option<u64>,
 		context: &Context,
-		_is_static: bool,
-	) -> PrecompileResult {
-		if let Some(multi_token_id) = Self::try_from_address(context.address) {
+		is_static: bool,
+	) -> Option<EvmResult<PrecompileOutput>> {
+		if let Some(multi_token_id) = Self::try_from_address(address) {
+			let mut gasometer = Gasometer::new(target_gas);
+			let gasometer = &mut gasometer;
 			if pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id) {
-				let (input, selector) = EvmDataReader::new_with_selector(input)?;
+				let result = {
+					let (mut input, selector) =
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
+					let input = &mut input;
 
-				let (origin, call) = match selector {
-					// storage getters
-					Action::BalanceOf => {
-						return Self::balance_of(multi_token_id, input, target_gas)
-					},
-					Action::BalanceOfBatch => {
-						return Self::balance_of_batch(multi_token_id, input, target_gas)
-					},
-					Action::URI => return Self::uri(multi_token_id, input, target_gas),
-					// runtime methods (dispatchable)
-					Action::TransferFrom => {
-						Self::transfer_from(multi_token_id, input, target_gas, context)?
-					},
-					Action::BatchTransferFrom => {
-						Self::batch_transfer_from(multi_token_id, input, target_gas, context)?
-					},
-					Action::Mint => Self::mint(multi_token_id, input, target_gas, context)?,
-					Action::MintBatch => {
-						Self::mint_batch(multi_token_id, input, target_gas, context)?
-					},
-					Action::Burn => Self::burn(multi_token_id, input, target_gas, context)?,
-					Action::BurnBatch => {
-						Self::burn_batch(multi_token_id, input, target_gas, context)?
-					},
+					if let Err(err) = gasometer.check_function_modifier(
+						context,
+						is_static,
+						match selector {
+							Action::TransferFrom | Action::Mint | Action::Burn => {
+								FunctionModifier::NonPayable
+							},
+							_ => FunctionModifier::View,
+						},
+					) {
+						return Some(Err(err));
+					}
+
+					match selector {
+						// storage getters
+						Action::BalanceOf => Self::balance_of(multi_token_id, input, gasometer),
+						Action::BalanceOfBatch => {
+							Self::balance_of_batch(multi_token_id, input, gasometer)
+						},
+						Action::URI => Self::uri(multi_token_id, input, gasometer),
+						// runtime methods (dispatchable)
+						Action::TransferFrom => {
+							Self::transfer_from(multi_token_id, input, gasometer, context)
+						},
+						Action::BatchTransferFrom => {
+							Self::batch_transfer_from(multi_token_id, input, gasometer, context)
+						},
+						Action::Mint => Self::mint(multi_token_id, input, gasometer, context),
+						Action::MintBatch => {
+							Self::mint_batch(multi_token_id, input, gasometer, context)
+						},
+						Action::Burn => Self::burn(multi_token_id, input, gasometer, context),
+						Action::BurnBatch => {
+							Self::burn_batch(multi_token_id, input, gasometer, context)
+						},
+					}
 				};
-
-				// initialize gasometer
-				let mut gasometer = Gasometer::new(target_gas);
-				// dispatch call (if enough gas).
-				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
-					origin,
-					call,
-					gasometer.remaining_gas()?,
-				)?;
-				gasometer.record_cost(used_gas)?;
-
-				return Ok(PrecompileOutput {
-					exit_status: ExitSucceed::Returned,
-					cost: gasometer.used_gas(),
-					output: vec![],
-					logs: vec![],
-				});
+				return Some(result);
 			} else {
 				// Action::Create = "create(bytes)"
 
-				let selector = &input[0..4];
-				if selector == CREATE_SELECTOR {
-					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
-				} else {
-					return Err(PrecompileFailure::Error {
-						exit_status: ExitError::Other("multi token not exists".into()),
-					});
+				if &input[0..4] == CREATE_SELECTOR {
+					let mut input = EvmDataReader::new(&input[4..]);
+					let result = Self::create(&mut input, gasometer, context);
+					return Some(result);
 				}
 			}
 		}
+		None
+	}
 
-		Err(PrecompileFailure::Error {
-			exit_status: ExitError::Other("multi token precompile execution failed".into()),
-		})
+	fn is_precompile(&self, address: H160) -> bool {
+		if let Some(multi_token_id) = Self::try_from_address(address) {
+			pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id)
+		} else {
+			false
+		}
+	}
+}
+
+impl<Runtime> MultiTokenExtension<Runtime> {
+	pub fn new() -> Self {
+		Self(PhantomData)
 	}
 }
 
@@ -164,24 +176,20 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
 {
 	fn create(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let token_uri: Vec<u8> = input.read::<Bytes>()?.into();
+		let token_uri: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
 
 		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
 
 		let id: u32 = pallet_token_multi::Pallet::<Runtime>::do_create_token(&caller, token_uri)
-			.map_err(|e| {
-				let err_msg: &str = e.into();
-				PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
-			})?
+			.unwrap()
 			.into();
 
 		let output = U256::from(id);
@@ -196,17 +204,16 @@ where
 
 	fn balance_of(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
 		let account: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_id = input.read::<TokenId>()?;
+			Runtime::AddressMapping::into_account_id(input.read::<Address>(gasometer)?.0);
+		let token_id = input.read::<TokenId>(gasometer)?;
 
 		let balance: Balance =
 			pallet_token_multi::Pallet::<Runtime>::balance_of(id, (token_id, &account));
@@ -221,20 +228,19 @@ where
 
 	fn balance_of_batch(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
 		let accounts: Vec<Runtime::AccountId> = input
-			.read::<Vec<Address>>()?
+			.read::<Vec<Address>>(gasometer)?
 			.iter()
 			.map(|&a| Runtime::AddressMapping::into_account_id(a.0))
 			.collect();
-		let ids = input.read::<Vec<TokenId>>()?;
+		let ids = input.read::<Vec<TokenId>>(gasometer)?;
 
 		let balances: Vec<Balance> =
 			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, ids).unwrap();
@@ -249,178 +255,236 @@ where
 
 	fn transfer_from(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(4)?;
+		input.expect_arguments(gasometer, 4)?;
 
-		let from: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_id = input.read::<TokenId>()?;
-		let amount = input.read::<Balance>()?;
+		let from: H160 = input.read::<Address>(gasometer)?.into();
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_id = input.read::<TokenId>(gasometer)?;
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call =
-			pallet_token_multi::Call::<Runtime>::transfer_from { id, from, to, token_id, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::transfer_from {
+					id,
+					from,
+					to,
+					token_id,
+					amount,
+				},
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn batch_transfer_from(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(4)?;
+		input.expect_arguments(gasometer, 4)?;
 
-		let from: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_ids = input.read::<Vec<TokenId>>()?;
-		let amounts = input.read::<Vec<Balance>>()?;
+		let from: H160 = input.read::<Address>(gasometer)?.into();
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_multi::Call::<Runtime>::batch_transfer_from {
-			id,
-			from,
-			to,
-			token_ids,
-			amounts,
-		};
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::batch_transfer_from {
+					id,
+					from,
+					to,
+					token_ids,
+					amounts,
+				},
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn mint(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_id = input.read::<TokenId>()?;
-		let amount = input.read::<Balance>()?;
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_id = input.read::<TokenId>(gasometer)?;
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn mint_batch(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_ids = input.read::<Vec<TokenId>>()?;
-		let amounts = input.read::<Vec<Balance>>()?;
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn burn(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
-		let token_id = input.read::<TokenId>()?;
-		let amount = input.read::<Balance>()?;
+		let token_id = input.read::<TokenId>(gasometer)?;
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn burn_batch(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
-		let token_ids = input.read::<Vec<TokenId>>()?;
-		let amounts = input.read::<Vec<Balance>>()?;
+		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn uri(
 		id: MultiTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>()?;
+		let token_id = input.read::<TokenId>(gasometer)?;
 
 		let uri: Vec<u8> = pallet_token_multi::Pallet::<Runtime>::uri(id, token_id);
 

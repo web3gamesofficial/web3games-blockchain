@@ -17,14 +17,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{CREATE_SELECTOR, FT_PRECOMPILE_ADDRESS_PREFIX};
-use fp_evm::{
-	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
-	PrecompileResult,
-};
+use fp_evm::{Context, ExitSucceed, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
-use pallet_evm::AddressMapping;
+use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{FungibleMetadata, TokenIdConversion};
-use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
+};
 use primitives::Balance;
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
@@ -32,7 +32,7 @@ use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;
 
 #[precompile_utils::generate_function_selector]
-#[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
+#[derive(Debug, PartialEq)]
 enum Action {
 	Name = "name()",
 	Symbol = "symbol()",
@@ -74,7 +74,7 @@ where
 	}
 }
 
-impl<Runtime> Precompile for FungibleTokenExtension<Runtime>
+impl<Runtime> PrecompileSet for FungibleTokenExtension<Runtime>
 where
 	Runtime: pallet_token_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
@@ -83,71 +83,82 @@ where
 	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
 {
 	fn execute(
+		&self,
+		address: H160,
 		input: &[u8], // reminder this is big-endian
 		target_gas: Option<u64>,
 		context: &Context,
-		_is_static: bool,
-	) -> PrecompileResult {
-		if let Some(fungible_token_id) = Self::try_from_address(context.address) {
+		is_static: bool,
+	) -> Option<EvmResult<PrecompileOutput>> {
+		if let Some(fungible_token_id) = Self::try_from_address(address) {
+			let mut gasometer = Gasometer::new(target_gas);
+			let gasometer = &mut gasometer;
 			if pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
-				let (input, selector) = EvmDataReader::new_with_selector(input)?;
+				let result = {
+					let (mut input, selector) =
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
+					let input = &mut input;
 
-				let (origin, call) = match selector {
-					// storage getters
-					Action::Name => return Self::name(fungible_token_id, target_gas),
-					Action::Symbol => return Self::symbol(fungible_token_id, target_gas),
-					Action::Decimals => return Self::decimals(fungible_token_id, target_gas),
-					Action::TotalSupply => {
-						return Self::total_supply(fungible_token_id, target_gas)
-					},
-					Action::BalanceOf => {
-						return Self::balance_of(fungible_token_id, input, target_gas)
-					},
-					// call methods (dispatchable)
-					Action::Transfer => {
-						Self::transfer(fungible_token_id, input, target_gas, context)?
-					},
-					Action::TransferFrom => {
-						Self::transfer_from(fungible_token_id, input, target_gas, context)?
-					},
-					Action::Mint => Self::mint(fungible_token_id, input, target_gas, context)?,
-					Action::Burn => Self::burn(fungible_token_id, input, target_gas, context)?,
+					if let Err(err) = gasometer.check_function_modifier(
+						context,
+						is_static,
+						match selector {
+							Action::TransferFrom | Action::Mint | Action::Burn => {
+								FunctionModifier::NonPayable
+							},
+							_ => FunctionModifier::View,
+						},
+					) {
+						return Some(Err(err));
+					}
+
+					match selector {
+						// storage getters
+						Action::Name => Self::name(fungible_token_id, gasometer),
+						Action::Symbol => Self::symbol(fungible_token_id, gasometer),
+						Action::Decimals => Self::decimals(fungible_token_id, gasometer),
+						Action::TotalSupply => Self::total_supply(fungible_token_id, gasometer),
+						Action::BalanceOf => Self::balance_of(fungible_token_id, input, gasometer),
+						// call methods (dispatchable)
+						Action::Transfer => {
+							Self::transfer(fungible_token_id, input, gasometer, context)
+						},
+						Action::TransferFrom => {
+							Self::transfer_from(fungible_token_id, input, gasometer, context)
+						},
+						Action::Mint => Self::mint(fungible_token_id, input, gasometer, context),
+						Action::Burn => Self::burn(fungible_token_id, input, gasometer, context),
+					}
 				};
-
-				// initialize gasometer
-				let mut gasometer = Gasometer::new(target_gas);
-				// dispatch call (if enough gas).
-				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
-					origin,
-					call,
-					gasometer.remaining_gas()?,
-				)?;
-				gasometer.record_cost(used_gas)?;
-
-				return Ok(PrecompileOutput {
-					exit_status: ExitSucceed::Returned,
-					cost: gasometer.used_gas(),
-					output: vec![],
-					logs: vec![],
-				});
+				return Some(result);
 			} else {
 				// Action::Create = "create(bytes,bytes)"
 
-				let selector = &input[0..4];
-				if selector == CREATE_SELECTOR {
-					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
-				} else {
-					return Err(PrecompileFailure::Error {
-						exit_status: ExitError::Other("fungible token not exists".into()),
-					});
+				if &input[0..4] == CREATE_SELECTOR {
+					let mut input = EvmDataReader::new(&input[4..]);
+					let result = Self::create(&mut input, gasometer, context);
+					return Some(result);
 				}
 			}
 		}
+		None
+	}
 
-		Err(PrecompileFailure::Error {
-			exit_status: ExitError::Other("fungible token precompile execution failed".into()),
-		})
+	fn is_precompile(&self, address: H160) -> bool {
+		if let Some(fungible_token_id) = Self::try_from_address(address) {
+			pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id)
+		} else {
+			false
+		}
+	}
+}
+
+impl<Runtime> FungibleTokenExtension<Runtime> {
+	pub fn new() -> Self {
+		Self(PhantomData)
 	}
 }
 
@@ -160,28 +171,24 @@ where
 	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
 {
 	fn create(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let name: Vec<u8> = input.read::<Bytes>()?.into();
-		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
-		let decimals = input.read::<u8>()?;
+		let name: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+		let symbol: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+		let decimals = input.read::<u8>(gasometer)?;
 
 		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
 
 		let id: u32 = pallet_token_fungible::Pallet::<Runtime>::do_create_token(
 			&caller, name, symbol, decimals,
 		)
-		.map_err(|e| {
-			let err_msg: &str = e.into();
-			PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
-		})?
+		.unwrap()
 		.into();
 
 		let output = U256::from(id);
@@ -196,9 +203,8 @@ where
 
 	fn total_supply(
 		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let balance: Balance = pallet_token_fungible::Pallet::<Runtime>::total_supply(id);
@@ -213,16 +219,15 @@ where
 
 	fn balance_of(
 		id: FungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
 		let account: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
+			Runtime::AddressMapping::into_account_id(input.read::<Address>(gasometer)?.0);
 
 		let balance: Balance = pallet_token_fungible::Pallet::<Runtime>::balance_of(id, account);
 
@@ -236,114 +241,149 @@ where
 
 	fn transfer(
 		id: FungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let amount = input.read::<Balance>()?;
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_fungible::Call::<Runtime>::transfer { id, recipient: to, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_fungible::Call::<Runtime>::transfer { id, recipient: to, amount },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn transfer_from(
 		id: FungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let from: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let amount = input.read::<Balance>()?;
+		let from: H160 = input.read::<Address>(gasometer)?.into();
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_fungible::Call::<Runtime>::transfer_from {
-			id,
-			sender: from,
-			recipient: to,
-			amount,
-		};
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_fungible::Call::<Runtime>::transfer_from {
+					id,
+					sender: from,
+					recipient: to,
+					amount,
+				},
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn mint(
 		id: FungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
-		let account: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let amount = input.read::<Balance>()?;
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_fungible::Call::<Runtime>::mint { id, account, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_fungible::Call::<Runtime>::mint { id, account: to, amount },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn burn(
 		id: FungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let amount = input.read::<Balance>()?;
+		let amount = input.read::<Balance>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_fungible::Call::<Runtime>::burn { id, amount };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_fungible::Call::<Runtime>::burn { id, amount },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn name(
 		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let name: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_name(id);
@@ -358,9 +398,8 @@ where
 
 	fn symbol(
 		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let symbol: Vec<u8> = pallet_token_fungible::Pallet::<Runtime>::token_symbol(id);
@@ -375,9 +414,8 @@ where
 
 	fn decimals(
 		id: FungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let decimals: u8 = pallet_token_fungible::Pallet::<Runtime>::token_decimals(id);

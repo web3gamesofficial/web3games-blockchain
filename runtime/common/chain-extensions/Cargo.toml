@@ -14,7 +14,7 @@ sp-runtime = { git = "https://github.com/paritytech/substrate", default-features
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 randomness = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "32a4fe01f110a755bf22eb8f803cdfd7052d4f8b", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
 

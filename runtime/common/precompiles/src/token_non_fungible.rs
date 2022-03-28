@@ -17,25 +17,28 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{CREATE_SELECTOR, NFT_PRECOMPILE_ADDRESS_PREFIX};
-use fp_evm::{
-	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
-	PrecompileResult,
-};
+use fp_evm::{Context, ExitSucceed, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
-use pallet_evm::AddressMapping;
+use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{
 	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
 };
-use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter, Gasometer, RuntimeHelper};
+use precompile_utils::{
+	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	Gasometer, LogsBuilder, RuntimeHelper,
+};
 use primitives::{TokenId, TokenIndex};
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
+
+/// Solidity selector of the Transfer log, which is the Keccak of the Log signature.
+pub const SELECTOR_LOG_TRANSFER: [u8; 32] = keccak256!("Transfer(address,address,uint256)");
 
 pub type NonFungibleTokenIdOf<Runtime> =
 	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId;
 
 #[precompile_utils::generate_function_selector]
-#[derive(Debug, PartialEq, num_enum::TryFromPrimitive)]
+#[derive(Debug, PartialEq)]
 enum Action {
 	BalanceOf = "balanceOf(address)",
 	OwnerOf = "ownerOf(uint256)",
@@ -81,7 +84,7 @@ where
 	}
 }
 
-impl<Runtime> Precompile for NonFungibleTokenExtension<Runtime>
+impl<Runtime> PrecompileSet for NonFungibleTokenExtension<Runtime>
 where
 	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
@@ -91,83 +94,95 @@ where
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn execute(
+		&self,
+		address: H160,
 		input: &[u8], // reminder this is big-endian
 		target_gas: Option<u64>,
 		context: &Context,
-		_is_static: bool,
-	) -> PrecompileResult {
-		if let Some(non_fungible_token_id) = Self::try_from_address(context.address) {
+		is_static: bool,
+	) -> Option<EvmResult<PrecompileOutput>> {
+		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
+			let mut gasometer = Gasometer::new(target_gas);
+			let gasometer = &mut gasometer;
 			if pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
-				let (input, selector) = EvmDataReader::new_with_selector(input)?;
+				let result = {
+					let (mut input, selector) =
+						match EvmDataReader::new_with_selector(gasometer, input) {
+							Ok((input, selector)) => (input, selector),
+							Err(e) => return Some(Err(e)),
+						};
+					let input = &mut input;
 
-				let (origin, call) = match selector {
-					// storage getters
-					Action::Name => return Self::name(non_fungible_token_id, target_gas),
-					Action::Symbol => return Self::symbol(non_fungible_token_id, target_gas),
-					Action::TokenURI => {
-						return Self::token_uri(non_fungible_token_id, input, target_gas)
-					},
-					Action::TotalSupply => {
-						return Self::total_supply(non_fungible_token_id, target_gas)
-					},
-					Action::TokenByIndex => {
-						return Self::token_by_index(non_fungible_token_id, input, target_gas)
-					},
-					Action::TokenOfOwnerByIndex => {
-						return Self::token_of_owner_by_index(
-							non_fungible_token_id,
-							input,
-							target_gas,
-						)
-					},
-					Action::BalanceOf => {
-						return Self::balance_of(non_fungible_token_id, input, target_gas)
-					},
-					Action::OwnerOf => {
-						return Self::owner_of(non_fungible_token_id, input, target_gas)
-					},
-					// call methods (dispatchable)
-					Action::TransferFrom => {
-						Self::transfer_from(non_fungible_token_id, input, target_gas, context)?
-					},
-					Action::Mint => Self::mint(non_fungible_token_id, input, target_gas, context)?,
-					Action::Burn => Self::burn(non_fungible_token_id, input, target_gas, context)?,
+					if let Err(err) = gasometer.check_function_modifier(
+						context,
+						is_static,
+						match selector {
+							Action::TransferFrom | Action::Mint | Action::Burn => {
+								FunctionModifier::NonPayable
+							},
+							_ => FunctionModifier::View,
+						},
+					) {
+						return Some(Err(err));
+					}
+
+					match selector {
+						// storage getters
+						Action::Name => Self::name(non_fungible_token_id, gasometer),
+						Action::Symbol => Self::symbol(non_fungible_token_id, gasometer),
+						Action::TokenURI => {
+							Self::token_uri(non_fungible_token_id, input, gasometer)
+						},
+						Action::TotalSupply => Self::total_supply(non_fungible_token_id, gasometer),
+						Action::TokenByIndex => {
+							Self::token_by_index(non_fungible_token_id, input, gasometer)
+						},
+						Action::TokenOfOwnerByIndex => {
+							Self::token_of_owner_by_index(non_fungible_token_id, input, gasometer)
+						},
+						Action::BalanceOf => {
+							Self::balance_of(non_fungible_token_id, input, gasometer)
+						},
+						Action::OwnerOf => Self::owner_of(non_fungible_token_id, input, gasometer),
+						// call methods (dispatchable)
+						Action::TransferFrom => {
+							Self::transfer_from(non_fungible_token_id, input, gasometer, context)
+						},
+						Action::Mint => {
+							Self::mint(non_fungible_token_id, input, gasometer, context)
+						},
+						Action::Burn => {
+							Self::burn(non_fungible_token_id, input, gasometer, context)
+						},
+					}
 				};
-
-				// initialize gasometer
-				let mut gasometer = Gasometer::new(target_gas);
-				// dispatch call (if enough gas).
-				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
-					origin,
-					call,
-					gasometer.remaining_gas()?,
-				)?;
-				gasometer.record_cost(used_gas)?;
-
-				return Ok(PrecompileOutput {
-					exit_status: ExitSucceed::Returned,
-					cost: gasometer.used_gas(),
-					output: vec![],
-					logs: vec![],
-				});
+				return Some(result);
 			} else {
 				// Action::Create = "create(bytes,bytes)"
 
-				let selector = &input[0..4];
-				if selector == CREATE_SELECTOR {
-					let input = EvmDataReader::new(&input[4..]);
-					return Self::create(input, target_gas, context);
-				} else {
-					return Err(PrecompileFailure::Error {
-						exit_status: ExitError::Other("fungible token not exists".into()),
-					});
+				if &input[0..4] == CREATE_SELECTOR {
+					let mut input = EvmDataReader::new(&input[4..]);
+					let result = Self::create(&mut input, gasometer, context);
+					return Some(result);
 				}
 			}
 		}
 
-		Err(PrecompileFailure::Error {
-			exit_status: ExitError::Other("fungible token precompile execution failed".into()),
-		})
+		None
+	}
+
+	fn is_precompile(&self, address: H160) -> bool {
+		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
+			pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id)
+		} else {
+			false
+		}
+	}
+}
+
+impl<Runtime> NonFungibleTokenExtension<Runtime> {
+	pub fn new() -> Self {
+		Self(PhantomData)
 	}
 }
 
@@ -181,28 +196,24 @@ where
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
 
-		let name: Vec<u8> = input.read::<Bytes>()?.into();
-		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
-		let base_uri: Vec<u8> = input.read::<Bytes>()?.into();
+		let name: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+		let symbol: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
+		let base_uri: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
 
 		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
 
 		let id: u32 = pallet_token_non_fungible::Pallet::<Runtime>::do_create_token(
 			&caller, name, symbol, base_uri,
 		)
-		.map_err(|e| {
-			let err_msg: &str = e.into();
-			PrecompileFailure::Error { exit_status: ExitError::Other(err_msg.into()) }
-		})?
+		.unwrap()
 		.into();
 
 		let output = U256::from(id);
@@ -217,18 +228,19 @@ where
 
 	fn balance_of(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let account: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
+		let owner: H160 = input.read::<Address>(gasometer)?.into();
 
-		let balance: u32 = pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, account);
+		let balance: U256 = {
+			let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
+			pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into()
+		};
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -240,15 +252,14 @@ where
 
 	fn owner_of(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>()?;
+		let token_id = input.read::<TokenId>(gasometer)?;
 
 		let owner_account_id: Runtime::AccountId =
 			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
@@ -265,85 +276,130 @@ where
 
 	fn transfer_from(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_non_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(3)?;
+		input.expect_arguments(gasometer, 3)?;
+		let from: H160 = input.read::<Address>(gasometer)?.into();
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_id = input.read::<TokenId>(gasometer)?;
 
-		let from: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_id = input.read::<TokenId>()?;
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::transfer_from {
+					id,
+					from,
+					to,
+					token_id,
+				},
+				gasometer,
+			)?;
+		}
 
-		let call =
-			pallet_token_non_fungible::Call::<Runtime>::transfer_from { id, from, to, token_id };
-
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: LogsBuilder::new(context.address)
+				.log3(SELECTOR_LOG_TRANSFER, from, to, EvmDataWriter::new().write(token_id).build())
+				.build(),
+		})
 	}
 
 	fn mint(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_non_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
-		let to: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
-		let token_id = input.read::<TokenId>()?;
+		let to: H160 = input.read::<Address>(gasometer)?.into();
+		let token_id = input.read::<TokenId>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
 
-		let call = pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: LogsBuilder::new(context.address)
+				.log3(
+					SELECTOR_LOG_TRANSFER,
+					H160::zero(),
+					to,
+					EvmDataWriter::new().write(token_id).build(),
+				)
+				.build(),
+		})
 	}
 
 	fn burn(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
 		context: &Context,
-	) -> Result<
-		(<Runtime::Call as Dispatchable>::Origin, pallet_token_non_fungible::Call<Runtime>),
-		PrecompileFailure,
-	> {
-		let mut gasometer = Gasometer::new(target_gas);
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>()?;
+		let token_id = input.read::<TokenId>(gasometer)?;
 
-		let origin = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
-		let call = pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id },
+				gasometer,
+			)?;
+		}
 
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: LogsBuilder::new(context.address)
+				.log3(
+					SELECTOR_LOG_TRANSFER,
+					context.caller,
+					H160::zero(),
+					EvmDataWriter::new().write(token_id).build(),
+				)
+				.build(),
+		})
 	}
 
 	fn name(
 		id: NonFungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let name: Vec<u8> = pallet_token_non_fungible::Pallet::<Runtime>::token_name(id);
@@ -358,9 +414,8 @@ where
 
 	fn symbol(
 		id: NonFungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let symbol: Vec<u8> = pallet_token_non_fungible::Pallet::<Runtime>::token_symbol(id);
@@ -375,15 +430,14 @@ where
 
 	fn token_uri(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>()?.into();
+		let token_id = input.read::<TokenId>(gasometer)?.into();
 
 		let token_uri: Vec<u8> =
 			pallet_token_non_fungible::Pallet::<Runtime>::token_uri(id, token_id);
@@ -398,9 +452,8 @@ where
 
 	fn total_supply(
 		id: NonFungibleTokenIdOf<Runtime>,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let balance: u32 = pallet_token_non_fungible::Pallet::<Runtime>::total_supply(id);
@@ -415,15 +468,14 @@ where
 
 	fn token_by_index(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(1)?;
+		input.expect_arguments(gasometer, 1)?;
 
-		let token_index = input.read::<TokenIndex>()?.into();
+		let token_index = input.read::<TokenIndex>(gasometer)?.into();
 
 		let token_id: TokenId =
 			pallet_token_non_fungible::Pallet::<Runtime>::token_by_index(id, token_index);
@@ -438,18 +490,17 @@ where
 
 	fn token_of_owner_by_index(
 		id: NonFungibleTokenIdOf<Runtime>,
-		mut input: EvmDataReader,
-		target_gas: Option<u64>,
-	) -> Result<PrecompileOutput, PrecompileFailure> {
-		let mut gasometer = Gasometer::new(target_gas);
+		input: &mut EvmDataReader,
+		gasometer: &mut Gasometer,
+	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		input.expect_arguments(2)?;
+		input.expect_arguments(gasometer, 2)?;
 
 		let owner: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(input.read::<Address>()?.0);
+			Runtime::AddressMapping::into_account_id(input.read::<Address>(gasometer)?.0);
 
-		let token_index = input.read::<TokenIndex>()?.into();
+		let token_index = input.read::<TokenIndex>(gasometer)?.into();
 
 		let token_id: TokenId =
 			pallet_token_non_fungible::Pallet::<Runtime>::token_of_owner_by_index(
