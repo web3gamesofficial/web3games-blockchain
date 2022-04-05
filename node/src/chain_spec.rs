@@ -27,9 +27,9 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
-	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
+	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig,
+	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, WrapCurrencyConfig, DOLLARS,
+	WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -282,17 +282,6 @@ fn testnet_genesis(
 		},
 		ethereum: EthereumConfig {},
 		base_fee: Default::default(),
-		orml_tokens: OrmlTokensConfig {
-			balances: endowed_accounts
-				.iter()
-				.flat_map(|x| {
-					vec![
-						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
-					]
-				})
-				.collect(),
-		},
+		wrap_currency: WrapCurrencyConfig {},
 	}
 }

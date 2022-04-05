@@ -57,11 +57,6 @@ pallet-base-fee = { default-features = false, git = "https://github.com/web3game
 fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
 fp-self-contained = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
 
-# Orml packages
-orml-traits = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
-orml-currencies = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
-orml-tokens = { default-features = false, git = "https://github.com/web3gamesofficial/open-runtime-module-library", branch = "web3games-v0.5" }
-
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 runtime-common = { path = "../common", default-features = false }
 
@@ -115,9 +110,6 @@ std = [
 	"pallet-contracts/std",
 	"pallet-contracts-primitives/std",
 	"pallet-contracts-rpc-runtime-api/std",
-	"orml-traits/std",
-	"orml-currencies/std",
-	"orml-tokens/std",
 	"pallet-ethereum/std",
 	"pallet-evm/std",
 	"pallet-base-fee/std",
