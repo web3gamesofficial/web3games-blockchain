@@ -66,7 +66,6 @@ pallet-token-non-fungible = { path = "../../pallets/token-non-fungible", default
 pallet-token-multi = { path = "../../pallets/token-multi", default-features = false }
 pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
 pallet-exchange = { path = "../../pallets/exchange", default-features = false }
-pallet-exchange-nft = { path = "../../pallets/exchange-nft", default-features = false }
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
 pallet-support = { path = "../../pallets/support", default-features = false }
 
@@ -122,7 +121,6 @@ std = [
 	"pallet-token-multi/std",
 	"pallet-wrap-currency/std",
 	"pallet-exchange/std",
-	"pallet-exchange-nft/std",
 	"pallet-marketplace/std",
 	"pallet-support/std",
 ]

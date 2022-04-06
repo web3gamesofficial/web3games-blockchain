@@ -438,7 +438,6 @@ pub fn get_all_pallet_accounts() -> Vec<AccountId> {
 		TokenMultiPalletId::get().into_account(),
 		WrapCurrencyPalletId::get().into_account(),
 		ExchangePalletId::get().into_account(),
-		ExchangeNftPalletId::get().into_account(),
 		ZeroAccountId::get(),
 	]
 }
@@ -449,7 +448,6 @@ parameter_types! {
 	pub const TokenMultiPalletId: PalletId = PalletId(*b"w3g/tmpi");
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
-	pub const ExchangeNftPalletId: PalletId = PalletId(*b"w3g/exnp");
 	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
@@ -524,14 +522,6 @@ impl pallet_exchange::Config for Runtime {
 	type Currency = Balances;
 }
 
-impl pallet_exchange_nft::Config for Runtime {
-	type Event = Event;
-	type PalletId = ExchangeNftPalletId;
-	type NftPoolId = u32;
-	type CreatePoolDeposit = CreatePoolDeposit;
-	type Currency = Balances;
-}
-
 impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
 	type StringLimit = StringLimit;
@@ -566,7 +556,6 @@ construct_runtime!(
 		TokenMulti: pallet_token_multi,
 		WrapCurrency: pallet_wrap_currency,
 		Exchange: pallet_exchange,
-		ExchangeNft: pallet_exchange_nft,
 		Marketplace: pallet_marketplace,
 		BaseFee: pallet_base_fee,
 	}

@@ -4444,27 +4444,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange-nft"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-fungible",
- "pallet-token-multi",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
@@ -9038,7 +9017,6 @@ dependencies = [
  "pallet-ethereum",
  "pallet-evm",
  "pallet-exchange",
- "pallet-exchange-nft",
  "pallet-grandpa",
  "pallet-marketplace",
  "pallet-preimage",
