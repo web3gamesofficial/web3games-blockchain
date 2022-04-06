@@ -143,10 +143,12 @@ impl<T: Config> Pallet<T> {
 		let deposit = <T as Config>::CreateTokenDeposit::get();
 		<T as Config>::Currency::deposit_creating(&vault_account, deposit);
 
+		let name: &str = "Wrapped Currency";
+		let symbol: &str = "WW3G";
 		let token_id = pallet_token_fungible::Pallet::<T>::do_create_token(
 			&vault_account,
-			[].to_vec(),
-			[].to_vec(),
+			name.as_bytes().to_vec(),
+			symbol.as_bytes().to_vec(),
 			18,
 		)?;
 
