@@ -1,24 +1,24 @@
-// Copyright 2019-2022 PureStake Inc.
-// This file is part of Moonbeam.
+// // Copyright 2019-2022 PureStake Inc.
+// // This file is part of Moonbeam.
 
-// Moonbeam is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// // Moonbeam is free software: you can redistribute it and/or modify
+// // it under the terms of the GNU General Public License as published by
+// // the Free Software Foundation, either version 3 of the License, or
+// // (at your option) any later version.
 
-// Moonbeam is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// // Moonbeam is distributed in the hope that it will be useful,
+// // but WITHOUT ANY WARRANTY; without even the implied warranty of
+// // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// // GNU General Public License for more details.
 
 // use sha3::{Digest, Keccak256};
-//
+
 // #[precompile_utils_macro::generate_function_selector]
 // pub enum Action {
 // 	Toto = "toto()",
 // 	Tata = "tata()",
 // }
-//
+
 // #[test]
 // fn test_keccak256() {
 // 	assert_eq!(
@@ -34,7 +34,7 @@
 // 		Keccak256::digest(b"tata()").as_ref(),
 // 	);
 // }
-//
+
 // #[test]
 // fn test_generate_function_selector() {
 // 	assert_eq!(

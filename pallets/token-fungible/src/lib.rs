@@ -29,7 +29,7 @@ use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, CheckedAdd, One},
+	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
@@ -241,6 +241,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
+	fn zero_account_id() -> T::AccountId {
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
+	}
+
 	pub fn exists(id: T::FungibleTokenId) -> bool {
 		Tokens::<T>::contains_key(id)
 	}
@@ -388,7 +392,7 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(id, T::AccountId::default(), account.clone(), amount));
+		Self::deposit_event(Event::Transfer(id, Self::zero_account_id(), account.clone(), amount));
 
 		Ok(())
 	}
@@ -408,7 +412,7 @@ impl<T: Config> Pallet<T> {
 			Ok(())
 		})?;
 
-		Self::deposit_event(Event::Transfer(id, account.clone(), T::AccountId::default(), amount));
+		Self::deposit_event(Event::Transfer(id, account.clone(), Self::zero_account_id(), amount));
 
 		Ok(())
 	}
