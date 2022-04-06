@@ -94,16 +94,17 @@ pub mod pallet {
 		pub fn deposit(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
+			let vault_account = Self::account_id();
+
 			<T as Config>::Currency::transfer(
 				&who,
-				&Self::account_id(),
+				&vault_account,
 				amount,
 				AllowDeath,
 			)?;
 
 			let token_id = WrapToken::<T>::get();
-
-			pallet_token_fungible::Pallet::<T>::do_mint(token_id, &who, who.clone(), amount.into())?;
+			pallet_token_fungible::Pallet::<T>::do_mint(token_id, &vault_account, who.clone(), amount.into())?;
 
 			Self::deposit_event(Event::Deposited(who, amount));
 
@@ -122,7 +123,6 @@ pub mod pallet {
 			)?;
 
 			let token_id = WrapToken::<T>::get();
-
 			pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount.into())?;
 
 			Self::deposit_event(Event::Withdrawn(who, amount));
