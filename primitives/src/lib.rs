@@ -18,20 +18,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
-use scale_info::TypeInfo;
 use sp_runtime::{
 	generic,
 	traits::{BlakeTwo256, IdentifyAccount, Verify},
-	MultiSignature, OpaqueExtrinsic, RuntimeDebug,
+	MultiSignature, OpaqueExtrinsic,
 };
-use sp_std::{
-	convert::{Into, TryFrom, TryInto},
-	prelude::*,
-};
-
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -81,116 +72,3 @@ pub type TokenIndex = u32;
 
 // // Index of pool created
 // pub type PoolIndex = u32;
-
-#[derive(
-	Encode,
-	Decode,
-	Eq,
-	PartialEq,
-	Copy,
-	Clone,
-	RuntimeDebug,
-	PartialOrd,
-	Ord,
-	TypeInfo,
-	MaxEncodedLen,
-)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub enum TokenSymbol {
-	W3G = 0,
-	DOT = 1,
-	ACA = 2,
-	AUSD = 3,
-}
-
-impl TryFrom<u8> for TokenSymbol {
-	type Error = ();
-
-	fn try_from(v: u8) -> Result<Self, Self::Error> {
-		match v {
-			0 => Ok(TokenSymbol::W3G),
-			1 => Ok(TokenSymbol::DOT),
-			2 => Ok(TokenSymbol::ACA),
-			3 => Ok(TokenSymbol::AUSD),
-			_ => Err(()),
-		}
-	}
-}
-
-#[derive(
-	Encode,
-	Decode,
-	Eq,
-	PartialEq,
-	Copy,
-	Clone,
-	RuntimeDebug,
-	PartialOrd,
-	Ord,
-	TypeInfo,
-	MaxEncodedLen,
-)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub enum CurrencyId {
-	Token(TokenSymbol),
-}
-
-impl CurrencyId {
-	pub fn is_token_currency_id(&self) -> bool {
-		matches!(self, CurrencyId::Token(_))
-	}
-}
-
-impl TryFrom<Vec<u8>> for CurrencyId {
-	type Error = ();
-	fn try_from(v: Vec<u8>) -> Result<CurrencyId, ()> {
-		match v.as_slice() {
-			b"W3G" => Ok(CurrencyId::Token(TokenSymbol::W3G)),
-			b"DOT" => Ok(CurrencyId::Token(TokenSymbol::DOT)),
-			b"ACA" => Ok(CurrencyId::Token(TokenSymbol::ACA)),
-			b"AUSD" => Ok(CurrencyId::Token(TokenSymbol::AUSD)),
-			_ => Err(()),
-		}
-	}
-}
-
-/// Note the pre-deployed ERC20 contracts depend on `CurrencyId` implementation,
-/// and need to be updated if any change.
-impl TryFrom<[u8; 32]> for CurrencyId {
-	type Error = ();
-
-	fn try_from(v: [u8; 32]) -> Result<Self, Self::Error> {
-		if !v.starts_with(&[0u8; 29][..]) {
-			return Err(());
-		}
-
-		// token
-		if v[29] == 0 && v[31] == 0 {
-			return v[30].try_into().map(CurrencyId::Token);
-		}
-
-		Err(())
-	}
-}
-
-/// Note the pre-deployed ERC20 contracts depend on `CurrencyId` implementation,
-/// and need to be updated if any change.
-impl Into<[u8; 32]> for CurrencyId {
-	fn into(self) -> [u8; 32] {
-		let mut bytes = [0u8; 32];
-		match self {
-			CurrencyId::Token(token) => {
-				bytes[30] = token as u8;
-			},
-		}
-		bytes
-	}
-}
-
-impl Into<u64> for CurrencyId {
-	fn into(self) -> u64 {
-		match self {
-			CurrencyId::Token(token) => token as u64,
-		}
-	}
-}
