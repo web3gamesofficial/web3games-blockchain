@@ -4159,69 +4159,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
-name = "orml-currencies"
-version = "0.4.1-dev"
-source = "git+https://github.com/web3gamesofficial/open-runtime-module-library?branch=web3games-v0.5#7e4e4cc14b2d4f1514da37125eb8e7aa181c1694"
-dependencies = [
- "frame-support",
- "frame-system",
- "orml-traits",
- "orml-utilities",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "orml-tokens"
-version = "0.4.1-dev"
-source = "git+https://github.com/web3gamesofficial/open-runtime-module-library?branch=web3games-v0.5#7e4e4cc14b2d4f1514da37125eb8e7aa181c1694"
-dependencies = [
- "frame-support",
- "frame-system",
- "orml-traits",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "orml-traits"
-version = "0.4.1-dev"
-source = "git+https://github.com/web3gamesofficial/open-runtime-module-library?branch=web3games-v0.5#7e4e4cc14b2d4f1514da37125eb8e7aa181c1694"
-dependencies = [
- "frame-support",
- "impl-trait-for-tuples",
- "num-traits",
- "orml-utilities",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "orml-utilities"
-version = "0.4.1-dev"
-source = "git+https://github.com/web3gamesofficial/open-runtime-module-library?branch=web3games-v0.5#7e4e4cc14b2d4f1514da37125eb8e7aa181c1694"
-dependencies = [
- "frame-support",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "os_str_bytes"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4791,7 +4728,6 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
- "orml-traits",
  "pallet-token-fungible",
  "parity-scale-codec",
  "scale-info",
@@ -9093,9 +9029,6 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
- "orml-currencies",
- "orml-tokens",
- "orml-traits",
  "pallet-aura",
  "pallet-balances",
  "pallet-base-fee",

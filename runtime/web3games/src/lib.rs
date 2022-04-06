@@ -70,8 +70,6 @@ use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
-use orml_currencies::BasicCurrencyAdapter;
-use orml_traits::parameter_type_with_key;
 pub use pallet_balances::Call as BalancesCall;
 use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
@@ -88,8 +86,7 @@ pub use sp_runtime::{Perbill, Permill};
 mod constants;
 pub use constants::{currency::*, time::*};
 pub use primitives::{
-	AccountId, AccountIndex, Amount, Balance, BlockNumber, CurrencyId, Hash, Index, Moment,
-	Signature, TokenSymbol,
+	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature,
 };
 
 use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
@@ -428,41 +425,10 @@ impl Contains<AccountId> for DustRemovalWhitelist {
 	}
 }
 
-parameter_type_with_key! {
-	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
-		Zero::zero()
-	};
-}
-
-impl orml_tokens::Config for Runtime {
-	type Event = Event;
-	type Balance = Balance;
-	type Amount = Amount;
-	type CurrencyId = CurrencyId;
-	type WeightInfo = ();
-	type ExistentialDeposits = ExistentialDeposits;
-	type OnDust = ();
-	type MaxLocks = MaxLocks;
-	type DustRemovalWhitelist = DustRemovalWhitelist;
-}
-
-parameter_types! {
-	pub const GetNativeCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::W3G);
-}
-
-impl orml_currencies::Config for Runtime {
-	type Event = Event;
-	type MultiCurrency = OrmlTokens;
-	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
-	type GetNativeCurrencyId = GetNativeCurrencyId;
-	type WeightInfo = ();
-}
-
 parameter_types! {
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
-	pub const CreateCurrencyInstanceDeposit: Balance = 500 * MILLICENTS;
 }
 
 pub fn get_all_pallet_accounts() -> Vec<AccountId> {
@@ -546,9 +512,8 @@ impl pallet_token_multi::Config for Runtime {
 impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
-	type Currency = OrmlCurrencies;
-	type CreateWrapTokenDeposit = CreateCurrencyInstanceDeposit;
-	type GetNativeCurrencyId = GetNativeCurrencyId;
+	type Currency = Balances;
+	type CreateTokenDeposit = CreateTokenDeposit;
 }
 
 impl pallet_exchange::Config for Runtime {
@@ -594,8 +559,6 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
-		OrmlTokens: orml_tokens,
-		OrmlCurrencies: orml_currencies,
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
