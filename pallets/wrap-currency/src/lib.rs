@@ -81,17 +81,8 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		// TokenCreated(T::AccountId),
-		TokenMint(Balance, T::AccountId),
-		TokenBurn(Balance, T::AccountId),
-	}
-
-	// Errors inform users that something went wrong.
-	#[pallet::error]
-	pub enum Error<T> {
-		Unknown,
-		NumOverflow,
-		InvalidWrapToken,
+		Deposited(T::AccountId, BalanceOf<T>),
+		Withdrawn(T::AccountId, BalanceOf<T>),
 	}
 
 	#[pallet::hooks]
@@ -100,44 +91,44 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
 	where
-		BalanceOf<T>: From<u128>,
+		BalanceOf<T>: Into<u128>,
 	{
 		#[pallet::weight(10_000)]
-		pub fn deposit(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
+		pub fn deposit(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			<T as Config>::Currency::transfer(
 				&who,
 				&Self::account_id(),
-				amount.into(),
+				amount,
 				AllowDeath,
 			)?;
 
 			let token_id = WrapToken::<T>::get();
 
-			pallet_token_fungible::Pallet::<T>::do_mint(token_id, &who, who.clone(), amount)?;
+			pallet_token_fungible::Pallet::<T>::do_mint(token_id, &who, who.clone(), amount.into())?;
 
-			Self::deposit_event(Event::TokenMint(amount, who));
+			Self::deposit_event(Event::Deposited(who, amount));
 
 			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn withdraw(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
+		pub fn withdraw(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			<T as Config>::Currency::transfer(
 				&Self::account_id(),
 				&who,
-				amount.into(),
+				amount,
 				AllowDeath,
 			)?;
 
 			let token_id = WrapToken::<T>::get();
 
-			pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount)?;
+			pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount.into())?;
 
-			Self::deposit_event(Event::TokenBurn(amount, who));
+			Self::deposit_event(Event::Withdrawn(who, amount));
 
 			Ok(())
 		}
