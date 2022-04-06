@@ -18,15 +18,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::DispatchResult,
 	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
 	PalletId,
 };
-use primitives::Balance;
-use scale_info::TypeInfo;
-use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
+use sp_runtime::traits::AccountIdConversion;
 use sp_std::prelude::*;
 
 pub use pallet::*;
