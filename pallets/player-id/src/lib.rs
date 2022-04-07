@@ -18,48 +18,53 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use codec::{Decode, Encode, MaxEncodedLen};
+use frame_support::{
+	traits::{ConstU32, Get},
+	BoundedVec,
+};
+use scale_info::TypeInfo;
+use sp_runtime::{
+	traits::{IdentifyAccount, Verify},
+	RuntimeDebug,
+};
+use sp_std::prelude::*;
 
 pub use pallet::*;
-use codec::{Decode, Encode, MaxEncodedLen};
-use scale_info::TypeInfo;
-use sp_runtime::RuntimeDebug;
-use sp_runtime::traits::{IdentifyAccount, Verify};
-use sp_std::{convert::TryFrom, prelude::*};
-use sp_std::vec::Vec;
 
-pub use weights::WeightInfo;
+#[cfg(test)]
+mod mock;
 
-pub mod weights;
+#[cfg(test)]
+mod tests;
 
+pub type Address = BoundedVec<u8, ConstU32<32>>;
+pub type PlayerId = BoundedVec<u8, ConstU32<32>>;
 
-type Address = Vec<u8>;
-type PlayerID = Vec<u8>;
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Copy)]
-pub enum Chain {
-	Ethereum,
-	BSC,
-	Polygon
+#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub enum Chains {
+	W3G,
+	BTC,
+	ETH,
+	DOT,
+	SOL,
+	MATIC,
+	BNB,
+	NEAR,
 }
-
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
-	use log::error;
-	use sp_core::crypto::AccountId32;
-	use sp_core::ecdsa::Public;
-	use sp_runtime::MultiSignature;
-	// use crate::ethereum::EthereumSignature;
-	use crate::WeightInfo;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
-		type WeightInfo: WeightInfo;
+		#[pallet::constant]
+		type MaxAddressesPerChain: Get<u32>;
 	}
 
 	#[pallet::pallet]
@@ -67,142 +72,176 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	#[pallet::getter(fn playerchain)]
-	pub(super) type PlayerChain<T: Config> = StorageDoubleMap<
+	pub(super) type PlayerIdOf<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
 		Address,
 		Blake2_128Concat,
-		Chain,
-		PlayerID
+		Chains,
+		PlayerId,
+		OptionQuery,
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn chainplayer)]
-	pub(super) type ChainPlayer<T: Config> = StorageDoubleMap<
+	pub(super) type Addresses<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		PlayerID,
+		PlayerId,
 		Blake2_128Concat,
-		Chain,
-		Vec<Address>
+		Chains,
+		BoundedVec<Address, T::MaxAddressesPerChain>,
+		OptionQuery,
 	>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		PlayerIDCreated(T::AccountId,Address,Chain,PlayerID),
-		PlayerIDCheck(T::AccountId,bool),
-		PlayerIDRemove(T::AccountId,bool),
-		PlayerIDUpdate(T::AccountId,bool)
+		Registered(PlayerId, T::AccountId),
+		AddressAdded(Address, Chains, PlayerId),
+		AddressRemoved(Address, Chains, PlayerId),
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
-		Repeat,
-		NODATA
+		Unknown,
+		NotFound,
+		PlayerIdTooLong,
+		AddressTooLong,
+		PlayerIdAlreadyRegistered,
+		AddressAlreadyExists,
+		NoPermission,
+		TooManyAddresses,
 	}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn create_player_id(
+	impl<T: Config> Pallet<T>
+	where
+		T::AccountId: AsRef<[u8]>,
+	{
+		#[pallet::weight(10_000)]
+		pub fn register(
 			origin: OriginFor<T>,
-			address:Vec<u8>,
-			chain:Chain,
-			player_id:PlayerID
+			player_id: Vec<u8>,
+			owner: T::AccountId,
 		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
+			let _who = ensure_signed(origin)?;
 
-			let repeat_data = ChainPlayer::<T>::get(player_id.clone(),chain.clone());
+			let player_id: PlayerId =
+				player_id.clone().try_into().map_err(|_| Error::<T>::PlayerIdTooLong)?;
 
-			let repeat_result:bool = match repeat_data {
-				Some(repeat_value) =>{
-					repeat_value.contains(&address)
-				}
-				None => {
-					false
-				}
-			};
+			let chain = Self::native_chain();
+			ensure!(
+				Addresses::<T>::get(player_id.clone(), chain.clone()).is_none(),
+				Error::<T>::PlayerIdAlreadyRegistered
+			);
 
-			ensure!(repeat_result == false,Error::<T>::Repeat);
+			let address: Address = Self::account_to_address(owner.clone());
 
-			PlayerChain::<T>::insert(address.clone(),chain.clone(),player_id.clone());
+			let addresses = BoundedVec::try_from(vec![address.clone()]).unwrap();
+			Addresses::<T>::insert(player_id.clone(), chain.clone(), addresses);
 
-			let new_address_list = ChainPlayer::<T>::get(player_id.clone(), chain.clone());
+			PlayerIdOf::<T>::insert(address, chain.clone(), player_id.clone());
 
-			match new_address_list {
-				Some(mut address_list) =>{
-					address_list.push(address.clone());
-					ChainPlayer::<T>::insert(player_id.clone(),chain.clone(),address_list);
-					Self::deposit_event(Event::PlayerIDCreated(who,address,chain,player_id));
-				}
-				None =>{
-					let address_list = vec![address.clone()];
-					ChainPlayer::<T>::insert(player_id.clone(),chain.clone(),address_list);
-					Self::deposit_event(Event::PlayerIDCreated(who,address,chain,player_id));
-				}
-			};
-			Ok(().into())
+			Self::deposit_event(Event::Registered(player_id, owner));
+
+			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn delete_player_id(
+		#[pallet::weight(10_000)]
+		pub fn add_address(
 			origin: OriginFor<T>,
-			player_id:PlayerID,
-			chain:Chain,
-			address:Vec<u8>,
+			player_id: PlayerId,
+			chain: Chains,
+			address: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let mut all_address = ChainPlayer::<T>::get(player_id.clone(), chain).unwrap_or(vec![address.clone()]);
+			ensure!(Self::check_permission(who, player_id.clone()), Error::<T>::NoPermission);
 
-			let check = vec![address.clone()];
+			let address: Address =
+				address.clone().try_into().map_err(|_| Error::<T>::AddressTooLong)?;
 
-			ensure!(all_address != check,Error::<T>::NODATA);
+			Addresses::<T>::try_mutate(
+				player_id.clone(),
+				chain.clone(),
+				|maybe_addresses| -> DispatchResult {
+					match maybe_addresses {
+						Some(ref mut a) => {
+							ensure!(!a.contains(&address), Error::<T>::AddressAlreadyExists);
+							a.try_push(address.clone())
+								.map_err(|_| Error::<T>::TooManyAddresses)?;
+						},
+						maybe_addresses @ None => {
+							*maybe_addresses =
+								Some(BoundedVec::try_from(vec![address.clone()]).unwrap());
+						},
+					};
+					Ok(())
+				},
+			)?;
 
-			ensure!(all_address.contains(&address),Error::<T>::NODATA);
+			PlayerIdOf::<T>::insert(address.clone(), chain.clone(), player_id.clone());
 
-			for (index, value) in all_address.clone().iter().enumerate() {
-							if address == *value{
-								all_address.remove(index);
-							}
-			}
+			Self::deposit_event(Event::AddressAdded(address, chain, player_id));
 
-			PlayerChain::<T>::remove(address.clone(),chain);
-			ChainPlayer::<T>::insert(player_id.clone(),chain,all_address);
-			Self::deposit_event(Event::PlayerIDRemove(who,true));
-			Ok(().into())
+			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn update_player_id(
+		#[pallet::weight(10_000)]
+		pub fn remove_address(
 			origin: OriginFor<T>,
-			player_id:PlayerID,
-			chain:Chain,
-			before_address:Vec<u8>,
-			after_address:Vec<u8>,
+			player_id: PlayerId,
+			chain: Chains,
+			address: Address,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			let mut all_address = ChainPlayer::<T>::get(player_id.clone(), chain).unwrap_or(vec![before_address.clone()]);
+			ensure!(Self::check_permission(who, player_id.clone()), Error::<T>::NoPermission);
 
-			let check = vec![before_address.clone()];
+			Addresses::<T>::try_mutate_exists(
+				player_id.clone(),
+				chain.clone(),
+				|maybe_addresses| -> DispatchResult {
+					let mut addresses = maybe_addresses.take().ok_or(Error::<T>::Unknown)?;
 
-			ensure!(all_address != check,Error::<T>::NODATA);
+					let pos = addresses
+						.binary_search_by_key(&address, |a| a.clone())
+						.map_err(|_| Error::<T>::NotFound)?;
+					addresses.remove(pos);
 
+					*maybe_addresses = Some(addresses);
+					PlayerIdOf::<T>::remove(address.clone(), chain.clone());
 
-			for (index, value) in all_address.clone().iter().enumerate() {
-				if before_address == *value{
-					all_address.remove(index);
-					all_address.push(after_address.clone());
-				}
-			}
+					Ok(())
+				},
+			)?;
 
-			PlayerChain::<T>::remove(before_address.clone(),chain);
-			ChainPlayer::<T>::insert(player_id.clone(),chain,all_address);
-			Self::deposit_event(Event::PlayerIDUpdate(who,true));
-			Ok(().into())
+			Self::deposit_event(Event::AddressRemoved(address, chain, player_id));
+
+			Ok(())
+		}
+	}
+}
+
+impl<T: Config> Pallet<T>
+where
+	T::AccountId: AsRef<[u8]>,
+{
+	fn account_to_address(account: T::AccountId) -> Address {
+		BoundedVec::try_from(account.as_ref().to_vec()).unwrap()
+	}
+
+	fn native_chain() -> Chains {
+		Chains::W3G
+	}
+
+	fn check_permission(who: T::AccountId, player_id: PlayerId) -> bool {
+		let maybe_addresses = Addresses::<T>::get(player_id.clone(), Self::native_chain());
+		let owner_address = Self::account_to_address(who);
+
+		match maybe_addresses {
+			Some(a) => a.contains(&owner_address),
+			None => false,
 		}
 	}
 }

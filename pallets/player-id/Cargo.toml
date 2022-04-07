@@ -1,13 +1,13 @@
 [package]
 name = "pallet-player-id"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
 
 [dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 log = { version = "0.4.14", default-features = false }
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
@@ -16,9 +16,7 @@ sp-io = { git = "https://github.com/paritytech/substrate", default-features = fa
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3.1"
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
-
+pallet-balances = { git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]
@@ -28,8 +26,8 @@ std = [
     "log/std",
     "frame-support/std",
     "frame-system/std",
+	"sp-core/std",
     "sp-std/std",
     "sp-io/std",
     "sp-runtime/std",
-    "sp-core/std",
 ]

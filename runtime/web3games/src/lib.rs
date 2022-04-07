@@ -530,9 +530,13 @@ impl pallet_marketplace::Config for Runtime {
 	type Currency = Balances;
 }
 
+parameter_types! {
+	pub const MaxAddressesPerChain: u32 = 10;
+}
+
 impl pallet_player_id::Config for Runtime {
 	type Event = Event;
-	type WeightInfo = ();
+	type MaxAddressesPerChain = MaxAddressesPerChain;
 }
 
 construct_runtime!(
@@ -554,6 +558,7 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
+		BaseFee: pallet_base_fee,
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
@@ -562,7 +567,7 @@ construct_runtime!(
 		WrapCurrency: pallet_wrap_currency,
 		Exchange: pallet_exchange,
 		Marketplace: pallet_marketplace,
-		BaseFee: pallet_base_fee,
+		PalyerId: pallet_player_id,
 	}
 );
 
