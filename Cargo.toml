@@ -6,6 +6,7 @@ members = [
 	"pallets/exchange",
 	"pallets/wrap-currency",
 	"pallets/marketplace",
+	"pallets/player-id",
 	"primitives",
 	"runtime/common",
 	"runtime/common/chain-extensions",

@@ -4486,6 +4486,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-player-id"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-preimage"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
@@ -9019,6 +9035,7 @@ dependencies = [
  "pallet-exchange",
  "pallet-grandpa",
  "pallet-marketplace",
+ "pallet-player-id",
  "pallet-preimage",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
