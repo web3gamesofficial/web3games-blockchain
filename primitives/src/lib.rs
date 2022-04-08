@@ -67,8 +67,10 @@ pub type Amount = i128;
 /// Token ID
 pub type TokenId = u32;
 
-// /// Index of token created
+/// Index of token created
 pub type TokenIndex = u32;
 
 // // Index of pool created
 // pub type PoolIndex = u32;
+
+pub type TokenAssetId = u128;

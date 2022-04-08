@@ -22,7 +22,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
+	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency, Randomness},
 	PalletId,
 };
 use integer_sqrt::IntegerSquareRoot;
@@ -79,6 +79,8 @@ pub mod pallet {
 		type CreatePoolDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -327,12 +329,15 @@ impl<T: Config> Pallet<T> {
 		let deposit = T::CreatePoolDeposit::get();
 		<T as Config>::Currency::transfer(who, &Self::account_id(), deposit, AllowDeath)?;
 
-		let token_name: Vec<u8> = "LP Token".into();
-		let symbol_name: Vec<u8> = "LP-V1".into();
-		let lp_token = pallet_token_fungible::Pallet::<T>::do_create_token(
+		let lp_token = Self::generate_random_token_id(id);
+		let name: Vec<u8> = "LP Token".as_bytes().to_vec();
+		let symbol: Vec<u8> = "LPV1".as_bytes().to_vec();
+
+		pallet_token_fungible::Pallet::<T>::do_create_token(
 			&Self::account_id(),
-			token_name,
-			symbol_name,
+			lp_token,
+			name,
+			symbol,
 			18,
 		)?;
 
@@ -730,5 +735,12 @@ impl<T: Config> Pallet<T> {
 				true,
 			)
 		}
+	}
+
+	fn generate_random_token_id(seed: T::PoolId) -> T::FungibleTokenId {
+		let (random_seed, _) = T::Randomness::random(&(Self::account_id(), seed).encode());
+		let random_id = <T::FungibleTokenId>::decode(&mut random_seed.as_ref())
+			.expect("Failed to decode random seed");
+		random_id
 	}
 }

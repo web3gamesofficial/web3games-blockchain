@@ -18,9 +18,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use codec::{Decode, Encode};
 use frame_support::{
 	dispatch::DispatchResult,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
+	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency, Randomness},
 	PalletId,
 };
 use sp_runtime::traits::AccountIdConversion;
@@ -54,6 +55,8 @@ pub mod pallet {
 		type CreateTokenDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -68,7 +71,10 @@ pub mod pallet {
 	pub struct GenesisConfig {}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig {
+	impl<T: Config> GenesisBuild<T> for GenesisConfig
+	where
+		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>
+	{
 		fn build(&self) {
 			let result = Pallet::<T>::create_wrap_token();
 			assert!(result.is_ok());
@@ -89,6 +95,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T>
 	where
 		BalanceOf<T>: Into<u128>,
+		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
 	{
 		#[pallet::weight(10_000)]
 		pub fn deposit(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
@@ -127,7 +134,10 @@ pub mod pallet {
 	}
 }
 
-impl<T: Config> Pallet<T> {
+impl<T: Config> Pallet<T>
+where
+	<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>
+{
 	pub fn account_id() -> T::AccountId {
 		<T as pallet::Config>::PalletId::get().into_account()
 	}
@@ -138,16 +148,19 @@ impl<T: Config> Pallet<T> {
 		let deposit = <T as Config>::CreateTokenDeposit::get();
 		<T as Config>::Currency::deposit_creating(&vault_account, deposit);
 
-		let name: &str = "Wrapped Currency";
-		let symbol: &str = "WW3G";
-		let token_id = pallet_token_fungible::Pallet::<T>::do_create_token(
+		let id: T::FungibleTokenId = 0u128.into();
+		let name: Vec<u8> = "Wrapped Currency".as_bytes().to_vec();
+		let symbol: Vec<u8> = "WW3G".as_bytes().to_vec();
+
+		pallet_token_fungible::Pallet::<T>::do_create_token(
 			&vault_account,
-			name.as_bytes().to_vec(),
-			symbol.as_bytes().to_vec(),
+			id,
+			name,
+			symbol,
 			18,
 		)?;
 
-		WrapToken::<T>::put(token_id);
+		WrapToken::<T>::put(id);
 
 		Ok(())
 	}

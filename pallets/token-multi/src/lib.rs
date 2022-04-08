@@ -158,10 +158,10 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
-		pub fn create_token(origin: OriginFor<T>, id:T::MultiTokenId, uri: Vec<u8>) -> DispatchResult {
+		pub fn create_token(origin: OriginFor<T>, id: T::MultiTokenId, uri: Vec<u8>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_create_token(&who, id,uri)?;
+			Self::do_create_token(&who, id, uri)?;
 
 			Ok(())
 		}

@@ -155,14 +155,14 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn create_token(
 			origin: OriginFor<T>,
-			fungible_token_id:T::FungibleTokenId,
+			id: T::FungibleTokenId,
 			name: Vec<u8>,
 			symbol: Vec<u8>,
 			decimals: u8,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_create_token(&who, fungible_token_id,name, symbol, decimals)?;
+			Self::do_create_token(&who, id,name, symbol, decimals)?;
 
 			Ok(())
 		}
@@ -253,7 +253,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
-		fungible_token_id:T::FungibleTokenId,
+		id: T::FungibleTokenId,
 		name: Vec<u8>,
 		symbol: Vec<u8>,
 		decimals: u8,
@@ -266,7 +266,7 @@ impl<T: Config> Pallet<T> {
 		let bounded_symbol: BoundedVec<u8, T::StringLimit> =
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
-		ensure!(!Self::exists(fungible_token_id.clone()),Error::<T>::InvalidId);
+		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
 
 		let token = Token {
 			owner: who.clone(),
@@ -276,9 +276,9 @@ impl<T: Config> Pallet<T> {
 			total_supply: Balance::default(),
 		};
 
-		Tokens::<T>::insert(fungible_token_id, token);
+		Tokens::<T>::insert(id, token);
 
-		Self::deposit_event(Event::TokenCreated(fungible_token_id, who.clone(),name,symbol,decimals));
+		Self::deposit_event(Event::TokenCreated(id, who.clone(),name,symbol,decimals));
 
 		Ok(())
 	}

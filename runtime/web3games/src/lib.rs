@@ -86,7 +86,7 @@ pub use sp_runtime::{Perbill, Permill};
 mod constants;
 pub use constants::{currency::*, time::*};
 pub use primitives::{
-	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature,
+	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature, TokenAssetId,
 };
 
 use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
@@ -483,7 +483,7 @@ impl pallet_base_fee::Config for Runtime {
 impl pallet_token_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
-	type FungibleTokenId = u32;
+	type FungibleTokenId = TokenAssetId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -492,7 +492,7 @@ impl pallet_token_fungible::Config for Runtime {
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
-	type NonFungibleTokenId = u32;
+	type NonFungibleTokenId = TokenAssetId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -501,7 +501,7 @@ impl pallet_token_non_fungible::Config for Runtime {
 impl pallet_token_multi::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
-	type MultiTokenId = u32;
+	type MultiTokenId = TokenAssetId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -512,6 +512,7 @@ impl pallet_wrap_currency::Config for Runtime {
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
+	type Randomness = RandomnessCollectiveFlip;
 }
 
 impl pallet_exchange::Config for Runtime {
@@ -520,6 +521,7 @@ impl pallet_exchange::Config for Runtime {
 	type PoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
 }
 
 impl pallet_marketplace::Config for Runtime {

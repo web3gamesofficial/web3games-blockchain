@@ -59,7 +59,7 @@ impl<Runtime> TokenIdConversion<NonFungibleTokenIdOf<Runtime>>
 	for NonFungibleTokenExtension<Runtime>
 where
 	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
+	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
 {
 	fn try_from_address(address: H160) -> Option<NonFungibleTokenIdOf<Runtime>> {
 		let mut data = [0u8; 4];
@@ -76,7 +76,7 @@ where
 	}
 
 	fn into_address(id: NonFungibleTokenIdOf<Runtime>) -> H160 {
-		let id: u32 = id.into();
+		let id: u128 = id.into();
 		let mut data = [0u8; 20];
 		data[0..4].copy_from_slice(NFT_PRECOMPILE_ADDRESS_PREFIX);
 		data[4..20].copy_from_slice(&id.to_be_bytes());
@@ -90,7 +90,7 @@ where
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
+	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn execute(
@@ -158,19 +158,6 @@ where
 				};
 				return Some(result);
 			} else {
-				// Action::Create = "create(bytes,bytes)"
-				let input = EvmDataReader::new(&input[4..]);
-				let (origin, call) = Self::create(non_fungible_token_id,input, target_gas, context)?;
-				// initialize gasometer
-				let mut gasometer = Gasometer::new(target_gas);
-				// dispatch call (if enough gas).
-				let used_gas = RuntimeHelper::<Runtime>::try_dispatch(
-					origin,
-					call,
-					gasometer.remaining_gas()?,
-				)?;
-				gasometer.record_cost(used_gas)?;
-
 				if &input[0..4] == CREATE_SELECTOR {
 					let mut input = EvmDataReader::new(&input[4..]);
 					let result = Self::create(&mut input, gasometer, context);
@@ -203,7 +190,7 @@ where
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
+	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
@@ -213,28 +200,31 @@ where
 	) -> EvmResult<PrecompileOutput> {
 		gasometer.record_log_costs_manual(3, 32)?;
 
-		input.expect_arguments(gasometer, 3)?;
+		input.expect_arguments(gasometer, 4)?;
 
+		let id = input.read::<u128>(gasometer)?.into();
 		let name: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
 		let symbol: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
 		let base_uri: Vec<u8> = input.read::<Bytes>(gasometer)?.into();
 
-		let caller: Runtime::AccountId = Runtime::AddressMapping::into_account_id(context.caller);
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(context.caller);
 
-		let id: u32 = pallet_token_non_fungible::Pallet::<Runtime>::do_create_token(
-			&caller, name, symbol, base_uri,
-		)
-		.unwrap()
-		.into();
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::create_token { id, name, symbol, base_uri},
+				gasometer,
+			)?;
+		}
 
-		let call = pallet_token_non_fungible::Call::<Runtime>::create_token {
-			id,
-			name,
-			symbol,
-			base_uri,
-		};
-
-		Ok((Some(origin).into(), call))
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output: EvmDataWriter::new().write(true).build(),
+			logs: vec![],
+		})
 	}
 
 	fn balance_of(

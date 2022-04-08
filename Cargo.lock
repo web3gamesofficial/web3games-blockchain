@@ -4723,6 +4723,7 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "log",
  "pallet-token-fungible",
  "parity-scale-codec",
  "scale-info",
@@ -9047,6 +9048,7 @@ dependencies = [
  "pallet-token-non-fungible",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-wrap-currency",
  "parity-scale-codec",
  "runtime-common",
  "scale-info",
