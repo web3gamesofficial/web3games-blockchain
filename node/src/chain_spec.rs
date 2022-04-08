@@ -27,9 +27,9 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
-	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
+	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig,
+	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, WrapCurrencyConfig, DOLLARS,
+	WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -96,6 +96,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		None,
 		// Protocol ID
 		None,
+		None,
 		// Properties
 		Some(
 			json!({
@@ -148,6 +149,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
+		None,
 		None,
 		// Properties
 		Some(
@@ -212,6 +214,7 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID
 		None,
+		None,
 		// Properties
 		Some(
 			json!({
@@ -257,8 +260,7 @@ fn testnet_genesis(
 		grandpa: GrandpaConfig {
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
-		sudo: SudoConfig { key: root_key },
-		scheduler: Default::default(),
+		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
 		evm: EVMConfig {
 			// We need _some_ code inserted at the precompile address so that
@@ -279,17 +281,7 @@ fn testnet_genesis(
 				.collect(),
 		},
 		ethereum: EthereumConfig {},
-		orml_tokens: OrmlTokensConfig {
-			balances: endowed_accounts
-				.iter()
-				.flat_map(|x| {
-					vec![
-						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
-					]
-				})
-				.collect(),
-		},
+		base_fee: Default::default(),
+		wrap_currency: WrapCurrencyConfig {},
 	}
 }

@@ -25,10 +25,10 @@ use async_trait::async_trait;
 use fc_consensus::FrontierBlockImport;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
-use fc_rpc_core::types::FilterPool;
+use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
 use futures::StreamExt;
 use sc_cli::SubstrateCli;
-use sc_client_api::{BlockchainEvents, ExecutorProvider};
+use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 #[cfg(feature = "manual-seal")]
 use sc_consensus_manual_seal::{self as manual_seal};
@@ -38,7 +38,6 @@ use sc_keystore::LocalKeystore;
 use sc_network::warp_request_handler::WarpSyncProvider;
 use sc_service::{error::Error as ServiceError, BasePath, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker};
-use sp_consensus::SlotData;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use sp_core::U256;
 use sp_inherents::{InherentData, InherentIdentifier};
@@ -144,7 +143,13 @@ pub fn new_partial(
 		FullSelectChain,
 		sc_consensus::DefaultImportQueue<Block, FullClient>,
 		sc_transaction_pool::FullPool<Block, FullClient>,
-		(ConsensusResult, Option<FilterPool>, Arc<fc_db::Backend<Block>>, Option<Telemetry>),
+		(
+			ConsensusResult,
+			Option<FilterPool>,
+			Arc<fc_db::Backend<Block>>,
+			Option<Telemetry>,
+			FeeHistoryCache,
+		),
 	>,
 	ServiceError,
 > {
@@ -167,6 +172,7 @@ pub fn new_partial(
 		config.wasm_method,
 		config.default_heap_pages,
 		config.max_runtime_instances,
+		config.runtime_cache_size,
 	);
 
 	let (client, backend, keystore_container, task_manager) =
@@ -193,6 +199,7 @@ pub fn new_partial(
 	);
 
 	let filter_pool: Option<FilterPool> = Some(Arc::new(Mutex::new(BTreeMap::new())));
+	let fee_history_cache: FeeHistoryCache = Arc::new(Mutex::new(BTreeMap::new()));
 
 	let frontier_backend = open_frontier_backend(config)?;
 
@@ -217,7 +224,13 @@ pub fn new_partial(
 			keystore_container,
 			select_chain,
 			transaction_pool,
-			other: ((frontier_block_import, sealing), filter_pool, frontier_backend, telemetry),
+			other: (
+				(frontier_block_import, sealing),
+				filter_pool,
+				frontier_backend,
+				telemetry,
+				fee_history_cache,
+			),
 		})
 	}
 
@@ -236,7 +249,7 @@ pub fn new_partial(
 			frontier_backend.clone(),
 		);
 
-		let slot_duration = sc_consensus_aura::slot_duration(&*client)?.slot_duration();
+		let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 
 		let import_queue =
 			sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -247,7 +260,7 @@ pub fn new_partial(
 					let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 					let slot =
-						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
 							*timestamp,
 							slot_duration,
 						);
@@ -276,6 +289,7 @@ pub fn new_partial(
 				filter_pool,
 				frontier_backend,
 				telemetry,
+				fee_history_cache,
 			),
 		})
 	}
@@ -298,7 +312,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		mut keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (consensus_result, filter_pool, frontier_backend, mut telemetry),
+		other: (consensus_result, filter_pool, frontier_backend, mut telemetry, fee_history_cache),
 	} = new_partial(&config, &cli)?;
 
 	if let Some(url) = &config.keystore_remote {
@@ -313,10 +327,18 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		};
 	}
 
+	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
+		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
+		&config.chain_spec,
+	);
+
 	let warp_sync: Option<Arc<dyn WarpSyncProvider<Block>>> = {
 		#[cfg(feature = "aura")]
 		{
-			config.network.extra_sets.push(sc_finality_grandpa::grandpa_peers_set_config());
+			config
+				.network
+				.extra_sets
+				.push(sc_finality_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone()));
 			Some(Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
 				backend.clone(),
 				consensus_result.1.shared_authority_set().clone(),
@@ -363,12 +385,24 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
 
+	let overrides = crate::rpc::overrides_handle(client.clone());
+	let fee_history_limit = cli.run.fee_history_limit;
+
+	let block_data_cache = Arc::new(fc_rpc::EthBlockDataCache::new(
+		task_manager.spawn_handle(),
+		overrides.clone(),
+		50,
+		50,
+	));
+
 	let rpc_extensions_builder = {
 		let client = client.clone();
 		let pool = transaction_pool.clone();
 		let network = network.clone();
 		let filter_pool = filter_pool.clone();
 		let frontier_backend = frontier_backend.clone();
+		let overrides = overrides.clone();
+		let fee_history_cache = fee_history_cache.clone();
 		let max_past_logs = cli.run.max_past_logs;
 
 		Box::new(move |deny_unsafe, _| {
@@ -383,7 +417,11 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				filter_pool: filter_pool.clone(),
 				backend: frontier_backend.clone(),
 				max_past_logs,
+				fee_history_limit,
+				fee_history_cache: fee_history_cache.clone(),
 				command_sink: Some(command_sink.clone()),
+				overrides: overrides.clone(),
+				block_data_cache: block_data_cache.clone(),
 			};
 
 			Ok(crate::rpc::create_full(deps, subscription_task_executor.clone()))
@@ -412,6 +450,8 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			client.clone(),
 			backend.clone(),
 			frontier_backend.clone(),
+			3,
+			0,
 			SyncStrategy::Normal,
 		)
 		.for_each(|()| futures::future::ready(())),
@@ -516,7 +556,6 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 			let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
-			let raw_slot_duration = slot_duration.slot_duration();
 
 			let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 				StartAuraParams {
@@ -529,9 +568,9 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 						let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 						let slot =
-							sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+							sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
 								*timestamp,
-								raw_slot_duration,
+								slot_duration,
 							);
 
 						Ok((timestamp, slot))
@@ -571,6 +610,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			keystore,
 			local_role: role,
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
+			protocol_name: grandpa_protocol_name,
 		};
 
 		if enable_grandpa {

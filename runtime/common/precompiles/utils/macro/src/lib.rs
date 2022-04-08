@@ -74,6 +74,7 @@ pub fn keccak256(input: TokenStream) -> TokenStream {
 /// 	Tata = 1414311903u32,
 /// }
 /// ```
+///
 #[proc_macro_attribute]
 pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenStream {
 	let item = parse_macro_input!(input as ItemEnum);
@@ -86,9 +87,8 @@ pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenSt
 		match variant.discriminant {
 			Some((_, Expr::Lit(ExprLit { lit, .. }))) => {
 				if let Lit::Str(lit_str) = lit {
-					let selector = u32::from_be_bytes(
-						Keccak256::digest(lit_str.value().as_ref())[..4].try_into().unwrap(),
-					);
+					let digest = Keccak256::digest(lit_str.value().as_ref());
+					let selector = u32::from_be_bytes([digest[0], digest[1], digest[2], digest[3]]);
 					ident_expressions.push(variant.ident);
 					variant_expressions.push(Expr::Lit(ExprLit {
 						lit: Lit::Verbatim(Literal::u32_suffixed(selector)),
@@ -118,6 +118,7 @@ pub fn generate_function_selector(_: TokenStream, input: TokenStream) -> TokenSt
 
 	(quote! {
 		#(#attrs)*
+		#[derive(num_enum::TryFromPrimitive, num_enum::IntoPrimitive)]
 		#[repr(u32)]
 		#vis #enum_token #ident {
 			#(
