@@ -75,6 +75,12 @@ pub struct Bid<AccountId> {
 	pub bid_price: Option<Balance>,
 }
 
+// #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+// pub enum SaleTokenId {
+// 	NFT_TOKEN_ID,
+// 	FT_TOKEN_ID,
+// }
+
 /// Collection Sale
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Sale<AccountId> {

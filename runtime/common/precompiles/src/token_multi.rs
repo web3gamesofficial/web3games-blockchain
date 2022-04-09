@@ -80,6 +80,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + AsRef<[u8]>,
 {
 	fn execute(
 		&self,
@@ -172,6 +173,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + AsRef<[u8]>,
 {
 	fn create(
 		input: &mut EvmDataReader,
@@ -216,7 +218,7 @@ where
 
 		let account: Runtime::AccountId =
 			Runtime::AddressMapping::into_account_id(input.read::<Address>(gasometer)?.0);
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 
 		let balance: Balance =
 			pallet_token_multi::Pallet::<Runtime>::balance_of(id, (token_id, &account));
@@ -243,10 +245,15 @@ where
 			.iter()
 			.map(|&a| Runtime::AddressMapping::into_account_id(a.0))
 			.collect();
-		let ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let token_ids: Vec<Runtime::TokenId> = input
+			.read::<Vec<TokenId>>(gasometer)?
+			.iter()
+			.map(|&a| Runtime::TokenId::from(a))
+			.collect();
+
 
 		let balances: Vec<Balance> =
-			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, ids).unwrap();
+			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids).unwrap();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -268,7 +275,7 @@ where
 
 		let from: H160 = input.read::<Address>(gasometer)?.into();
 		let to: H160 = input.read::<Address>(gasometer)?.into();
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
@@ -311,7 +318,11 @@ where
 
 		let from: H160 = input.read::<Address>(gasometer)?.into();
 		let to: H160 = input.read::<Address>(gasometer)?.into();
-		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let token_ids: Vec<Runtime::TokenId> = input
+			.read::<Vec<TokenId>>(gasometer)?
+			.iter()
+			.map(|&a| Runtime::TokenId::from(a))
+			.collect();
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
@@ -353,7 +364,7 @@ where
 		input.expect_arguments(gasometer, 3)?;
 
 		let to: H160 = input.read::<Address>(gasometer)?.into();
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
@@ -388,7 +399,11 @@ where
 		input.expect_arguments(gasometer, 3)?;
 
 		let to: H160 = input.read::<Address>(gasometer)?.into();
-		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let token_ids: Vec<Runtime::TokenId> = input
+			.read::<Vec<TokenId>>(gasometer)?
+			.iter()
+			.map(|&a| Runtime::TokenId::from(a))
+			.collect();
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
@@ -422,7 +437,7 @@ where
 
 		input.expect_arguments(gasometer, 2)?;
 
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 		let amount = input.read::<Balance>(gasometer)?;
 
 		{
@@ -455,7 +470,11 @@ where
 
 		input.expect_arguments(gasometer, 2)?;
 
-		let token_ids = input.read::<Vec<TokenId>>(gasometer)?;
+		let token_ids: Vec<Runtime::TokenId> = input
+			.read::<Vec<TokenId>>(gasometer)?
+			.iter()
+			.map(|&a| Runtime::TokenId::from(a))
+			.collect();
 		let amounts = input.read::<Vec<Balance>>(gasometer)?;
 
 		{
@@ -487,7 +506,7 @@ where
 
 		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 
 		let uri: Vec<u8> = pallet_token_multi::Pallet::<Runtime>::uri(id, token_id);
 

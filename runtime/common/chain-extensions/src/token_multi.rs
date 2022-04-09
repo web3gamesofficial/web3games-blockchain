@@ -88,7 +88,7 @@ where
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					TokenId,
+					<E::T as pallet_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -114,7 +114,7 @@ where
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					Vec<TokenId>,
+					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -139,7 +139,7 @@ where
 				let (id, to, token_id, amount): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
-					TokenId,
+					<E::T as pallet_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -163,7 +163,7 @@ where
 				let (id, to, token_ids, amounts): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
-					Vec<TokenId>,
+					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -187,7 +187,7 @@ where
 
 				let (id, token_id, amount): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
-					TokenId,
+					<E::T as pallet_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -209,7 +209,7 @@ where
 
 				let (id, token_ids, amounts): (
 					<E::T as pallet_token_multi::Config>::MultiTokenId,
-					Vec<TokenId>,
+					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
@@ -254,7 +254,7 @@ where
 
 				let in_len = env.in_len();
 
-				let token_ids: Vec<TokenId> = env.read_as_unbounded(in_len)?;
+				let token_ids: Vec<<E::T as pallet_token_multi::Config>::TokenId> = env.read_as_unbounded(in_len)?;
 
 				let in_len = env.in_len();
 
@@ -282,7 +282,7 @@ where
 
 				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
 				let account: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: TokenId = env.read_as()?;
+				let token_id: <E::T as pallet_token_multi::Config>::TokenId = env.read_as()?;
 
 				let balance: Balance =
 					pallet_token_multi::Pallet::<E::T>::balance_of(id, (token_id, &account));

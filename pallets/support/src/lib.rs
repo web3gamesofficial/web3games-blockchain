@@ -18,7 +18,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use primitives::{TokenId, TokenIndex};
+use primitives::TokenIndex;
 use sp_core::H160;
 use sp_std::prelude::*;
 
@@ -47,26 +47,29 @@ pub trait FungibleMetadata {
 
 pub trait NonFungibleMetadata {
 	type NonFungibleTokenId;
+	type TokenId;
 
 	fn token_name(id: Self::NonFungibleTokenId) -> Vec<u8>;
 	fn token_symbol(id: Self::NonFungibleTokenId) -> Vec<u8>;
-	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8>;
+	fn token_uri(id: Self::NonFungibleTokenId, token_id: Self::TokenId) -> Vec<u8>;
 }
 
 pub trait NonFungibleEnumerable<AccountId> {
 	type NonFungibleTokenId;
+	type TokenId;
 
 	fn total_supply(id: Self::NonFungibleTokenId) -> u32;
-	fn token_by_index(id: Self::NonFungibleTokenId, index: TokenIndex) -> TokenId;
+	fn token_by_index(id: Self::NonFungibleTokenId, index: TokenIndex) -> Self::TokenId;
 	fn token_of_owner_by_index(
 		id: Self::NonFungibleTokenId,
 		owner: AccountId,
 		index: TokenIndex,
-	) -> TokenId;
+	) -> Self::TokenId;
 }
 
 pub trait MultiMetadata {
 	type MultiTokenId;
+	type TokenId;
 
-	fn uri(id: Self::MultiTokenId, token_id: TokenId) -> Vec<u8>;
+	fn uri(id: Self::MultiTokenId, token_id: Self::TokenId) -> Vec<u8>;
 }

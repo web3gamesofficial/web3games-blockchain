@@ -26,7 +26,7 @@ use frame_support::{
 	BoundedVec, PalletId,
 };
 use pallet_support::{NonFungibleEnumerable, NonFungibleMetadata};
-use primitives::{TokenId, TokenIndex};
+use primitives::TokenIndex;
 use scale_info::TypeInfo;
 use sp_runtime::{
 	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
@@ -73,6 +73,8 @@ pub mod pallet {
 			+ Copy
 			+ MaxEncodedLen;
 
+		type TokenId: Member + Parameter + Default + MaxEncodedLen + Copy;
+
 		/// The maximum length of base uri stored on-chain.
 		#[pallet::constant]
 		type StringLimit: Get<u32>;
@@ -103,7 +105,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
-		TokenId,
+		T::TokenId,
 		T::AccountId,
 		OptionQuery,
 		GetDefault,
@@ -129,7 +131,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
-		TokenId,
+		T::TokenId,
 		T::AccountId,
 		OptionQuery,
 		GetDefault,
@@ -160,7 +162,7 @@ pub mod pallet {
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
 		TokenIndex,
-		TokenId,
+		T::TokenId,
 		ValueQuery,
 	>;
 
@@ -170,7 +172,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
-		TokenId,
+		T::TokenId,
 		TokenIndex,
 		ValueQuery,
 	>;
@@ -182,7 +184,7 @@ pub mod pallet {
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
 		(T::AccountId, TokenIndex),
-		TokenId,
+		T::TokenId,
 		ValueQuery,
 	>;
 
@@ -192,7 +194,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
-		TokenId,
+		T::TokenId,
 		TokenIndex,
 		ValueQuery,
 	>;
@@ -201,8 +203,8 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		TokenCreated(T::NonFungibleTokenId, T::AccountId,Vec<u8>,Vec<u8>,Vec<u8>),
-		Transfer(T::NonFungibleTokenId, T::AccountId, T::AccountId, TokenId),
-		Approval(T::NonFungibleTokenId, T::AccountId, T::AccountId, TokenId),
+		Transfer(T::NonFungibleTokenId, T::AccountId, T::AccountId, T::TokenId),
+		Approval(T::NonFungibleTokenId, T::AccountId, T::AccountId, T::TokenId),
 		ApprovalForAll(T::NonFungibleTokenId, T::AccountId, T::AccountId, bool),
 	}
 
@@ -249,7 +251,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
 			to: T::AccountId,
-			token_id: TokenId,
+			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -278,7 +280,7 @@ pub mod pallet {
 			id: T::NonFungibleTokenId,
 			from: T::AccountId,
 			to: T::AccountId,
-			token_id: TokenId,
+			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -292,7 +294,7 @@ pub mod pallet {
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
 			to: T::AccountId,
-			token_id: TokenId,
+			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -305,7 +307,7 @@ pub mod pallet {
 		pub fn burn(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
-			token_id: TokenId,
+			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -325,7 +327,7 @@ impl<T: Config> Pallet<T> {
 		Tokens::<T>::contains_key(id)
 	}
 
-	pub fn token_exists(id: T::NonFungibleTokenId, token_id: TokenId) -> bool {
+	pub fn token_exists(id: T::NonFungibleTokenId, token_id: T::TokenId) -> bool {
 		Owners::<T>::contains_key(id, token_id)
 	}
 
@@ -366,7 +368,7 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
 		to: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 		ensure!(to != &owner, Error::<T>::ApproveToCurrentOwner);
@@ -403,7 +405,7 @@ impl<T: Config> Pallet<T> {
 		id: T::NonFungibleTokenId,
 		from: &T::AccountId,
 		to: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		ensure!(Self::token_exists(id, token_id), Error::<T>::TokenNonExistent);
 		ensure!(
@@ -418,7 +420,7 @@ impl<T: Config> Pallet<T> {
 		id: T::NonFungibleTokenId,
 		from: &T::AccountId,
 		to: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		ensure!(
 			Owners::<T>::get(id, token_id) == Some(from.clone()),
@@ -460,7 +462,7 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
 		to: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		ensure!(Self::has_permission(id, who), Error::<T>::NoPermission);
 		ensure!(!Self::token_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
@@ -491,7 +493,7 @@ impl<T: Config> Pallet<T> {
 	pub fn do_burn(
 		who: &T::AccountId,
 		id: T::NonFungibleTokenId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 		ensure!(who == &owner, Error::<T>::NotTokenOwner);
@@ -519,7 +521,7 @@ impl<T: Config> Pallet<T> {
 	fn is_approved_or_owner(
 		id: T::NonFungibleTokenId,
 		spender: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> Result<bool, DispatchError> {
 		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 
@@ -533,7 +535,7 @@ impl<T: Config> Pallet<T> {
 		*who == token.owner
 	}
 
-	fn clear_approval(id: T::NonFungibleTokenId, token_id: TokenId) -> DispatchResult {
+	fn clear_approval(id: T::NonFungibleTokenId, token_id: T::TokenId) -> DispatchResult {
 		TokenApprovals::<T>::remove(id, token_id);
 		Ok(())
 	}
@@ -541,7 +543,7 @@ impl<T: Config> Pallet<T> {
 	fn add_token_to_owner_enumeration(
 		id: T::NonFungibleTokenId,
 		to: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		let new_token_index = Self::balance_of(id, to);
 
@@ -553,7 +555,7 @@ impl<T: Config> Pallet<T> {
 
 	fn add_token_to_all_tokens_enumeration(
 		id: T::NonFungibleTokenId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		TotalSupply::<T>::try_mutate(id, |total_supply| -> DispatchResult {
 			let new_token_index = *total_supply;
@@ -571,7 +573,7 @@ impl<T: Config> Pallet<T> {
 	fn remove_token_from_owner_enumeration(
 		id: T::NonFungibleTokenId,
 		from: &T::AccountId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		let balance_of_from = Self::balance_of(id, from);
 
@@ -596,7 +598,7 @@ impl<T: Config> Pallet<T> {
 
 	fn remove_token_from_all_tokens_enumeration(
 		id: T::NonFungibleTokenId,
-		token_id: TokenId,
+		token_id: T::TokenId,
 	) -> DispatchResult {
 		let total_supply = Self::total_supply(id);
 
@@ -623,8 +625,12 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-impl<T: Config> NonFungibleMetadata for Pallet<T> {
+impl<T: Config> NonFungibleMetadata for Pallet<T>
+where
+	T::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
+{
 	type NonFungibleTokenId = T::NonFungibleTokenId;
+	type TokenId = T::TokenId;
 
 	fn token_name(id: Self::NonFungibleTokenId) -> Vec<u8> {
 		Tokens::<T>::get(id).unwrap().name.to_vec()
@@ -634,27 +640,28 @@ impl<T: Config> NonFungibleMetadata for Pallet<T> {
 		Tokens::<T>::get(id).unwrap().symbol.to_vec()
 	}
 
-	fn token_uri(id: Self::NonFungibleTokenId, token_id: TokenId) -> Vec<u8> {
+	fn token_uri(id: Self::NonFungibleTokenId, token_id: Self::TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
-		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		let token_id_buf: Vec<u8> = token_id.as_ref().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }
 
 impl<T: Config> NonFungibleEnumerable<T::AccountId> for Pallet<T> {
 	type NonFungibleTokenId = T::NonFungibleTokenId;
+	type TokenId = T::TokenId;
 
-	fn total_supply(id: Self::NonFungibleTokenId) -> u32 {
+	fn total_supply(id: Self::NonFungibleTokenId) -> TokenIndex {
 		TotalSupply::<T>::get(id)
 	}
-	fn token_by_index(id: Self::NonFungibleTokenId, index: TokenIndex) -> TokenId {
+	fn token_by_index(id: Self::NonFungibleTokenId, index: TokenIndex) -> Self::TokenId {
 		AllTokens::<T>::get(id, index)
 	}
 	fn token_of_owner_by_index(
 		id: Self::NonFungibleTokenId,
 		owner: T::AccountId,
 		index: TokenIndex,
-	) -> TokenId {
+	) -> Self::TokenId {
 		OwnedTokens::<T>::get(id, (owner, index))
 	}
 }

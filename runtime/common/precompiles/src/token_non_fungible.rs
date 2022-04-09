@@ -91,6 +91,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
 	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn execute(
@@ -191,6 +192,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
 	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
@@ -260,7 +262,7 @@ where
 
 		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>(gasometer)?;
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 
 		let owner_account_id: Runtime::AccountId =
 			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
@@ -293,6 +295,7 @@ where
 				Runtime::AddressMapping::into_account_id(context.caller);
 			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			let token_id: Runtime::TokenId = token_id.into();
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
@@ -334,6 +337,7 @@ where
 			let caller: Runtime::AccountId =
 				Runtime::AddressMapping::into_account_id(context.caller);
 			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			let token_id: Runtime::TokenId = token_id.into();
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
@@ -373,6 +377,7 @@ where
 		{
 			let caller: Runtime::AccountId =
 				Runtime::AddressMapping::into_account_id(context.caller);
+			let token_id: Runtime::TokenId = token_id.into();
 
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
@@ -438,7 +443,7 @@ where
 
 		input.expect_arguments(gasometer, 1)?;
 
-		let token_id = input.read::<TokenId>(gasometer)?.into();
+		let token_id: Runtime::TokenId = input.read::<TokenId>(gasometer)?.into();
 
 		let token_uri: Vec<u8> =
 			pallet_token_non_fungible::Pallet::<Runtime>::token_uri(id, token_id);
@@ -479,7 +484,7 @@ where
 		let token_index = input.read::<TokenIndex>(gasometer)?.into();
 
 		let token_id: TokenId =
-			pallet_token_non_fungible::Pallet::<Runtime>::token_by_index(id, token_index);
+			pallet_token_non_fungible::Pallet::<Runtime>::token_by_index(id, token_index).into();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
@@ -508,7 +513,7 @@ where
 				id,
 				owner,
 				token_index,
-			);
+			).into();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

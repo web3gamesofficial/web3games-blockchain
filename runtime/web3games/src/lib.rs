@@ -86,7 +86,7 @@ pub use sp_runtime::{Perbill, Permill};
 mod constants;
 pub use constants::{currency::*, time::*};
 pub use primitives::{
-	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature, TokenAssetId,
+	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature, TokenAssetId, TokenId,
 };
 
 use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
@@ -493,6 +493,7 @@ impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = TokenAssetId;
+	type TokenId = TokenId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -502,6 +503,7 @@ impl pallet_token_multi::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = TokenAssetId;
+	type TokenId = TokenId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
