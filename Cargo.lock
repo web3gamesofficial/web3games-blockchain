@@ -1714,7 +1714,7 @@ dependencies = [
 [[package]]
 name = "fork-tree"
 version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -4520,7 +4520,7 @@ dependencies = [
 [[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4715,6 +4715,22 @@ dependencies = [
  "parity-scale-codec",
  "sp-api",
  "sp-runtime",
+]
+
+[[package]]
+name = "pallet-treasury"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech//substrate?rev=69079b58579ea36812c4a375a118f27aac0fb281#69079b58579ea36812c4a375a118f27aac0fb281"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -6036,7 +6052,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "async-trait",
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
@@ -6079,7 +6095,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-epochs"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
  "parity-scale-codec",
@@ -6092,7 +6108,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-manual-seal"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -7248,7 +7264,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "async-trait",
  "merlin",
@@ -7285,7 +7301,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-vrf"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "parity-scale-codec",
  "schnorrkel",
@@ -7966,7 +7982,7 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#65b44e91bedd6961ef30cef08e89273b7d98b4ed"
+source = "git+https://github.com/paritytech/substrate#26eff96fed52fb2001f37f17e743939b0e2384bb"
 dependencies = [
  "ansi_term",
  "build-helper",
@@ -9048,6 +9064,7 @@ dependencies = [
  "pallet-token-non-fungible",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-treasury",
  "pallet-wrap-currency",
  "parity-scale-codec",
  "runtime-common",

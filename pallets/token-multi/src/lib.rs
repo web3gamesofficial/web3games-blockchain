@@ -129,7 +129,13 @@ pub mod pallet {
 		Burn(T::MultiTokenId, T::AccountId, T::TokenId, Balance),
 		BatchBurn(T::MultiTokenId, T::AccountId, Vec<T::TokenId>, Vec<Balance>),
 		Transferred(T::MultiTokenId, T::AccountId, T::AccountId, T::TokenId, Balance),
-		BatchTransferred(T::MultiTokenId, T::AccountId, T::AccountId, Vec<T::TokenId>, Vec<Balance>),
+		BatchTransferred(
+			T::MultiTokenId,
+			T::AccountId,
+			T::AccountId,
+			Vec<T::TokenId>,
+			Vec<Balance>,
+		),
 		ApprovalForAll(T::MultiTokenId, T::AccountId, T::AccountId, bool),
 	}
 
@@ -156,7 +162,11 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
-		pub fn create_token(origin: OriginFor<T>, id: T::MultiTokenId, uri: Vec<u8>) -> DispatchResult {
+		pub fn create_token(
+			origin: OriginFor<T>,
+			id: T::MultiTokenId,
+			uri: Vec<u8>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
 			Self::do_create_token(&who, id, uri)?;
@@ -277,11 +287,10 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
-		id:T::MultiTokenId,
+		id: T::MultiTokenId,
 		uri: Vec<u8>,
 	) -> Result<T::MultiTokenId, DispatchError> {
-
-		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
+		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
@@ -546,14 +555,15 @@ impl<T: Config> Pallet<T> {
 
 impl<T: Config> MultiMetadata for Pallet<T>
 where
-	T::TokenId: From<u128> + AsRef<[u8]>,
+	T::TokenId: From<u128> + Into<u128>,
 {
 	type MultiTokenId = T::MultiTokenId;
 	type TokenId = T::TokenId;
 
 	fn uri(id: Self::MultiTokenId, token_id: T::TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().uri.to_vec();
-		let token_id_buf: Vec<u8> = token_id.as_ref().to_vec();
+		let token_id: u128 = token_id.into();
+		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }

@@ -21,7 +21,7 @@
 use codec::{Decode, Encode};
 use frame_support::{
 	dispatch::DispatchResult,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency, Randomness},
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get, Randomness, ReservableCurrency},
 	PalletId,
 };
 use sp_runtime::traits::AccountIdConversion;
@@ -73,7 +73,7 @@ pub mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig
 	where
-		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>
+		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
 	{
 		fn build(&self) {
 			let result = Pallet::<T>::create_wrap_token();
@@ -103,7 +103,7 @@ pub mod pallet {
 
 			let vault_account = Self::account_id();
 
-			<T as Config>::Currency::transfer(&who, &vault_account, amount, AllowDeath)?;
+			<T as Config>::Currency::transfer(&who, &vault_account, amount, KeepAlive)?;
 
 			let token_id = WrapToken::<T>::get();
 			pallet_token_fungible::Pallet::<T>::do_mint(
@@ -122,7 +122,7 @@ pub mod pallet {
 		pub fn withdraw(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			<T as Config>::Currency::transfer(&Self::account_id(), &who, amount, AllowDeath)?;
+			<T as Config>::Currency::transfer(&Self::account_id(), &who, amount, KeepAlive)?;
 
 			let token_id = WrapToken::<T>::get();
 			pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount.into())?;
@@ -136,7 +136,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T>
 where
-	<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>
+	<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
 {
 	pub fn account_id() -> T::AccountId {
 		<T as pallet::Config>::PalletId::get().into_account()
@@ -152,13 +152,7 @@ where
 		let name: Vec<u8> = "Wrapped Currency".as_bytes().to_vec();
 		let symbol: Vec<u8> = "WW3G".as_bytes().to_vec();
 
-		pallet_token_fungible::Pallet::<T>::do_create_token(
-			&vault_account,
-			id,
-			name,
-			symbol,
-			18,
-		)?;
+		pallet_token_fungible::Pallet::<T>::do_create_token(&vault_account, id, name, symbol, 18)?;
 
 		WrapToken::<T>::put(id);
 

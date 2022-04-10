@@ -72,4 +72,3 @@ pub type TokenId = u128;
 
 /// Index of token created
 pub type TokenIndex = u32;
-

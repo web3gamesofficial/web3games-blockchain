@@ -202,7 +202,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		TokenCreated(T::NonFungibleTokenId, T::AccountId,Vec<u8>,Vec<u8>,Vec<u8>),
+		TokenCreated(T::NonFungibleTokenId, T::AccountId, Vec<u8>, Vec<u8>, Vec<u8>),
 		Transfer(T::NonFungibleTokenId, T::AccountId, T::AccountId, T::TokenId),
 		Approval(T::NonFungibleTokenId, T::AccountId, T::AccountId, T::TokenId),
 		ApprovalForAll(T::NonFungibleTokenId, T::AccountId, T::AccountId, bool),
@@ -241,7 +241,7 @@ pub mod pallet {
 			base_uri: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_create_token(&who, id,name, symbol, base_uri)?;
+			Self::do_create_token(&who, id, name, symbol, base_uri)?;
 
 			Ok(())
 		}
@@ -338,7 +338,7 @@ impl<T: Config> Pallet<T> {
 		symbol: Vec<u8>,
 		base_uri: Vec<u8>,
 	) -> DispatchResult {
-		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
+		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
@@ -359,7 +359,7 @@ impl<T: Config> Pallet<T> {
 
 		Tokens::<T>::insert(id, token);
 
-		Self::deposit_event(Event::TokenCreated(id, who.clone(),name,symbol,base_uri));
+		Self::deposit_event(Event::TokenCreated(id, who.clone(), name, symbol, base_uri));
 
 		Ok(())
 	}
@@ -627,7 +627,7 @@ impl<T: Config> Pallet<T> {
 
 impl<T: Config> NonFungibleMetadata for Pallet<T>
 where
-	T::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
+	T::TokenId: From<u128> + Into<u128>,
 {
 	type NonFungibleTokenId = T::NonFungibleTokenId;
 	type TokenId = T::TokenId;
@@ -642,7 +642,8 @@ where
 
 	fn token_uri(id: Self::NonFungibleTokenId, token_id: Self::TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
-		let token_id_buf: Vec<u8> = token_id.as_ref().to_vec();
+		let token_id: u128 = token_id.into();
+		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }

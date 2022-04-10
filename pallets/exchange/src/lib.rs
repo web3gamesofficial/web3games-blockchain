@@ -22,7 +22,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency, Randomness},
+	traits::{Currency, ExistenceRequirement::AllowDeath, Get, Randomness, ReservableCurrency},
 	PalletId,
 };
 use integer_sqrt::IntegerSquareRoot;

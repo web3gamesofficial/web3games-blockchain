@@ -25,7 +25,7 @@ use precompile_utils::{
 	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
 	Gasometer, LogsBuilder, RuntimeHelper,
 };
-use primitives::{Balance};
+use primitives::Balance;
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 

@@ -91,7 +91,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
 	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
+	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn execute(
@@ -192,7 +192,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
 	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128> + AsRef<[u8]>,
+	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
@@ -216,7 +216,12 @@ where
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::create_token { id, name, symbol, base_uri},
+				pallet_token_non_fungible::Call::<Runtime>::create_token {
+					id,
+					name,
+					symbol,
+					base_uri,
+				},
 				gasometer,
 			)?;
 		}
@@ -513,7 +518,8 @@ where
 				id,
 				owner,
 				token_index,
-			).into();
+			)
+			.into();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

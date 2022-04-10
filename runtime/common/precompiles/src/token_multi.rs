@@ -80,7 +80,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + AsRef<[u8]>,
+	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
 	fn execute(
 		&self,
@@ -173,7 +173,7 @@ where
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + AsRef<[u8]>,
+	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
 	fn create(
 		input: &mut EvmDataReader,
@@ -251,9 +251,9 @@ where
 			.map(|&a| Runtime::TokenId::from(a))
 			.collect();
 
-
 		let balances: Vec<Balance> =
-			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids).unwrap();
+			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids)
+				.unwrap();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

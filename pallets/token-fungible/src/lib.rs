@@ -126,7 +126,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		TokenCreated(T::FungibleTokenId, T::AccountId,Vec<u8>,Vec<u8>,u8),
+		TokenCreated(T::FungibleTokenId, T::AccountId, Vec<u8>, Vec<u8>, u8),
 		Transfer(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 		Approval(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 	}
@@ -162,7 +162,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_create_token(&who, id,name, symbol, decimals)?;
+			Self::do_create_token(&who, id, name, symbol, decimals)?;
 
 			Ok(())
 		}
@@ -266,7 +266,7 @@ impl<T: Config> Pallet<T> {
 		let bounded_symbol: BoundedVec<u8, T::StringLimit> =
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
-		ensure!(!Self::exists(id.clone()),Error::<T>::InvalidId);
+		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let token = Token {
 			owner: who.clone(),
@@ -278,7 +278,7 @@ impl<T: Config> Pallet<T> {
 
 		Tokens::<T>::insert(id, token);
 
-		Self::deposit_event(Event::TokenCreated(id, who.clone(),name,symbol,decimals));
+		Self::deposit_event(Event::TokenCreated(id, who.clone(), name, symbol, decimals));
 
 		Ok(())
 	}

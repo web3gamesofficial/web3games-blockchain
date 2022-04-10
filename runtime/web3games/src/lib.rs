@@ -44,7 +44,7 @@ use sp_runtime::{
 		NumberFor, PostDispatchInfoOf, Zero,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult,
+	ApplyExtrinsicResult, Percent,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -86,7 +86,8 @@ pub use sp_runtime::{Perbill, Permill};
 mod constants;
 pub use constants::{currency::*, time::*};
 pub use primitives::{
-	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature, TokenAssetId, TokenId,
+	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature,
+	TokenAssetId, TokenId,
 };
 
 use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
@@ -478,6 +479,38 @@ impl pallet_base_fee::Config for Runtime {
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 1 * DOLLARS;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
+	pub const Burn: Permill = Permill::from_percent(50);
+	pub const TipCountdown: BlockNumber = 1 * DAYS;
+	pub const TipFindersFee: Percent = Percent::from_percent(20);
+	pub const TipReportDepositBase: Balance = 1 * DOLLARS;
+	pub const DataDepositPerByte: Balance = 1 * CENTS;
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+	pub const MaximumReasonLength: u32 = 300;
+	pub const MaxApprovals: u32 = 100;
+}
+
+impl pallet_treasury::Config for Runtime {
+	type PalletId = TreasuryPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EnsureRoot<AccountId>;
+	type RejectOrigin = EnsureRoot<AccountId>;
+	type Event = Event;
+	type OnSlash = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type ProposalBondMaximum = ();
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+	type BurnDestination = ();
+	type SpendFunds = ();
+	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+	type MaxApprovals = MaxApprovals;
+}
+
 // web3games pallets
 
 impl pallet_token_fungible::Config for Runtime {
@@ -526,12 +559,18 @@ impl pallet_exchange::Config for Runtime {
 	type Randomness = RandomnessCollectiveFlip;
 }
 
+parameter_types! {
+	pub const FeesCollectorShareCut: Percent = Percent::from_percent(2);
+	pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account();
+}
+
 impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
-	type StringLimit = StringLimit;
+	type Time = Timestamp;
 	type PalletId = MarketplacePalletId;
-	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
+	type FeesCollectorShareCut = FeesCollectorShareCut;
+	type FeesCollector = TreasuryAccount;
 }
 
 parameter_types! {
@@ -563,6 +602,7 @@ construct_runtime!(
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
 		BaseFee: pallet_base_fee,
+		Treasury: pallet_treasury,
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
