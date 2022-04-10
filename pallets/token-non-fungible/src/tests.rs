@@ -23,14 +23,26 @@ use frame_support::assert_ok;
 #[test]
 fn test_create_token_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 	})
 }
 
 #[test]
 fn test_mint_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 		assert_ok!(TokenNonFungible::mint(Origin::signed(1), 1, 2, 1));
 	})
 }
@@ -38,7 +50,13 @@ fn test_mint_works() {
 #[test]
 fn test_approve_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 		assert_ok!(TokenNonFungible::mint(Origin::signed(1), 1, 1, 1));
 		assert_ok!(TokenNonFungible::approve(Origin::signed(1), 1, 2, 1));
 	})
@@ -47,7 +65,13 @@ fn test_approve_works() {
 #[test]
 fn test_set_approve_for_all_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 		assert_ok!(TokenNonFungible::mint(Origin::signed(1), 1, 1, 1));
 		assert_ok!(TokenNonFungible::set_approve_for_all(Origin::signed(1), 1, 2, true));
 	})
@@ -56,7 +80,13 @@ fn test_set_approve_for_all_works() {
 #[test]
 fn test_transfer_from_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 		assert_ok!(TokenNonFungible::mint(Origin::signed(1), 1, 1, 1));
 		assert_ok!(TokenNonFungible::transfer_from(Origin::signed(1), 1, 1, 2, 1));
 	})
@@ -65,7 +95,13 @@ fn test_transfer_from_works() {
 #[test]
 fn test_burn_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenNonFungible::create_token(Origin::signed(1), 1, vec![0u8; 10], vec![0u8; 10], vec![0u8; 20]));
+		assert_ok!(TokenNonFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8; 10],
+			vec![0u8; 10],
+			vec![0u8; 20]
+		));
 		assert_ok!(TokenNonFungible::mint(Origin::signed(1), 1, 1, 1));
 		assert_ok!(TokenNonFungible::burn(Origin::signed(1), 1, 1));
 	})

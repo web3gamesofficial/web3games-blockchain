@@ -39,7 +39,13 @@ fn test_mint_works() {
 fn test_batch_mint_works() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(TokenMulti::create_token(Origin::signed(1), 1, vec![0u8; 20]));
-		assert_ok!(TokenMulti::mint_batch(Origin::signed(1), 1, 2, vec![1, 2, 3, 4, 5], vec![10u128; 5]));
+		assert_ok!(TokenMulti::mint_batch(
+			Origin::signed(1),
+			1,
+			2,
+			vec![1, 2, 3, 4, 5],
+			vec![10u128; 5]
+		));
 	})
 }
 
@@ -57,14 +63,7 @@ fn test_transfer_from_works() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(TokenMulti::create_token(Origin::signed(1), 1, vec![0u8; 20]));
 		assert_ok!(TokenMulti::mint(Origin::signed(1), 1, 1, 1, 10));
-		assert_ok!(TokenMulti::transfer_from(
-			Origin::signed(1),
-			1,
-			1,
-			2,
-			1,
-			5
-		));
+		assert_ok!(TokenMulti::transfer_from(Origin::signed(1), 1, 1, 2, 1, 5));
 	})
 }
 
@@ -72,7 +71,13 @@ fn test_transfer_from_works() {
 fn test_batch_transfer_from_works() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(TokenMulti::create_token(Origin::signed(1), 1, vec![0u8; 20]));
-		assert_ok!(TokenMulti::mint_batch(Origin::signed(1), 1, 1, vec![1, 2, 3, 4, 5], vec![10u128; 5]));
+		assert_ok!(TokenMulti::mint_batch(
+			Origin::signed(1),
+			1,
+			1,
+			vec![1, 2, 3, 4, 5],
+			vec![10u128; 5]
+		));
 		assert_ok!(TokenMulti::batch_transfer_from(
 			Origin::signed(1),
 			1,
@@ -97,7 +102,18 @@ fn test_burn_works() {
 fn test_batch_burn_works() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(TokenMulti::create_token(Origin::signed(1), 1, vec![0u8; 20]));
-		assert_ok!(TokenMulti::mint_batch(Origin::signed(1), 1, 1, vec![1, 2, 3, 4, 5], vec![10u128; 5]));
-		assert_ok!(TokenMulti::burn_batch(Origin::signed(1), 1, vec![1, 2, 3, 4, 5], vec![5u128; 5]));
+		assert_ok!(TokenMulti::mint_batch(
+			Origin::signed(1),
+			1,
+			1,
+			vec![1, 2, 3, 4, 5],
+			vec![10u128; 5]
+		));
+		assert_ok!(TokenMulti::burn_batch(
+			Origin::signed(1),
+			1,
+			vec![1, 2, 3, 4, 5],
+			vec![5u128; 5]
+		));
 	})
 }

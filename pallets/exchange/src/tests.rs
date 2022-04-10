@@ -23,8 +23,20 @@ use frame_support::assert_ok;
 #[test]
 fn test_create_pool_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(TokenFungible::create_token(Origin::signed(1), 1, vec![0u8, 10], vec![0u8, 10], 18));
-		assert_ok!(TokenFungible::create_token(Origin::signed(1), 2, vec![0u8, 10], vec![0u8, 10], 18));
+		assert_ok!(TokenFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8, 10],
+			vec![0u8, 10],
+			18
+		));
+		assert_ok!(TokenFungible::create_token(
+			Origin::signed(1),
+			2,
+			vec![0u8, 10],
+			vec![0u8, 10],
+			18
+		));
 		// assert_ok!(Exchange::create_pool(Origin::signed(1), 1, 2));
 		// assert_eq!(Exchange::get_pool((1, 2)), 0);
 	})
