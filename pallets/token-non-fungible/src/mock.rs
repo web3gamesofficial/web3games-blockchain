@@ -102,6 +102,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = u32;
+	type TokenId = u32;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;

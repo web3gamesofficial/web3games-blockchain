@@ -4432,6 +4432,7 @@ dependencies = [
  "integer-sqrt",
  "log",
  "pallet-balances",
+ "pallet-randomness-collective-flip",
  "pallet-timestamp",
  "pallet-token-fungible",
  "parity-scale-codec",

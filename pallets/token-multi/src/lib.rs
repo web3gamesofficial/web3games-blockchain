@@ -168,10 +168,7 @@ pub mod pallet {
 			uri: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_create_token(&who, id, uri)?;
-
-			Ok(())
+			Self::do_create_token(&who, id, uri)
 		}
 
 		#[pallet::weight(10_000)]
@@ -182,10 +179,7 @@ pub mod pallet {
 			approved: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_set_approval_for_all(&who, id, &operator, approved)?;
-
-			Ok(())
+			Self::do_set_approval_for_all(&who, id, &operator, approved)
 		}
 
 		#[pallet::weight(10_000)]
@@ -198,10 +192,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_transfer_from(&who, id, &from, &to, token_id, amount)?;
-
-			Ok(())
+			Self::do_transfer_from(&who, id, &from, &to, token_id, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -214,10 +205,7 @@ pub mod pallet {
 			amounts: Vec<Balance>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_batch_transfer_from(&who, id, &from, &to, token_ids, amounts)?;
-
-			Ok(())
+			Self::do_batch_transfer_from(&who, id, &from, &to, token_ids, amounts)
 		}
 
 		#[pallet::weight(10_000)]
@@ -229,10 +217,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_mint(&who, id, &to, token_id, amount)?;
-
-			Ok(())
+			Self::do_mint(&who, id, &to, token_id, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -244,10 +229,7 @@ pub mod pallet {
 			amounts: Vec<Balance>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_batch_mint(&who, id, &to, token_ids, amounts)?;
-
-			Ok(())
+			Self::do_batch_mint(&who, id, &to, token_ids, amounts)
 		}
 
 		#[pallet::weight(10_000)]
@@ -258,10 +240,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_burn(&who, id, token_id, amount)?;
-
-			Ok(())
+			Self::do_burn(&who, id, token_id, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -272,10 +251,7 @@ pub mod pallet {
 			amounts: Vec<Balance>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_batch_burn(&who, id, token_ids, amounts)?;
-
-			Ok(())
+			Self::do_batch_burn(&who, id, token_ids, amounts)
 		}
 	}
 }
@@ -289,7 +265,7 @@ impl<T: Config> Pallet<T> {
 		who: &T::AccountId,
 		id: T::MultiTokenId,
 		uri: Vec<u8>,
-	) -> Result<T::MultiTokenId, DispatchError> {
+	) -> DispatchResult {
 		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let deposit = T::CreateTokenDeposit::get();
@@ -305,7 +281,7 @@ impl<T: Config> Pallet<T> {
 
 		Self::deposit_event(Event::TokenCreated(id, who.clone()));
 
-		Ok(id)
+		Ok(())
 	}
 
 	pub fn do_set_approval_for_all(

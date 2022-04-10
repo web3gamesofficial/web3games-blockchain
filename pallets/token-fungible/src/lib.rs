@@ -161,10 +161,7 @@ pub mod pallet {
 			decimals: u8,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_create_token(&who, id, name, symbol, decimals)?;
-
-			Ok(())
+			Self::do_create_token(&who, id, name, symbol, decimals)
 		}
 
 		#[pallet::weight(10_000)]
@@ -175,10 +172,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_approve(id, &who, &spender, amount)?;
-
-			Ok(())
+			Self::do_approve(id, &who, &spender, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -189,10 +183,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			let _ = Self::do_transfer(id, &who, &recipient, amount);
-
-			Ok(())
+			Self::do_transfer(id, &who, &recipient, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -204,10 +195,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			let _ = Self::do_transfer_from(id, who, sender, recipient, amount);
-
-			Ok(())
+			Self::do_transfer_from(id, who, sender, recipient, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -218,9 +206,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_mint(id, &who, account, amount)?;
-			Ok(())
+			Self::do_mint(id, &who, account, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -230,10 +216,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_burn(id, &who, amount)?;
-
-			Ok(())
+			Self::do_burn(id, &who, amount)
 		}
 	}
 }
@@ -320,7 +303,6 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientAuthorizedTokens
 		);
 
-		// over flow check
 		Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
 			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
@@ -441,7 +423,6 @@ impl<T: Config> Pallet<T> {
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
 		let token = Tokens::<T>::get(id);
-		// println!("who{:?} token_owner{:?}", who, token.clone().unwrap().owner);
 		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
 
 		Ok(())

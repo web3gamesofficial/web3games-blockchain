@@ -241,9 +241,7 @@ pub mod pallet {
 			base_uri: Vec<u8>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_create_token(&who, id, name, symbol, base_uri)?;
-
-			Ok(())
+			Self::do_create_token(&who, id, name, symbol, base_uri)
 		}
 
 		#[pallet::weight(10_000)]
@@ -254,10 +252,7 @@ pub mod pallet {
 			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_approve(&who, id, &to, token_id)?;
-
-			Ok(())
+			Self::do_approve(&who, id, &to, token_id)
 		}
 
 		#[pallet::weight(10_000)]
@@ -268,10 +263,7 @@ pub mod pallet {
 			approved: bool,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_set_approve_for_all(&who, id, &operator, approved)?;
-
-			Ok(())
+			Self::do_set_approve_for_all(&who, id, &operator, approved)
 		}
 
 		#[pallet::weight(10_000)]
@@ -283,10 +275,7 @@ pub mod pallet {
 			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_transfer_from(&who, id, &from, &to, token_id)?;
-
-			Ok(())
+			Self::do_transfer_from(&who, id, &from, &to, token_id)
 		}
 
 		#[pallet::weight(10_000)]
@@ -297,10 +286,7 @@ pub mod pallet {
 			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_mint(&who, id, &to, token_id)?;
-
-			Ok(())
+			Self::do_mint(&who, id, &to, token_id)
 		}
 
 		#[pallet::weight(10_000)]
@@ -310,10 +296,7 @@ pub mod pallet {
 			token_id: T::TokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_burn(&who, id, token_id)?;
-
-			Ok(())
+			Self::do_burn(&who, id, token_id)
 		}
 	}
 }

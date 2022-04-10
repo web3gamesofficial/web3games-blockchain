@@ -13,7 +13,6 @@ frame-system = { git = "https://github.com/paritytech/substrate", default-featur
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false}
 sp-io = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 pallet-token-non-fungible = { path = "../token-non-fungible", default-features = false }
@@ -23,6 +22,7 @@ primitives = { package = "web3games-primitives", path = "../../primitives", defa
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]
@@ -34,7 +34,6 @@ std = [
 	"sp-std/std",
 	"sp-io/std",
 	"sp-runtime/std",
-	"pallet-timestamp/std",
 	"sp-core/std",
 	"primitives/std",
 	"pallet-token-non-fungible/std",
