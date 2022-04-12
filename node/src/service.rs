@@ -53,7 +53,12 @@ use web3games_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
 pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
+	/// Only enable the benchmarking host functions when we actually want to benchmark.
+	#[cfg(feature = "runtime-benchmarks")]
 	type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+	/// Otherwise we only use the default Substrate host functions.
+	#[cfg(not(feature = "runtime-benchmarks"))]
+	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
 		web3games_runtime::api::dispatch(method, data)
@@ -80,7 +85,10 @@ pub type ConsensusResult = (
 );
 
 #[cfg(feature = "manual-seal")]
-pub type ConsensusResult = (FrontierBlockImport<Block, Arc<FullClient>, FullClient>, Sealing);
+pub type ConsensusResult = (
+	FrontierBlockImport<Block, Arc<FullClient>, FullClient>,
+	Sealing,
+);
 
 /// Provide a mock duration starting at 0 in millisecond for timestamp inherent.
 /// Each call will increment timestamp by slot_duration making Aura think time has passed.
@@ -90,7 +98,7 @@ pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"timstap0";
 
 thread_local!(static TIMESTAMP: RefCell<u64> = RefCell::new(0));
 
-#[async_trait]
+#[async_trait::async_trait]
 impl sp_inherents::InherentDataProvider for MockTimestampInherentDataProvider {
 	fn provide_inherent_data(
 		&self,
@@ -125,12 +133,14 @@ pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 }
 
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
-	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
-		source: fc_db::DatabaseSettingsSrc::RocksDb {
-			path: frontier_database_dir(&config),
-			cache_size: 0,
+	Ok(Arc::new(fc_db::Backend::<Block>::new(
+		&fc_db::DatabaseSettings {
+			source: fc_db::DatabaseSettingsSrc::RocksDb {
+				path: frontier_database_dir(&config),
+				cache_size: 0,
+			},
 		},
-	})?))
+	)?))
 }
 
 pub fn new_partial(
@@ -154,7 +164,9 @@ pub fn new_partial(
 	ServiceError,
 > {
 	if config.keystore_remote.is_some() {
-		return Err(ServiceError::Other(format!("Remote Keystores are not supported.")));
+		return Err(ServiceError::Other(format!(
+			"Remote Keystores are not supported."
+		)));
 	}
 
 	let telemetry = config
@@ -184,7 +196,9 @@ pub fn new_partial(
 	let client = Arc::new(client);
 
 	let telemetry = telemetry.map(|(worker, telemetry)| {
-		task_manager.spawn_handle().spawn("telemetry", None, worker.run());
+		task_manager
+			.spawn_handle()
+			.spawn("telemetry", None, worker.run());
 		telemetry
 	});
 
@@ -250,6 +264,7 @@ pub fn new_partial(
 		);
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+		let target_gas_price = cli.run.target_gas_price;
 
 		let import_queue =
 			sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -265,7 +280,10 @@ pub fn new_partial(
 							slot_duration,
 						);
 
-					Ok((timestamp, slot))
+					let dynamic_fee =
+						fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+
+					Ok((timestamp, slot, dynamic_fee))
 				},
 				spawner: &task_manager.spawn_essential_handle(),
 				can_author_with: sp_consensus::CanAuthorWithNativeVersion::new(
@@ -323,12 +341,15 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 					"Error hooking up remote keystore for {}: {}",
 					url, e
 				)))
-			},
+			}
 		};
 	}
-
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
-		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
+		&client
+			.block_hash(0)
+			.ok()
+			.flatten()
+			.expect("Genesis block exists; qed"),
 		&config.chain_spec,
 	);
 
@@ -338,12 +359,16 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			config
 				.network
 				.extra_sets
-				.push(sc_finality_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone()));
-			Some(Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
-				backend.clone(),
-				consensus_result.1.shared_authority_set().clone(),
-				Vec::default(),
-			)))
+				.push(sc_finality_grandpa::grandpa_peers_set_config(
+					grandpa_protocol_name.clone(),
+				));
+			Some(Arc::new(
+				sc_finality_grandpa::warp_proof::NetworkProvider::new(
+					backend.clone(),
+					consensus_result.1.shared_authority_set().clone(),
+					Vec::default(),
+				),
+			))
 		}
 		#[cfg(feature = "manual-seal")]
 		{
@@ -380,11 +405,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	let name = config.network.node_name.clone();
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
-	let is_authority = role.is_authority();
+	let is_authority = config.role.is_authority();
 	let enable_dev_signer = cli.run.enable_dev_signer;
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
-
 	let overrides = crate::rpc::overrides_handle(client.clone());
 	let fee_history_limit = cli.run.fee_history_limit;
 
@@ -424,7 +448,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			Ok(crate::rpc::create_full(deps, subscription_task_executor.clone()))
+			Ok(crate::rpc::create_full(
+				deps,
+				subscription_task_executor.clone(),
+			))
 		})
 	};
 
@@ -443,7 +470,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 	task_manager.spawn_essential_handle().spawn(
 		"frontier-mapping-sync-worker",
-		Some("frontier"),
+		None,
 		MappingSyncWorker::new(
 			client.import_notification_stream(),
 			Duration::new(6, 0),
@@ -463,14 +490,26 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		const FILTER_RETAIN_THRESHOLD: u64 = 100;
 		task_manager.spawn_essential_handle().spawn(
 			"frontier-filter-pool",
-			Some("frontier"),
+			None,
 			EthTask::filter_pool_task(Arc::clone(&client), filter_pool, FILTER_RETAIN_THRESHOLD),
 		);
 	}
 
+	// Spawn Frontier FeeHistory cache maintenance task.
+	task_manager.spawn_essential_handle().spawn(
+		"frontier-fee-history",
+		None,
+		EthTask::fee_history_task(
+			Arc::clone(&client),
+			Arc::clone(&overrides),
+			fee_history_cache,
+			fee_history_limit,
+		),
+	);
+
 	task_manager.spawn_essential_handle().spawn(
 		"frontier-schema-cache-task",
-		Some("frontier"),
+		None,
 		EthTask::ethereum_schema_cache_task(Arc::clone(&client), Arc::clone(&frontier_backend)),
 	);
 
@@ -487,6 +526,8 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				telemetry.as_ref().map(|x| x.handle()),
 			);
 
+			let target_gas_price = cli.run.target_gas_price;
+
 			// Background authorship future
 			match sealing {
 				Sealing::Manual => {
@@ -502,16 +543,20 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 							create_inherent_data_providers: move |_, ()| async move {
 								let mock_timestamp = MockTimestampInherentDataProvider;
 
-								Ok((mock_timestamp))
+								let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(
+									target_gas_price,
+								));
+
+								Ok((mock_timestamp, dynamic_fee))
 							},
 						});
 					// we spawn the future on a background thread managed by service.
 					task_manager.spawn_essential_handle().spawn_blocking(
 						"manual-seal",
-						Some("block-authoring"),
+						None,
 						authorship_future,
 					);
-				},
+				}
 				Sealing::Instant => {
 					let authorship_future =
 						manual_seal::run_instant_seal(manual_seal::InstantSealParams {
@@ -524,16 +569,20 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 							create_inherent_data_providers: move |_, ()| async move {
 								let mock_timestamp = MockTimestampInherentDataProvider;
 
-								Ok((mock_timestamp))
+								let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(
+									target_gas_price,
+								));
+
+								Ok((mock_timestamp, dynamic_fee))
 							},
 						});
 					// we spawn the future on a background thread managed by service.
 					task_manager.spawn_essential_handle().spawn_blocking(
 						"instant-seal",
-						Some("block-authoring"),
+						None,
 						authorship_future,
 					);
-				},
+				}
 			};
 		}
 		log::info!("Manual Seal Ready");
@@ -556,6 +605,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 			let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+			let target_gas_price = cli.run.target_gas_price;
 
 			let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 				StartAuraParams {
@@ -573,7 +623,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 								slot_duration,
 							);
 
-						Ok((timestamp, slot))
+						let dynamic_fee =
+							fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+
+						Ok((timestamp, slot, dynamic_fee))
 					},
 					force_authoring,
 					backoff_authoring_blocks,
@@ -598,8 +651,11 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 		// if the node isn't actively participating in consensus then it doesn't
 		// need a keystore, regardless of which protocol we use below.
-		let keystore =
-			if role.is_authority() { Some(keystore_container.sync_keystore()) } else { None };
+		let keystore = if role.is_authority() {
+			Some(keystore_container.sync_keystore())
+		} else {
+			None
+		};
 
 		let grandpa_config = sc_finality_grandpa::Config {
 			// FIXME #1578 make this available through chainspec

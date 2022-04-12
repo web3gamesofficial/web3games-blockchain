@@ -376,10 +376,6 @@ impl pallet_ethereum::Config for Runtime {
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
 }
 
-frame_support::parameter_types! {
-	pub BoundDivision: U256 = U256::from(1024);
-}
-
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		RuntimeBlockWeights::get().max_block;
@@ -453,6 +449,14 @@ parameter_types! {
 	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
+}
+
+frame_support::parameter_types! {
+	pub BoundDivision: U256 = U256::from(1024);
+}
+
+impl pallet_dynamic_fee::Config for Runtime {
+	type MinGasPriceBoundDivisor = BoundDivision;
 }
 
 frame_support::parameter_types! {
@@ -602,6 +606,7 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
+		DynamicFee: pallet_dynamic_fee,
 		BaseFee: pallet_base_fee,
 		Treasury: pallet_treasury,
 

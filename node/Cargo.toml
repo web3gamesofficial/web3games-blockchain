@@ -73,6 +73,7 @@ fp-storage = { git = "https://github.com/web3gamesofficial/frontier", branch = "
 fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-dynamic-fee = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 
 pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }

@@ -281,6 +281,7 @@ fn testnet_genesis(
 				.collect(),
 		},
 		ethereum: EthereumConfig {},
+		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		treasury: Default::default(),
 		wrap_currency: WrapCurrencyConfig {},
