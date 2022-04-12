@@ -24,10 +24,7 @@ use frame_support::{
 	BoundedVec,
 };
 use scale_info::TypeInfo;
-use sp_runtime::{
-	traits::{IdentifyAccount, Verify},
-	RuntimeDebug,
-};
+use sp_runtime::RuntimeDebug;
 use sp_std::prelude::*;
 
 pub use pallet::*;

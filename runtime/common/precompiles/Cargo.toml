@@ -14,14 +14,13 @@ frame-system = { git = "https://github.com/paritytech/substrate", default-featur
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "master" }
 sp-core = { git = "https://github.com/paritytech/substrate", default-features = false }
-fp-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm-precompile-bn128 = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm-precompile-dispatch = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-# evm = { version = "0.34.0", default-features = false, features = ["with-codec"] }
+fp-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm-precompile-modexp = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm-precompile-bn128 = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm-precompile-simple = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm-precompile-sha3fips = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm-precompile-dispatch = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 
 pallet-token-fungible = { path = "../../../pallets/token-fungible", default-features = false }
 pallet-token-non-fungible = { path = "../../../pallets/token-non-fungible", default-features = false }

@@ -20,30 +20,25 @@ use super::*;
 use crate::mock::*;
 use frame_support::assert_ok;
 
-pub type FungibleTokenId = u32;
-// pub type PoolId = u32;
-
 #[test]
 fn test_create_pool_works() {
 	new_test_ext().execute_with(|| {
-		let origin = Origin::signed(1);
-		let name: Vec<u8> = "Test".to_string().into();
-		let symbol: Vec<u8> = "TST".to_string().into();
-		let decimals: u8 = 2;
-		assert_ok!(TokenFungible::create_token(origin, name, symbol, decimals));
-		assert_eq!(TokenFungible::next_token_id(), 1);
-		let origin = Origin::signed(2);
-		let name: Vec<u8> = "KING".to_string().into();
-		let symbol: Vec<u8> = "KIN".to_string().into();
-		let decimals: u8 = 2;
-		assert_ok!(TokenFungible::create_token(origin, name, symbol, decimals));
-		assert_eq!(TokenFungible::next_token_id(), 2);
-		let who = &1u64;
-		let token_a: FungibleTokenId = 0;
-		let token_b: FungibleTokenId = 1;
-		assert_ok!(Exchange::do_create_pool(who, token_a, token_b));
-		assert_eq!(Exchange::get_pool((token_a, token_b)), 0);
-		assert_eq!(Exchange::next_pool_id(), 1);
+		assert_ok!(TokenFungible::create_token(
+			Origin::signed(1),
+			1,
+			vec![0u8, 10],
+			vec![0u8, 10],
+			18
+		));
+		assert_ok!(TokenFungible::create_token(
+			Origin::signed(1),
+			2,
+			vec![0u8, 10],
+			vec![0u8, 10],
+			18
+		));
+		// assert_ok!(Exchange::create_pool(Origin::signed(1), 1, 2));
+		// assert_eq!(Exchange::get_pool((1, 2)), 0);
 	})
 }
 

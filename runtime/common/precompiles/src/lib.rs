@@ -79,9 +79,11 @@ where
 	R::Call: From<pallet_token_fungible::Call<R>>,
 	R::Call: From<pallet_token_non_fungible::Call<R>>,
 	R::Call: From<pallet_token_multi::Call<R>>,
-	<R as pallet_token_fungible::Config>::FungibleTokenId: Into<u32>,
-	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: Into<u32>,
-	<R as pallet_token_multi::Config>::MultiTokenId: Into<u32>,
+	<R as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<R as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
+	<R as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<R as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 	R: AccountMapping<R::AccountId>,
 {
 	fn execute(

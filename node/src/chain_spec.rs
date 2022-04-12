@@ -270,7 +270,7 @@ fn testnet_genesis(
 				.map(|addr| {
 					(
 						addr.clone(),
-						pallet_evm::GenesisAccount {
+						fp_evm::GenesisAccount {
 							nonce: Default::default(),
 							balance: Default::default(),
 							storage: Default::default(),
@@ -281,7 +281,9 @@ fn testnet_genesis(
 				.collect(),
 		},
 		ethereum: EthereumConfig {},
+		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
+		treasury: Default::default(),
 		wrap_currency: WrapCurrencyConfig {},
 	}
 }

@@ -53,7 +53,12 @@ use web3games_runtime::{self, opaque::Block, RuntimeApi, SLOT_DURATION};
 pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
+	/// Only enable the benchmarking host functions when we actually want to benchmark.
+	#[cfg(feature = "runtime-benchmarks")]
 	type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
+	/// Otherwise we only use the default Substrate host functions.
+	#[cfg(not(feature = "runtime-benchmarks"))]
+	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
 		web3games_runtime::api::dispatch(method, data)
@@ -64,7 +69,7 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	}
 }
 
-type FullClient =
+pub(crate) type FullClient =
 	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
@@ -90,7 +95,7 @@ pub const INHERENT_IDENTIFIER: InherentIdentifier = *b"timstap0";
 
 thread_local!(static TIMESTAMP: RefCell<u64> = RefCell::new(0));
 
-#[async_trait]
+#[async_trait::async_trait]
 impl sp_inherents::InherentDataProvider for MockTimestampInherentDataProvider {
 	fn provide_inherent_data(
 		&self,
@@ -250,6 +255,7 @@ pub fn new_partial(
 		);
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+		let target_gas_price = cli.run.target_gas_price;
 
 		let import_queue =
 			sc_consensus_aura::import_queue::<AuraPair, _, _, _, _, _, _>(ImportQueueParams {
@@ -265,7 +271,10 @@ pub fn new_partial(
 							slot_duration,
 						);
 
-					Ok((timestamp, slot))
+					let dynamic_fee =
+						fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+
+					Ok((timestamp, slot, dynamic_fee))
 				},
 				spawner: &task_manager.spawn_essential_handle(),
 				can_author_with: sp_consensus::CanAuthorWithNativeVersion::new(
@@ -326,7 +335,6 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			},
 		};
 	}
-
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
 		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
 		&config.chain_spec,
@@ -380,11 +388,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	let name = config.network.node_name.clone();
 	let enable_grandpa = !config.disable_grandpa;
 	let prometheus_registry = config.prometheus_registry().cloned();
-	let is_authority = role.is_authority();
+	let is_authority = config.role.is_authority();
 	let enable_dev_signer = cli.run.enable_dev_signer;
 	let subscription_task_executor =
 		sc_rpc::SubscriptionTaskExecutor::new(task_manager.spawn_handle());
-
 	let overrides = crate::rpc::overrides_handle(client.clone());
 	let fee_history_limit = cli.run.fee_history_limit;
 
@@ -443,7 +450,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 	task_manager.spawn_essential_handle().spawn(
 		"frontier-mapping-sync-worker",
-		Some("frontier"),
+		None,
 		MappingSyncWorker::new(
 			client.import_notification_stream(),
 			Duration::new(6, 0),
@@ -463,14 +470,26 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		const FILTER_RETAIN_THRESHOLD: u64 = 100;
 		task_manager.spawn_essential_handle().spawn(
 			"frontier-filter-pool",
-			Some("frontier"),
+			None,
 			EthTask::filter_pool_task(Arc::clone(&client), filter_pool, FILTER_RETAIN_THRESHOLD),
 		);
 	}
 
+	// Spawn Frontier FeeHistory cache maintenance task.
+	task_manager.spawn_essential_handle().spawn(
+		"frontier-fee-history",
+		None,
+		EthTask::fee_history_task(
+			Arc::clone(&client),
+			Arc::clone(&overrides),
+			fee_history_cache,
+			fee_history_limit,
+		),
+	);
+
 	task_manager.spawn_essential_handle().spawn(
 		"frontier-schema-cache-task",
-		Some("frontier"),
+		None,
 		EthTask::ethereum_schema_cache_task(Arc::clone(&client), Arc::clone(&frontier_backend)),
 	);
 
@@ -487,6 +506,8 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				telemetry.as_ref().map(|x| x.handle()),
 			);
 
+			let target_gas_price = cli.run.target_gas_price;
+
 			// Background authorship future
 			match sealing {
 				Sealing::Manual => {
@@ -502,13 +523,17 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 							create_inherent_data_providers: move |_, ()| async move {
 								let mock_timestamp = MockTimestampInherentDataProvider;
 
-								Ok((mock_timestamp))
+								let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(
+									target_gas_price,
+								));
+
+								Ok((mock_timestamp, dynamic_fee))
 							},
 						});
 					// we spawn the future on a background thread managed by service.
 					task_manager.spawn_essential_handle().spawn_blocking(
 						"manual-seal",
-						Some("block-authoring"),
+						None,
 						authorship_future,
 					);
 				},
@@ -524,13 +549,17 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 							create_inherent_data_providers: move |_, ()| async move {
 								let mock_timestamp = MockTimestampInherentDataProvider;
 
-								Ok((mock_timestamp))
+								let dynamic_fee = fp_dynamic_fee::InherentDataProvider(U256::from(
+									target_gas_price,
+								));
+
+								Ok((mock_timestamp, dynamic_fee))
 							},
 						});
 					// we spawn the future on a background thread managed by service.
 					task_manager.spawn_essential_handle().spawn_blocking(
 						"instant-seal",
-						Some("block-authoring"),
+						None,
 						authorship_future,
 					);
 				},
@@ -556,6 +585,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 			let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
+			let target_gas_price = cli.run.target_gas_price;
 
 			let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 				StartAuraParams {
@@ -573,7 +603,10 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 								slot_duration,
 							);
 
-						Ok((timestamp, slot))
+						let dynamic_fee =
+							fp_dynamic_fee::InherentDataProvider(U256::from(target_gas_price));
+
+						Ok((timestamp, slot, dynamic_fee))
 					},
 					force_authoring,
 					backoff_authoring_blocks,

@@ -64,11 +64,11 @@ pub type BlockId = generic::BlockId<Block>;
 /// Signed version of Balance
 pub type Amount = i128;
 
+// ID of fungible token or non fungible token or multi token
+pub type TokenAssetId = u128;
+
 /// Token ID
-pub type TokenId = u32;
+pub type TokenId = u128;
 
-// /// Index of token created
+/// Index of token created
 pub type TokenIndex = u32;
-
-// // Index of pool created
-// pub type PoolIndex = u32;

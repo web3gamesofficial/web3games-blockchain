@@ -22,17 +22,16 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
-	sp_runtime::traits::AccountIdConversion,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
-	BoundedVec,
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get, ReservableCurrency, Time},
+	PalletId,
 };
-use frame_system::{ensure_signed, pallet_prelude::OriginFor};
-use primitives::{Balance, TokenId};
 use scale_info::TypeInfo;
-use sp_runtime::{traits::One, RuntimeDebug};
-use sp_std::{convert::TryFrom, prelude::*};
+use sp_runtime::{
+	traits::{AccountIdConversion, One, Zero},
+	Percent, RuntimeDebug,
+};
+use sp_std::prelude::*;
 
-use crate::NftType::{MultiToken, NonFungibleToken};
 pub use pallet::*;
 
 #[cfg(test)]
@@ -41,55 +40,71 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+pub type MomentOf<T> = <<T as Config>::Time as Time>::Moment;
+
 type BalanceOf<T> =
-	<<T as pallet::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
-pub type CollectionId = u32;
-pub type NftId = u32;
-pub type SaleId = u32;
+type AssetOf<T> = Asset<
+	<T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+	<T as pallet_token_non_fungible::Config>::TokenId,
+	<T as pallet_token_multi::Config>::MultiTokenId,
+	<T as pallet_token_multi::Config>::TokenId,
+>;
+
+type OrderOf<T> =
+	Order<<T as frame_system::Config>::AccountId, BalanceOf<T>, MomentOf<T>, AssetOf<T>>;
+
+type BidOf<T> = Bid<<T as frame_system::Config>::AccountId, BalanceOf<T>, MomentOf<T>>;
+
+pub type OrderId = u32;
+pub type BidId = u32;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub enum NftType {
-	NonFungibleToken,
-	MultiToken,
-}
-
-/// Collection info
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct Collection<AccountId, BoundedString> {
-	/// Class owner
-	pub owner: AccountId,
-	// The type of nft
-	pub nft_type: NftType,
-	/// The account of nft
-	pub nft_id: NftId,
-	/// Metadata from ipfs
-	pub metadata: BoundedString,
-	/// Escrow account
-	pub escrow_account: AccountId,
+pub struct NFTAsset<NFTGroupId, NFTokenId> {
+	pub group_id: NFTGroupId,
+	pub token_id: NFTokenId,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct Bid<AccountId> {
-	pub bid_account: Option<AccountId>,
-	pub bid_price: Option<Balance>,
+pub struct MTAsset<MTGroupId, MTokenId> {
+	pub group_id: MTGroupId,
+	pub token_id: MTokenId,
 }
 
-/// Collection Sale
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct Sale<AccountId> {
-	owner_id: AccountId,
-	token_id: TokenId,
-	price: Balance,
-	amount: Balance,
-	bid: Bid<AccountId>, // pub is_auction: bool,
+pub enum Asset<NFTGroupId, NFTokenId, MTGroupId, MTokenId> {
+	NFT(NFTAsset<NFTGroupId, NFTokenId>),
+	MT(MTAsset<MTGroupId, MTokenId>),
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct Order<AccountId, Balance, Moment, AssetOf> {
+	pub id: OrderId,
+	pub seller: AccountId,
+	pub asset: AssetOf,
+	pub price: Balance,
+	pub expires_at: Moment,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct Bid<AccountId, Balance, Moment> {
+	pub id: BidId,
+	pub bidder: AccountId,
+	pub price: Balance,
+	pub expires_at: Moment,
+}
+
+#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
+pub struct Royalty<AccountId> {
+	share_cut: Percent,
+	beneficiary: AccountId,
 }
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use crate::NftType::{MultiToken, NonFungibleToken};
-	use frame_support::{pallet_prelude::*, PalletId};
+	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
@@ -98,18 +113,18 @@ pub mod pallet {
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		type Time: Time;
+
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
 
-		/// The maximum length of metadata stored on-chain.
-		#[pallet::constant]
-		type StringLimit: Get<u32>;
-
-		/// The minimum balance to create collection
-		#[pallet::constant]
-		type CreateCollectionDeposit: Get<BalanceOf<Self>>;
-
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		#[pallet::constant]
+		type FeesCollectorShareCut: Get<Percent>;
+
+		#[pallet::constant]
+		type FeesCollector: Get<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -117,60 +132,54 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type Collections<T: Config> = StorageMap<
-		_,
-		Blake2_128Concat,
-		CollectionId,
-		Collection<T::AccountId, BoundedVec<u8, <T as pallet::Config>::StringLimit>>,
-	>;
+	pub(super) type Orders<T: Config> =
+		StorageMap<_, Blake2_128Concat, AssetOf<T>, OrderOf<T>, OptionQuery>;
 
 	#[pallet::storage]
-	pub(super) type CollectionSale<T: Config> = StorageDoubleMap<
-		_,
-		Blake2_128Concat,
-		CollectionId,
-		Blake2_128Concat,
-		SaleId,
-		Sale<T::AccountId>,
-	>;
+	#[pallet::getter(fn next_order_id)]
+	pub(super) type NextOrderId<T: Config> = StorageValue<_, OrderId, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn next_collectionsale_id)]
-	pub(super) type NextCollectionSaleId<T: Config> =
-		StorageMap<_, Blake2_128Concat, CollectionId, SaleId, ValueQuery>;
+	pub(super) type Bids<T: Config> =
+		StorageMap<_, Blake2_128Concat, AssetOf<T>, BidOf<T>, OptionQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn next_collection_id)]
-	pub(super) type NextCollectionId<T: Config> = StorageValue<_, CollectionId, ValueQuery>;
+	#[pallet::getter(fn next_bid_id)]
+	pub(super) type NextBidId<T: Config> = StorageValue<_, BidId, ValueQuery>;
+
+	#[pallet::storage]
+	pub(super) type Royalties<T: Config> =
+		StorageMap<_, Blake2_128Concat, AssetOf<T>, Royalty<T::AccountId>, OptionQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		CollectionCreated(CollectionId, T::AccountId),
-		CollectionSaleCreated(CollectionId, SaleId, T::AccountId),
-		CollectionSaleDestroyed(CollectionId, SaleId, T::AccountId),
-		CollectionSaleUpdated(CollectionId, SaleId, T::AccountId),
-		CollectionDestroyed(CollectionId, T::AccountId),
+		OrderCreated(OrderId, T::AccountId, AssetOf<T>),
+		OrderCancelled(OrderId),
+		OrderExecuted(OrderId, T::AccountId, AssetOf<T>, BalanceOf<T>),
+		BidCreated(BidId, T::AccountId, AssetOf<T>),
+		BidCancelled(BidId),
+		BidAccepted(OrderId, T::AccountId, AssetOf<T>, BalanceOf<T>),
+		RoyaltiesSet(AssetOf<T>, Percent, T::AccountId),
 	}
 
 	// Errors inform users that something went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
-		TokenNotFound,
-		CollectionFound,
-		NumOverflow,
-		NoAvailableCollectionId,
-		CollectionNotFound,
-		NoAvailableAssetId,
 		AssetNotFound,
-		InvalidQuantity,
+		OrderNotFound,
+		BidNotFound,
+		NotOwner,
+		ZeroPrice,
+		InvalidExpiresAt,
+		NoAvailableOrderId,
+		NeedHigherPrice,
+		NoAvailableBidId,
 		NoPermission,
-		MustLargeBidPrice,
-		NoOwnerShip,
-		MustMultiToken,
-		ConfuseBehavior,
-		CannotDestroyCollection,
-		BadMetadata,
+		InvalidPrice,
+		CallerIsSeller,
+		OrderExpired,
+		BidExpired,
 	}
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
@@ -178,469 +187,297 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
-		pub fn create_collection(
+		pub fn create_order(
 			origin: OriginFor<T>,
-			nft_type: NftType,
-			nft_id: NftId,
-			metadata: Vec<u8>,
+			asset: AssetOf<T>,
+			price: BalanceOf<T>,
+			expires_at: MomentOf<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			if nft_type == NonFungibleToken {
-				let nft_id: T::NonFungibleTokenId = nft_id.into();
-				ensure!(
-					pallet_token_non_fungible::Pallet::<T>::exists(nft_id),
-					Error::<T>::TokenNotFound,
-				);
-			} else if nft_type == MultiToken {
-				let nft_id: T::MultiTokenId = nft_id.into();
-				ensure!(pallet_token_multi::Pallet::<T>::exists(nft_id), Error::<T>::TokenNotFound);
+
+			ensure!(price > Zero::zero(), Error::<T>::ZeroPrice);
+			ensure!(T::Time::now() > expires_at, Error::<T>::InvalidExpiresAt);
+
+			// check owner
+			match asset {
+				Asset::NFT(ref a) => {
+					let owner =
+						pallet_token_non_fungible::Pallet::<T>::owner_of(a.group_id, a.token_id)
+							.ok_or(Error::<T>::AssetNotFound)?;
+					ensure!(owner == who, Error::<T>::NotOwner);
+					pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
+						&who,
+						a.group_id,
+						&who,
+						&Self::account_id(),
+						a.token_id,
+					)?;
+				},
+				Asset::MT(ref a) => {
+					let balance =
+						pallet_token_multi::Pallet::<T>::balance_of(a.group_id, (a.token_id, &who));
+					ensure!(balance > Zero::zero(), Error::<T>::NotOwner);
+					pallet_token_multi::Pallet::<T>::do_transfer_from(
+						&who,
+						a.group_id,
+						&who,
+						&Self::account_id(),
+						a.token_id,
+						One::one(),
+					)?;
+				},
 			}
-			Self::do_create_collection(&who, nft_type, nft_id, metadata)?;
 
-			Ok(().into())
+			let id = NextOrderId::<T>::try_mutate(|id| -> Result<OrderId, DispatchError> {
+				let current_id = *id;
+				*id = id.checked_add(One::one()).ok_or(Error::<T>::NoAvailableOrderId)?;
+				Ok(current_id)
+			})?;
+
+			let order = Order { id, seller: who.clone(), asset: asset.clone(), price, expires_at };
+
+			Orders::<T>::insert(asset.clone(), order);
+
+			Self::deposit_event(Event::OrderCreated(id, who, asset));
+			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn add_sale(
-			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			token_id: TokenId,
-			price: Balance,
-			amount: Balance,
-		) -> DispatchResult {
-			Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-			Self::do_add_sale(origin, collection_id, token_id, price, amount)?;
-			Ok(().into())
+		pub fn cancel_order(origin: OriginFor<T>, asset: AssetOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let order = Orders::<T>::get(&asset).ok_or(Error::<T>::OrderNotFound)?;
+			ensure!(order.seller == who, Error::<T>::NoPermission);
+
+			let maybe_bid = Bids::<T>::get(&asset);
+			if let Some(bid) = maybe_bid {
+				Self::do_cancel_bid(&asset, bid)?;
+			}
+
+			Self::transfer_asset_to(&order, &who)?;
+
+			Orders::<T>::remove(order.asset);
+
+			Self::deposit_event(Event::OrderCancelled(order.id));
+			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn remove_sale(
+		pub fn execute_order(
 			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			sale_id: SaleId,
+			asset: AssetOf<T>,
+			price: BalanceOf<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Self::do_remove_sale(&who, collection_id, sale_id)?;
+			let order = Orders::<T>::get(&asset).ok_or(Error::<T>::OrderNotFound)?;
 
-			Ok(().into())
+			ensure!(order.price == price, Error::<T>::InvalidPrice);
+			ensure!(order.seller != who, Error::<T>::CallerIsSeller);
+			ensure!(order.expires_at < T::Time::now(), Error::<T>::OrderExpired);
+
+			// Transfer share fees
+			let saled_amount = Self::transfer_share_fees(&who, &asset, price)?;
+
+			// Transfer sale amount to seller
+			<T as Config>::Currency::transfer(&who, &order.seller, saled_amount, KeepAlive)?;
+
+			let maybe_bid = Bids::<T>::get(&asset);
+			if let Some(bid) = maybe_bid {
+				Self::do_cancel_bid(&asset, bid)?;
+			}
+
+			Self::transfer_asset_to(&order, &who)?;
+
+			Orders::<T>::remove(order.asset);
+
+			Self::deposit_event(Event::OrderExecuted(order.id, who, asset, price));
+			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn update_price(
+		pub fn place_bid(
 			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			sale_id: SaleId,
-			price: Balance,
+			asset: AssetOf<T>,
+			price: BalanceOf<T>,
+			expires_at: MomentOf<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-			let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
-			ensure!(who == owner_id, Error::<T>::NoOwnerShip);
+			// check order validity
+			let order = Orders::<T>::get(&asset).ok_or(Error::<T>::OrderNotFound)?;
 
-			Self::do_update_price(&who, collection_id, sale_id, price)?;
+			// check on expire time
+			let expires_at =
+				if expires_at > order.expires_at { order.expires_at } else { expires_at };
 
-			Ok(().into())
+			let maybe_bid = Bids::<T>::get(&asset);
+
+			// if theres no previous bid, just check price > 0
+			if let Some(bid) = maybe_bid {
+				if bid.expires_at >= T::Time::now() {
+					ensure!(price > bid.price, Error::<T>::NeedHigherPrice);
+				} else {
+					ensure!(price > Zero::zero(), Error::<T>::ZeroPrice);
+				}
+
+				Self::do_cancel_bid(&asset, bid)?;
+			} else {
+				ensure!(price > Zero::zero(), Error::<T>::ZeroPrice);
+			}
+
+			<T as Config>::Currency::transfer(&who, &Self::account_id(), price, KeepAlive)?;
+
+			let id = NextBidId::<T>::try_mutate(|id| -> Result<BidId, DispatchError> {
+				let current_id = *id;
+				*id = id.checked_add(One::one()).ok_or(Error::<T>::NoAvailableBidId)?;
+				Ok(current_id)
+			})?;
+
+			let bid = Bid { id, bidder: who.clone(), price, expires_at };
+
+			Bids::<T>::insert(asset.clone(), bid);
+
+			Self::deposit_event(Event::BidCreated(id, who, asset));
+			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn update_amount(
+		pub fn cancel_bid(origin: OriginFor<T>, asset: AssetOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+
+			let bid = Bids::<T>::get(&asset).ok_or(Error::<T>::BidNotFound)?;
+
+			ensure!(bid.bidder == who, Error::<T>::NoPermission);
+
+			Self::do_cancel_bid(&asset, bid)
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn accept_bid(
 			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			sale_id: SaleId,
-			amount: Balance,
+			asset: AssetOf<T>,
+			price: BalanceOf<T>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-			let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
-			ensure!(who == owner_id, Error::<T>::NoOwnerShip);
+			let order = Orders::<T>::get(&asset).ok_or(Error::<T>::OrderNotFound)?;
+			ensure!(order.seller == who, Error::<T>::NoPermission);
 
-			let nft_type = Collections::<T>::get(collection_id).unwrap().nft_type;
+			let bid = Bids::<T>::get(&asset).ok_or(Error::<T>::BidNotFound)?;
 
-			ensure!(nft_type == MultiToken, Error::<T>::MustMultiToken);
-			Self::do_update_amount(&who, collection_id, sale_id, amount)?;
+			ensure!(bid.price == price, Error::<T>::InvalidPrice);
+			ensure!(T::Time::now() <= bid.expires_at, Error::<T>::BidExpired);
 
-			Ok(().into())
+			// Transfer share fees
+			let saled_amount = Self::transfer_share_fees(&who, &asset, price)?;
+
+			// Transfer bid amount to seller
+			<T as Config>::Currency::transfer(
+				&Self::account_id(),
+				&order.seller,
+				saled_amount,
+				KeepAlive,
+			)?;
+
+			Self::transfer_asset_to(&order, &bid.bidder)?;
+
+			Orders::<T>::remove(asset.clone());
+
+			Self::deposit_event(Event::BidAccepted(bid.id, who, asset, price));
+			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
-		pub fn offer(
+		#[pallet::weight(0)]
+		pub fn set_royalties(
 			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			sale_id: SaleId,
-			price: Balance,
+			asset: AssetOf<T>,
+			share_cut: Percent,
+			beneficiary: T::AccountId,
 		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
+			ensure_root(origin)?;
 
-			Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-			let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
-			ensure!(who != owner_id, Error::<T>::ConfuseBehavior);
+			let royalty = Royalty { share_cut, beneficiary: beneficiary.clone() };
 
-			Self::do_offer(origin, collection_id, sale_id, price)?;
+			Royalties::<T>::insert(asset.clone(), royalty);
 
-			Ok(().into())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn accept_offer(
-			origin: OriginFor<T>,
-			collection_id: CollectionId,
-			sale_id: SaleId,
-		) -> DispatchResult {
-			let who = ensure_signed(origin.clone())?;
-
-			Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-			let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
-			ensure!(who == owner_id, Error::<T>::ConfuseBehavior);
-
-			Self::do_accept_offer(origin, collection_id, sale_id)?;
-
-			Ok(().into())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn destroy_collection(
-			origin: OriginFor<T>,
-			collection_id: CollectionId,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			Self::do_destroy_collection(&who, collection_id)?;
-
-			Ok(().into())
+			Self::deposit_event(Event::RoyaltiesSet(asset, share_cut, beneficiary));
+			Ok(())
 		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
-	pub fn do_create_collection(
-		who: &T::AccountId,
-		nft_type: NftType,
-		nft_id: NftId,
-		metadata: Vec<u8>,
-	) -> Result<CollectionId, DispatchError> {
-		let bounded_metadata: BoundedVec<u8, <T as pallet::Config>::StringLimit> =
-			metadata.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
-
-		let collection_id =
-			NextCollectionId::<T>::try_mutate(|id| -> Result<CollectionId, DispatchError> {
-				let current_id = *id;
-				*id = id.checked_add(One::one()).ok_or(Error::<T>::NoAvailableCollectionId)?;
-				Ok(current_id)
-			})?;
-
-		let deposit = T::CreateCollectionDeposit::get();
-		<T as pallet::Config>::Currency::reserve(who, deposit.clone())?;
-
-		// Generate account from collection_id
-		let next_collection_id = NextCollectionId::<T>::get();
-		let escrow_account: <T as frame_system::Config>::AccountId =
-			<T as pallet::Config>::PalletId::get().into_sub_account(next_collection_id);
-
-		let collection = Collection {
-			owner: who.clone(),
-			nft_type,
-			nft_id,
-			metadata: bounded_metadata,
-			escrow_account,
-		};
-
-		Collections::<T>::insert(collection_id, collection);
-
-		Self::deposit_event(Event::CollectionCreated(collection_id, who.clone()));
-		Ok(collection_id)
+	fn account_id() -> T::AccountId {
+		<T as pallet::Config>::PalletId::get().into_account()
 	}
 
-	pub fn do_add_sale(
-		origin: OriginFor<T>,
-		collection_id: CollectionId,
-		token_id: TokenId,
-		price: Balance,
-		amount: Balance,
-	) -> DispatchResult {
-		let who = ensure_signed(origin.clone())?;
-		let escrow_account = Collections::<T>::get(collection_id).unwrap().escrow_account;
-		let nft_id = Collections::<T>::get(collection_id).unwrap().nft_id;
-		let nft_type = Collections::<T>::get(collection_id).unwrap().nft_type;
-		let mut new_sale = Sale {
-			owner_id: who.clone(),
-			token_id,
-			price,
-			amount: 0,
-			bid: Bid { bid_account: None, bid_price: None },
-		};
-		if nft_type == NonFungibleToken {
-			let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-				nft_id.into();
-			pallet_token_non_fungible::Pallet::<T>::do_approve(
-				&who,
-				nft_id,
-				&escrow_account,
-				token_id,
+	fn transfer_share_fees(
+		who: &T::AccountId,
+		asset: &AssetOf<T>,
+		price: BalanceOf<T>,
+	) -> Result<BalanceOf<T>, DispatchError> {
+		let mut saled_amount = price;
+
+		// Royalties share fee
+		let maybe_royalty = Royalties::<T>::get(&asset);
+		if let Some(royalty) = maybe_royalty {
+			let royalty_share_amount = royalty.share_cut * price;
+			<T as Config>::Currency::transfer(
+				who,
+				&royalty.beneficiary,
+				royalty_share_amount,
+				KeepAlive,
 			)?;
-			new_sale = Sale {
-				owner_id: who.clone(),
-				token_id,
-				price,
-				amount: 1,
-				bid: Bid { bid_account: None, bid_price: None },
-			};
-		} else if nft_type == MultiToken {
-			let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = nft_id.into();
-			pallet_token_multi::Pallet::<T>::do_set_approval_for_all(
-				&who,
-				nft_id,
-				&escrow_account,
-				true,
-			)?;
-			new_sale = Sale {
-				owner_id: who.clone(),
-				token_id,
-				price,
-				amount,
-				bid: Bid { bid_account: None, bid_price: None },
-			};
+			saled_amount -= royalty_share_amount;
 		}
-		let sale_id = NextCollectionSaleId::<T>::try_mutate(
-			collection_id,
-			|id| -> Result<CollectionId, DispatchError> {
-				let current_id = *id;
-				*id = id.checked_add(One::one()).ok_or(Error::<T>::NoAvailableCollectionId)?;
-				Ok(current_id)
+
+		// Fees collector share
+		let fees_collector = T::FeesCollector::get();
+		let fees_collector_share_cut = T::FeesCollectorShareCut::get();
+		let fees_collector_share_amount = fees_collector_share_cut * price;
+		<T as Config>::Currency::transfer(
+			who,
+			&fees_collector,
+			fees_collector_share_amount,
+			KeepAlive,
+		)?;
+		saled_amount -= fees_collector_share_amount;
+
+		Ok(saled_amount)
+	}
+
+	fn transfer_asset_to(order: &OrderOf<T>, to: &T::AccountId) -> DispatchResult {
+		match &order.asset {
+			Asset::NFT(a) => {
+				pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
+					&Self::account_id(),
+					a.group_id,
+					&Self::account_id(),
+					to,
+					a.token_id,
+				)?;
 			},
-		)?;
-		CollectionSale::<T>::insert(collection_id, sale_id, new_sale);
-		Self::deposit_event(Event::CollectionSaleCreated(collection_id, sale_id, who));
-		Ok(())
-	}
-
-	pub fn do_remove_sale(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-	) -> DispatchResult {
-		Collections::<T>::get(collection_id).ok_or(Error::<T>::CollectionFound)?;
-		let owner_id = CollectionSale::<T>::get(collection_id, sale_id).unwrap().owner_id;
-		ensure!(*who == owner_id, Error::<T>::NoOwnerShip);
-		CollectionSale::<T>::remove(collection_id, sale_id);
-		Self::deposit_event(Event::CollectionSaleDestroyed(collection_id, sale_id, who.clone()));
-		Ok(())
-	}
-
-	pub fn do_update_price(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-		price: Balance,
-	) -> DispatchResult {
-		let old_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-		let new_sale = Sale {
-			owner_id: old_sale.owner_id,
-			token_id: old_sale.token_id,
-			price,
-			amount: old_sale.amount,
-			bid: Bid { bid_account: None, bid_price: None },
-		};
-		CollectionSale::<T>::insert(collection_id, sale_id, new_sale);
-		Self::deposit_event(Event::CollectionSaleUpdated(collection_id, sale_id, who.clone()));
-		Ok(())
-	}
-
-	pub fn do_update_amount(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-		amount: Balance,
-	) -> DispatchResult {
-		let old_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-		let new_sale = Sale {
-			owner_id: old_sale.owner_id,
-			token_id: old_sale.token_id,
-			price: old_sale.price,
-			amount,
-			bid: Bid { bid_account: None, bid_price: None },
-		};
-		CollectionSale::<T>::insert(collection_id, sale_id, new_sale);
-		Self::deposit_event(Event::CollectionSaleUpdated(collection_id, sale_id, who.clone()));
-		Ok(())
-	}
-
-	pub fn do_offer(
-		origin: OriginFor<T>,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-		price: Balance,
-	) -> DispatchResult {
-		let bid_price = CollectionSale::<T>::get(collection_id, sale_id).unwrap().bid.bid_price;
-		if bid_price == None {
-			let who = ensure_signed(origin.clone())?;
-
-			let collections = Collections::<T>::get(collection_id).unwrap();
-			let collection_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-
-			if collection_sale.bid.bid_price.unwrap() == price {
-				let sale_price = BalanceOf::<T>::try_from(collection_sale.bid.bid_price.unwrap())
-					.map_err(|_| "balance expect u128 type")
-					.unwrap();
-				<T as Config>::Currency::transfer(
-					&who,
-					&collections.escrow_account,
-					sale_price,
-					AllowDeath,
+			Asset::MT(a) => {
+				pallet_token_multi::Pallet::<T>::do_transfer_from(
+					&Self::account_id(),
+					a.group_id,
+					&Self::account_id(),
+					to,
+					a.token_id,
+					One::one(),
 				)?;
-				if collections.nft_type == NonFungibleToken {
-					let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-						collections.nft_id.into();
-					pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
-						&collections.escrow_account,
-						nft_id,
-						&collection_sale.owner_id,
-						&who,
-						collection_sale.token_id,
-					)?;
-					CollectionSale::<T>::remove(collection_id, sale_id);
-				} else if collections.nft_type == MultiToken {
-					let nft_id: <T as pallet_token_multi::Config>::MultiTokenId =
-						collections.nft_id.into();
-					pallet_token_multi::Pallet::<T>::do_transfer_from(
-						&collections.escrow_account,
-						nft_id,
-						&collection_sale.owner_id,
-						&who,
-						collection_sale.token_id,
-						collection_sale.amount,
-					)?;
-					CollectionSale::<T>::remove(collection_id, sale_id);
-				}
-			} else {
-				let bid_price = price.clone();
-				let price = BalanceOf::<T>::try_from(price)
-					.map_err(|_| "balance expect u128 type")
-					.unwrap();
-				<T as Config>::Currency::transfer(
-					&who,
-					&collections.escrow_account,
-					price,
-					AllowDeath,
-				)?;
-				let old_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-				let new_sale = Sale {
-					owner_id: old_sale.owner_id,
-					token_id: old_sale.token_id,
-					price: old_sale.price,
-					amount: old_sale.amount,
-					bid: Bid { bid_account: Some(who.clone()), bid_price: Some(bid_price) },
-				};
-				CollectionSale::<T>::insert(collection_id, sale_id, new_sale);
-			}
-		} else {
-			let _result = Self::do_offer_check(origin, collection_id, sale_id, price);
-		};
-		Ok(())
-	}
-
-	pub fn do_accept_offer(
-		origin: OriginFor<T>,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-	) -> DispatchResult {
-		let who = ensure_signed(origin.clone())?;
-
-		let collections = Collections::<T>::get(collection_id).unwrap();
-		let collection_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-		let sale_price = BalanceOf::<T>::try_from(collection_sale.bid.bid_price.unwrap())
-			.map_err(|_| "balance expect u128 type")
-			.unwrap();
-
-		<T as Config>::Currency::transfer(
-			&collections.escrow_account,
-			&who,
-			sale_price,
-			AllowDeath,
-		)?;
-		if collections.nft_type == NonFungibleToken {
-			let nft_id: <T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
-				collections.nft_id.into();
-			pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
-				&collections.escrow_account,
-				nft_id,
-				&collection_sale.owner_id,
-				&who,
-				collection_sale.token_id,
-			)?;
-			CollectionSale::<T>::remove(collection_id, sale_id);
-		} else if collections.nft_type == MultiToken {
-			let nft_id: <T as pallet_token_multi::Config>::MultiTokenId = collections.nft_id.into();
-			pallet_token_multi::Pallet::<T>::do_transfer_from(
-				&collections.escrow_account,
-				nft_id,
-				&collection_sale.owner_id,
-				&who,
-				collection_sale.token_id,
-				collection_sale.amount,
-			)?;
-			CollectionSale::<T>::remove(collection_id, sale_id);
+			},
 		}
 		Ok(())
 	}
 
-	pub fn do_offer_check(
-		origin: OriginFor<T>,
-		collection_id: CollectionId,
-		sale_id: SaleId,
-		price: Balance,
-	) -> DispatchResult {
-		let bid = CollectionSale::<T>::get(collection_id, sale_id).unwrap().bid;
-		let bid_price = bid.bid_price.unwrap();
-		ensure!(price >= bid_price, Error::<T>::MustLargeBidPrice);
+	fn do_cancel_bid(asset: &AssetOf<T>, bid: BidOf<T>) -> DispatchResult {
+		<T as Config>::Currency::transfer(&Self::account_id(), &bid.bidder, bid.price, KeepAlive)?;
 
-		let who = ensure_signed(origin.clone())?;
-		let escrow_account = Collections::<T>::get(collection_id).unwrap().escrow_account;
+		Bids::<T>::remove(asset.clone());
 
-		// refund old bid account
-		let old_bid_account = bid.bid_account.unwrap();
-		let old_bid_price = BalanceOf::<T>::try_from(bid.bid_price.unwrap())
-			.map_err(|_| "balance expect u128 type")
-			.unwrap();
-		<T as Config>::Currency::transfer(
-			&escrow_account,
-			&old_bid_account,
-			old_bid_price,
-			AllowDeath,
-		)?;
-
-		// update new bid account and price
-		let new_bid_price =
-			BalanceOf::<T>::try_from(price).map_err(|_| "balance expect u128 type").unwrap();
-		<T as Config>::Currency::transfer(&who, &escrow_account, new_bid_price, AllowDeath)?;
-		let old_sale = CollectionSale::<T>::get(collection_id, sale_id).unwrap();
-		let new_sale = Sale {
-			owner_id: old_sale.owner_id,
-			token_id: old_sale.token_id,
-			price: old_sale.price,
-			amount: old_sale.amount,
-			bid: Bid { bid_account: Some(who.clone()), bid_price: Some(bid_price) },
-		};
-		CollectionSale::<T>::insert(collection_id, sale_id, new_sale);
+		Self::deposit_event(Event::BidCancelled(bid.id));
 		Ok(())
-	}
-
-	pub fn do_destroy_collection(
-		who: &T::AccountId,
-		collection_id: CollectionId,
-	) -> DispatchResult {
-		Collections::<T>::try_mutate_exists(collection_id, |collection| -> DispatchResult {
-			let c = collection.take().ok_or(Error::<T>::CollectionNotFound)?;
-			ensure!(c.owner == *who, Error::<T>::NoPermission);
-
-			let deposit = T::CreateCollectionDeposit::get();
-			<T as pallet::Config>::Currency::unreserve(who, deposit);
-
-			Self::deposit_event(Event::CollectionDestroyed(collection_id, who.clone()));
-
-			Ok(())
-		})
 	}
 }

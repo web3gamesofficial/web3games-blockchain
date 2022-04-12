@@ -20,7 +20,7 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
-	dispatch::{DispatchError, DispatchResult},
+	dispatch::DispatchResult,
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
@@ -29,7 +29,7 @@ use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
+	traits::{AtLeast32BitUnsigned, TrailingZeroInput},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
@@ -98,10 +98,6 @@ pub mod pallet {
 	>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn next_token_id)]
-	pub(super) type NextTokenId<T: Config> = StorageValue<_, T::FungibleTokenId, ValueQuery>;
-
-	#[pallet::storage]
 	#[pallet::getter(fn balance_of)]
 	pub(super) type Balances<T: Config> = StorageDoubleMap<
 		_,
@@ -129,7 +125,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		TokenCreated(T::FungibleTokenId, T::AccountId),
+		TokenCreated(T::FungibleTokenId, T::AccountId, Vec<u8>, Vec<u8>, u8),
 		Transfer(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 		Approval(T::FungibleTokenId, T::AccountId, T::AccountId, Balance),
 	}
@@ -158,15 +154,13 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn create_token(
 			origin: OriginFor<T>,
+			id: T::FungibleTokenId,
 			name: Vec<u8>,
 			symbol: Vec<u8>,
 			decimals: u8,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_create_token(&who, name, symbol, decimals)?;
-
-			Ok(())
+			Self::do_create_token(&who, id, name, symbol, decimals)
 		}
 
 		#[pallet::weight(10_000)]
@@ -177,10 +171,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_approve(id, &who, &spender, amount)?;
-
-			Ok(())
+			Self::do_approve(id, &who, &spender, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -191,10 +182,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			let _ = Self::do_transfer(id, &who, &recipient, amount);
-
-			Ok(())
+			Self::do_transfer(id, &who, &recipient, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -206,10 +194,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			let _ = Self::do_transfer_from(id, who, sender, recipient, amount);
-
-			Ok(())
+			Self::do_transfer_from(id, who, sender, recipient, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -220,9 +205,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_mint(id, &who, account, amount)?;
-			Ok(())
+			Self::do_mint(id, &who, account, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -232,10 +215,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-
-			Self::do_burn(id, &who, amount)?;
-
-			Ok(())
+			Self::do_burn(id, &who, amount)
 		}
 	}
 }
@@ -255,10 +235,11 @@ impl<T: Config> Pallet<T> {
 
 	pub fn do_create_token(
 		who: &T::AccountId,
+		id: T::FungibleTokenId,
 		name: Vec<u8>,
 		symbol: Vec<u8>,
 		decimals: u8,
-	) -> Result<T::FungibleTokenId, DispatchError> {
+	) -> DispatchResult {
 		let deposit = T::CreateTokenDeposit::get();
 		T::Currency::reserve(&who, deposit.clone())?;
 
@@ -267,11 +248,7 @@ impl<T: Config> Pallet<T> {
 		let bounded_symbol: BoundedVec<u8, T::StringLimit> =
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 
-		let id = NextTokenId::<T>::try_mutate(|id| -> Result<T::FungibleTokenId, DispatchError> {
-			let current_id = *id;
-			*id = id.checked_add(&One::one()).ok_or(Error::<T>::NoAvailableTokenId)?;
-			Ok(current_id)
-		})?;
+		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let token = Token {
 			owner: who.clone(),
@@ -283,9 +260,9 @@ impl<T: Config> Pallet<T> {
 
 		Tokens::<T>::insert(id, token);
 
-		Self::deposit_event(Event::TokenCreated(id, who.clone()));
+		Self::deposit_event(Event::TokenCreated(id, who.clone(), name, symbol, decimals));
 
-		Ok(id)
+		Ok(())
 	}
 
 	pub fn do_approve(
@@ -325,7 +302,6 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientAuthorizedTokens
 		);
 
-		// over flow check
 		Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
 			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
 			Ok(())
@@ -335,6 +311,7 @@ impl<T: Config> Pallet<T> {
 
 		Ok(())
 	}
+
 	pub fn do_transfer(
 		id: T::FungibleTokenId,
 		who: &T::AccountId,
@@ -445,7 +422,6 @@ impl<T: Config> Pallet<T> {
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
 		let token = Tokens::<T>::get(id);
-		// println!("who{:?} token_owner{:?}", who, token.clone().unwrap().owner);
 		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
 
 		Ok(())

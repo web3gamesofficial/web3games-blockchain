@@ -44,7 +44,7 @@ use sp_runtime::{
 		NumberFor, PostDispatchInfoOf, Zero,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
-	ApplyExtrinsicResult,
+	ApplyExtrinsicResult, Percent,
 };
 use sp_std::{marker::PhantomData, prelude::*};
 #[cfg(feature = "std")]
@@ -57,7 +57,7 @@ use fp_rpc::TransactionStatus;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		ConstU16, ConstU32, Contains, EqualPrivilegeOnly, Everything, FindAuthor,
+		ConstU16, ConstU32, ConstU8, Contains, EqualPrivilegeOnly, Everything, FindAuthor,
 		KeyOwnerProofSystem, Nothing, Randomness,
 	},
 	weights::{
@@ -66,6 +66,7 @@ pub use frame_support::{
 	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
+pub use frame_system::Call as SystemCall;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
@@ -87,6 +88,7 @@ mod constants;
 pub use constants::{currency::*, time::*};
 pub use primitives::{
 	AccountId, AccountIndex, Amount, Balance, BlockNumber, Hash, Index, Moment, Signature,
+	TokenAssetId, TokenId,
 };
 
 use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
@@ -269,9 +271,9 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-	type TransactionByteFee = TransactionByteFee;
-	type OperationalFeeMultiplier = OperationalFeeMultiplier;
+	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightToFee = IdentityFee<Balance>;
+	type LengthToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
 }
 
@@ -346,7 +348,7 @@ where
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 102;
+	pub const ChainId: u64 = 105;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
@@ -372,10 +374,6 @@ impl pallet_evm::Config for Runtime {
 impl pallet_ethereum::Config for Runtime {
 	type Event = Event;
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
-}
-
-frame_support::parameter_types! {
-	pub BoundDivision: U256 = U256::from(1024);
 }
 
 parameter_types! {
@@ -454,6 +452,14 @@ parameter_types! {
 }
 
 frame_support::parameter_types! {
+	pub BoundDivision: U256 = U256::from(1024);
+}
+
+impl pallet_dynamic_fee::Config for Runtime {
+	type MinGasPriceBoundDivisor = BoundDivision;
+}
+
+frame_support::parameter_types! {
 	pub IsActive: bool = true;
 	pub DefaultBaseFeePerGas: U256 = U256::from(1_000_000_000);
 }
@@ -478,12 +484,44 @@ impl pallet_base_fee::Config for Runtime {
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
+parameter_types! {
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+	pub const ProposalBondMinimum: Balance = 1 * DOLLARS;
+	pub const SpendPeriod: BlockNumber = 1 * DAYS;
+	pub const Burn: Permill = Permill::from_percent(50);
+	pub const TipCountdown: BlockNumber = 1 * DAYS;
+	pub const TipFindersFee: Percent = Percent::from_percent(20);
+	pub const TipReportDepositBase: Balance = 1 * DOLLARS;
+	pub const DataDepositPerByte: Balance = 1 * CENTS;
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
+	pub const MaximumReasonLength: u32 = 300;
+	pub const MaxApprovals: u32 = 100;
+}
+
+impl pallet_treasury::Config for Runtime {
+	type PalletId = TreasuryPalletId;
+	type Currency = Balances;
+	type ApproveOrigin = EnsureRoot<AccountId>;
+	type RejectOrigin = EnsureRoot<AccountId>;
+	type Event = Event;
+	type OnSlash = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
+	type ProposalBondMaximum = ();
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
+	type BurnDestination = ();
+	type SpendFunds = ();
+	type WeightInfo = pallet_treasury::weights::SubstrateWeight<Runtime>;
+	type MaxApprovals = MaxApprovals;
+}
+
 // web3games pallets
 
 impl pallet_token_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
-	type FungibleTokenId = u32;
+	type FungibleTokenId = TokenAssetId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -492,7 +530,8 @@ impl pallet_token_fungible::Config for Runtime {
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
-	type NonFungibleTokenId = u32;
+	type NonFungibleTokenId = TokenAssetId;
+	type TokenId = TokenId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -501,7 +540,8 @@ impl pallet_token_non_fungible::Config for Runtime {
 impl pallet_token_multi::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
-	type MultiTokenId = u32;
+	type MultiTokenId = TokenAssetId;
+	type TokenId = TokenId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -512,6 +552,7 @@ impl pallet_wrap_currency::Config for Runtime {
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
+	type Randomness = RandomnessCollectiveFlip;
 }
 
 impl pallet_exchange::Config for Runtime {
@@ -520,14 +561,21 @@ impl pallet_exchange::Config for Runtime {
 	type PoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
+}
+
+parameter_types! {
+	pub const FeesCollectorShareCut: Percent = Percent::from_percent(2);
+	pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account();
 }
 
 impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
-	type StringLimit = StringLimit;
+	type Time = Timestamp;
 	type PalletId = MarketplacePalletId;
-	type CreateCollectionDeposit = CreateCollectionDeposit;
 	type Currency = Balances;
+	type FeesCollectorShareCut = FeesCollectorShareCut;
+	type FeesCollector = TreasuryAccount;
 }
 
 parameter_types! {
@@ -558,7 +606,9 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
+		DynamicFee: pallet_dynamic_fee,
 		BaseFee: pallet_base_fee,
+		Treasury: pallet_treasury,
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
@@ -607,6 +657,7 @@ pub type SignedBlock = generic::SignedBlock<Block>;
 pub type BlockId = generic::BlockId<Block>;
 /// The SignedExtension to the basic transaction logic.
 pub type SignedExtra = (
+	frame_system::CheckNonZeroSender<Runtime>,
 	frame_system::CheckSpecVersion<Runtime>,
 	frame_system::CheckTxVersion<Runtime>,
 	frame_system::CheckGenesis<Runtime>,
@@ -620,6 +671,8 @@ pub type UncheckedExtrinsic =
 	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
+/// The payload being signed in transactions.
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
 pub type Executive = frame_executive::Executive<
 	Runtime,

@@ -38,13 +38,12 @@ pub struct Web3GamesChainExtensions<C>(PhantomData<C>);
 
 impl<C> ChainExtension<C> for Web3GamesChainExtensions<C>
 where
-	C: pallet_contracts::Config
-		+ pallet_token_fungible::Config
-		+ pallet_token_non_fungible::Config
-		+ pallet_token_multi::Config,
+	C: pallet_contracts::Config + pallet_token_fungible::Config,
+	// + pallet_token_non_fungible::Config
+	// + pallet_token_multi::Config,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
+	// <C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
+	// <C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
@@ -70,11 +69,11 @@ where
 			// 0x10001-0x10040(65537-65600): token-fungible
 			id if id >= 65537 && id < 65600 => FungibleTokenExtension::call(func_id, env),
 
-			// 0x10041-0x10080(65601-65664): token-non-fungible
-			id if id >= 65601 && id < 65664 => NonFungibleTokenExtension::call(func_id, env),
-
-			// 0x10081-0x100c1(65665-65729): token-multi
-			id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
+			// // 0x10041-0x10080(65601-65664): token-non-fungible
+			// id if id >= 65601 && id < 65664 => NonFungibleTokenExtension::call(func_id, env),
+			//
+			// // 0x10081-0x100c1(65665-65729): token-multi
+			// id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
 				return Err(DispatchError::Other("Unimplemented func_id"));
