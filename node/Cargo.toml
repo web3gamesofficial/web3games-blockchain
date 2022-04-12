@@ -30,6 +30,7 @@ sc-service = { git = "https://github.com/paritytech/substrate", features = ["was
 sc-telemetry = { git = "https://github.com/paritytech/substrate" }
 sc-keystore = { git = "https://github.com/paritytech/substrate" }
 sp-inherents = { git = "https://github.com/paritytech/substrate" }
+sp-keyring = { git = "https://github.com/paritytech/substrate" }
 sc-transaction-pool = { git = "https://github.com/paritytech/substrate" }
 sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate" }
 sc-consensus-aura = { git = "https://github.com/paritytech/substrate" }
@@ -43,6 +44,8 @@ sp-finality-grandpa = { git = "https://github.com/paritytech/substrate" }
 sc-client-api = { git = "https://github.com/paritytech/substrate" }
 sp-runtime = { git = "https://github.com/paritytech/substrate" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate" }
+frame-system = { git = "https://github.com/paritytech/substrate" }
+pallet-transaction-payment = { git = "https://github.com/paritytech/substrate" }
 
 # These dependencies are used for the node template's RPCs
 sc-rpc = { git = "https://github.com/paritytech/substrate" }
