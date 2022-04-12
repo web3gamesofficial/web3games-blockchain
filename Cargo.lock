@@ -1443,8 +1443,9 @@ checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
 
 [[package]]
 name = "evm"
-version = "0.34.0"
-source = "git+https://github.com/wjsxqs/evm.git?branch=web3games#989cb6b504bfffc12f819ece0c0e7134a3873241"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be8ff320c1e25e7f6d676858f16ffd9b0493d2cc67c3d900c6f2ed027b747f43"
 dependencies = [
  "auto_impl",
  "environmental",
@@ -1458,13 +1459,14 @@ dependencies = [
  "rlp",
  "scale-info",
  "serde",
- "sha3 0.8.2",
+ "sha3 0.10.1",
 ]
 
 [[package]]
 name = "evm-core"
-version = "0.34.0"
-source = "git+https://github.com/wjsxqs/evm.git?branch=web3games#989cb6b504bfffc12f819ece0c0e7134a3873241"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d4537041d3a3438d59b2d01bd950ce89fb1ccb3cf21d9331193c10be12e849f"
 dependencies = [
  "parity-scale-codec",
  "primitive-types",
@@ -1474,8 +1476,9 @@ dependencies = [
 
 [[package]]
 name = "evm-gasometer"
-version = "0.34.0"
-source = "git+https://github.com/wjsxqs/evm.git?branch=web3games#989cb6b504bfffc12f819ece0c0e7134a3873241"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6181da8734c86873ac9b3f9886d4e00105361039dcfb9f621be9a0ddb8f43961"
 dependencies = [
  "environmental",
  "evm-core",
@@ -1485,14 +1488,15 @@ dependencies = [
 
 [[package]]
 name = "evm-runtime"
-version = "0.34.0"
-source = "git+https://github.com/wjsxqs/evm.git?branch=web3games#989cb6b504bfffc12f819ece0c0e7134a3873241"
+version = "0.35.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6157af91ca70fcf3581afaea1fa25974a71b9ef63d454c08dfba93ab0c7715d"
 dependencies = [
  "auto_impl",
  "environmental",
  "evm-core",
  "primitive-types",
- "sha3 0.8.2",
+ "sha3 0.10.1",
 ]
 
 [[package]]
@@ -1528,7 +1532,7 @@ dependencies = [
 [[package]]
 name = "fc-consensus"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "async-trait",
  "fc-db",
@@ -1547,7 +1551,7 @@ dependencies = [
 [[package]]
 name = "fc-db"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-storage",
  "kvdb-rocksdb",
@@ -1561,7 +1565,7 @@ dependencies = [
 [[package]]
 name = "fc-mapping-sync"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fc-db",
  "fp-consensus",
@@ -1578,7 +1582,7 @@ dependencies = [
 [[package]]
 name = "fc-rpc"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "ethereum-types",
@@ -1617,7 +1621,7 @@ dependencies = [
 [[package]]
 name = "fc-rpc-core"
 version = "1.1.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "ethereum-types",
@@ -1714,7 +1718,7 @@ dependencies = [
 [[package]]
 name = "fork-tree"
 version = "3.0.0"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -1732,7 +1736,7 @@ dependencies = [
 [[package]]
 name = "fp-consensus"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "parity-scale-codec",
@@ -1744,7 +1748,7 @@ dependencies = [
 [[package]]
 name = "fp-evm"
 version = "3.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "evm",
  "parity-scale-codec",
@@ -1756,7 +1760,7 @@ dependencies = [
 [[package]]
 name = "fp-rpc"
 version = "3.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "ethereum-types",
@@ -1773,7 +1777,7 @@ dependencies = [
 [[package]]
 name = "fp-self-contained"
 version = "1.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "frame-support",
@@ -1789,7 +1793,7 @@ dependencies = [
 [[package]]
 name = "fp-storage"
 version = "2.0.0"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -4235,11 +4239,11 @@ dependencies = [
 [[package]]
 name = "pallet-base-fee"
 version = "1.0.0"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
+ "fp-evm",
  "frame-support",
  "frame-system",
- "pallet-evm",
  "parity-scale-codec",
  "scale-info",
  "serde",
@@ -4334,7 +4338,7 @@ dependencies = [
 [[package]]
 name = "pallet-ethereum"
 version = "4.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "ethereum",
  "ethereum-types",
@@ -4362,11 +4366,10 @@ dependencies = [
 [[package]]
 name = "pallet-evm"
 version = "6.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "evm",
  "fp-evm",
- "frame-benchmarking",
  "frame-support",
  "frame-system",
  "hex",
@@ -4378,7 +4381,7 @@ dependencies = [
  "rlp",
  "scale-info",
  "serde",
- "sha3 0.8.2",
+ "sha3 0.10.1",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -4388,7 +4391,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-bn128"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-evm",
  "sp-core",
@@ -4398,7 +4401,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-dispatch"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-evm",
  "frame-support",
@@ -4408,7 +4411,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-modexp"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-evm",
  "num",
@@ -4417,7 +4420,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-sha3fips"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-evm",
  "tiny-keccak",
@@ -4426,7 +4429,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-simple"
 version = "2.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.5#95f40b5537e12606cbd0cfe7f5d9364cb5d9653d"
+source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
 dependencies = [
  "fp-evm",
  "ripemd",
@@ -4531,7 +4534,7 @@ dependencies = [
 [[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -6063,7 +6066,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "async-trait",
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
@@ -6106,7 +6109,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-epochs"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "fork-tree 3.0.0 (git+https://github.com/paritytech/substrate)",
  "parity-scale-codec",
@@ -6119,7 +6122,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-manual-seal"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "assert_matches",
  "async-trait",
@@ -7006,19 +7009,6 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd26bc0e7a2e3a7c959bc494caf58b72ee0c71d67704e9520f736ca7e4853ecf"
-dependencies = [
- "block-buffer 0.7.3",
- "byte-tools",
- "digest 0.8.1",
- "keccak",
- "opaque-debug 0.2.3",
-]
-
-[[package]]
-name = "sha3"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
@@ -7293,7 +7283,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-babe"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "async-trait",
  "merlin",
@@ -7330,7 +7320,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-vrf"
 version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "parity-scale-codec",
  "schnorrkel",
@@ -7413,7 +7403,7 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate?branch=master#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate?branch=master#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "kvdb",
  "parking_lot 0.12.0",
@@ -7520,7 +7510,7 @@ dependencies = [
 [[package]]
 name = "sp-keyring"
 version = "6.0.0"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "lazy_static",
  "sp-core",
@@ -8022,7 +8012,7 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/paritytech/substrate#5597a93a8c8b1ab578693c68549e3ce1902f3eaf"
+source = "git+https://github.com/paritytech/substrate#2cdae822589863846dbe589015c5397545d26abb"
 dependencies = [
  "ansi_term",
  "build-helper",
@@ -9020,6 +9010,7 @@ dependencies = [
  "fc-rpc",
  "fc-rpc-core",
  "fp-consensus",
+ "fp-evm",
  "fp-rpc",
  "fp-storage",
  "frame-benchmarking",

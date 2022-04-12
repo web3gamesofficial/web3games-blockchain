@@ -52,11 +52,11 @@ frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", d
 hex-literal = { version = "0.3.1", optional = true }
 
 # EVM
-pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-base-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fp-self-contained = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-base-fee = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-rpc = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-self-contained = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 
 primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
 runtime-common = { path = "../common", default-features = false }

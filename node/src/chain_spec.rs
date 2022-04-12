@@ -270,7 +270,7 @@ fn testnet_genesis(
 				.map(|addr| {
 					(
 						addr.clone(),
-						pallet_evm::GenesisAccount {
+						fp_evm::GenesisAccount {
 							nonce: Default::default(),
 							balance: Default::default(),
 							storage: Default::default(),

@@ -64,17 +64,18 @@ pallet-contracts-rpc = { git = "https://github.com/paritytech/substrate" }
 frame-benchmarking = { git = "https://github.com/paritytech/substrate" }
 frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate" }
 
-fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fp-storage = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+fc-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-consensus = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fc-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-rpc = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fp-storage = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fc-rpc-core = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fc-db = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+fc-mapping-sync = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 
-pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
-pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.5" }
+pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
+pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branch = "web3games-v0.6" }
 
 web3games-runtime = { path = "../runtime/web3games", default-features = false, features = ["std"] }
 
