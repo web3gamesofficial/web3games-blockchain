@@ -144,25 +144,21 @@ pub mod pallet {
 			token_b: T::FungibleTokenId,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			log::info!("create_pool");
 
 			ensure!(token_a != token_b, Error::<T>::TokenRepeat);
-			log::info!("test1");
 			ensure!(
 				pallet_token_fungible::Pallet::<T>::exists(token_a),
 				Error::<T>::TokenAccountNotFound,
 			);
-			log::info!("test2");
 			ensure!(
 				pallet_token_fungible::Pallet::<T>::exists(token_b),
 				Error::<T>::TokenAccountNotFound,
 			);
-			log::info!("test3");
 			ensure!(
 				!GetPool::<T>::contains_key((token_a, token_b)),
 				Error::<T>::PoolAlreadyCreated
 			);
-			log::info!("test4");
+
 			Self::do_create_pool(&who, token_a, token_b)?;
 
 			Ok(())

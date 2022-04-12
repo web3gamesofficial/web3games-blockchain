@@ -85,10 +85,7 @@ pub type ConsensusResult = (
 );
 
 #[cfg(feature = "manual-seal")]
-pub type ConsensusResult = (
-	FrontierBlockImport<Block, Arc<FullClient>, FullClient>,
-	Sealing,
-);
+pub type ConsensusResult = (FrontierBlockImport<Block, Arc<FullClient>, FullClient>, Sealing);
 
 /// Provide a mock duration starting at 0 in millisecond for timestamp inherent.
 /// Each call will increment timestamp by slot_duration making Aura think time has passed.
@@ -133,14 +130,12 @@ pub fn frontier_database_dir(config: &Configuration) -> std::path::PathBuf {
 }
 
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
-		&fc_db::DatabaseSettings {
-			source: fc_db::DatabaseSettingsSrc::RocksDb {
-				path: frontier_database_dir(&config),
-				cache_size: 0,
-			},
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: fc_db::DatabaseSettingsSrc::RocksDb {
+			path: frontier_database_dir(&config),
+			cache_size: 0,
 		},
-	)?))
+	})?))
 }
 
 pub fn new_partial(
@@ -164,9 +159,7 @@ pub fn new_partial(
 	ServiceError,
 > {
 	if config.keystore_remote.is_some() {
-		return Err(ServiceError::Other(format!(
-			"Remote Keystores are not supported."
-		)));
+		return Err(ServiceError::Other(format!("Remote Keystores are not supported.")));
 	}
 
 	let telemetry = config
@@ -196,9 +189,7 @@ pub fn new_partial(
 	let client = Arc::new(client);
 
 	let telemetry = telemetry.map(|(worker, telemetry)| {
-		task_manager
-			.spawn_handle()
-			.spawn("telemetry", None, worker.run());
+		task_manager.spawn_handle().spawn("telemetry", None, worker.run());
 		telemetry
 	});
 
@@ -341,15 +332,11 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 					"Error hooking up remote keystore for {}: {}",
 					url, e
 				)))
-			}
+			},
 		};
 	}
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
-		&client
-			.block_hash(0)
-			.ok()
-			.flatten()
-			.expect("Genesis block exists; qed"),
+		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
 		&config.chain_spec,
 	);
 
@@ -359,16 +346,12 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 			config
 				.network
 				.extra_sets
-				.push(sc_finality_grandpa::grandpa_peers_set_config(
-					grandpa_protocol_name.clone(),
-				));
-			Some(Arc::new(
-				sc_finality_grandpa::warp_proof::NetworkProvider::new(
-					backend.clone(),
-					consensus_result.1.shared_authority_set().clone(),
-					Vec::default(),
-				),
-			))
+				.push(sc_finality_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone()));
+			Some(Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
+				backend.clone(),
+				consensus_result.1.shared_authority_set().clone(),
+				Vec::default(),
+			)))
 		}
 		#[cfg(feature = "manual-seal")]
 		{
@@ -448,10 +431,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 				block_data_cache: block_data_cache.clone(),
 			};
 
-			Ok(crate::rpc::create_full(
-				deps,
-				subscription_task_executor.clone(),
-			))
+			Ok(crate::rpc::create_full(deps, subscription_task_executor.clone()))
 		})
 	};
 
@@ -556,7 +536,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 						None,
 						authorship_future,
 					);
-				}
+				},
 				Sealing::Instant => {
 					let authorship_future =
 						manual_seal::run_instant_seal(manual_seal::InstantSealParams {
@@ -582,7 +562,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 						None,
 						authorship_future,
 					);
-				}
+				},
 			};
 		}
 		log::info!("Manual Seal Ready");
@@ -651,11 +631,8 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 
 		// if the node isn't actively participating in consensus then it doesn't
 		// need a keystore, regardless of which protocol we use below.
-		let keystore = if role.is_authority() {
-			Some(keystore_container.sync_keystore())
-		} else {
-			None
-		};
+		let keystore =
+			if role.is_authority() { Some(keystore_container.sync_keystore()) } else { None };
 
 		let grandpa_config = sc_finality_grandpa::Config {
 			// FIXME #1578 make this available through chainspec

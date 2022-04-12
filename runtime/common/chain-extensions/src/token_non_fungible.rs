@@ -20,7 +20,6 @@ use codec::Encode;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
-use primitives::TokenId;
 use sp_runtime::DispatchError;
 use sp_std::vec::Vec;
 

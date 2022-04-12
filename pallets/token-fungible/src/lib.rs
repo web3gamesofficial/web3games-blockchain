@@ -20,17 +20,16 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
-	dispatch::{DispatchError, DispatchResult},
+	dispatch::DispatchResult,
 	ensure,
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
-use log::error;
 use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
+	traits::{AtLeast32BitUnsigned, TrailingZeroInput},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;

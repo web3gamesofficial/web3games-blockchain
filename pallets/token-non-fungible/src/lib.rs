@@ -29,7 +29,7 @@ use pallet_support::{NonFungibleEnumerable, NonFungibleMetadata};
 use primitives::TokenIndex;
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput},
+	traits::{AtLeast32BitUnsigned, One, TrailingZeroInput},
 	RuntimeDebug,
 };
 use sp_std::prelude::*;

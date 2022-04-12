@@ -23,14 +23,14 @@ use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
 	traits::{Currency, ExistenceRequirement::KeepAlive, Get, ReservableCurrency, Time},
-	BoundedVec, PalletId,
+	PalletId,
 };
 use scale_info::TypeInfo;
 use sp_runtime::{
-	traits::{AccountIdConversion, CheckedMul, One, Zero},
+	traits::{AccountIdConversion, One, Zero},
 	Percent, RuntimeDebug,
 };
-use sp_std::{convert::TryFrom, prelude::*};
+use sp_std::prelude::*;
 
 pub use pallet::*;
 
@@ -335,6 +335,8 @@ pub mod pallet {
 			})?;
 
 			let bid = Bid { id, bidder: who.clone(), price, expires_at };
+
+			Bids::<T>::insert(asset.clone(), bid);
 
 			Self::deposit_event(Event::BidCreated(id, who, asset));
 			Ok(())
