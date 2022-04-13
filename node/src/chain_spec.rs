@@ -27,9 +27,9 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, EvmChainIdConfig, EVMConfig, EthereumConfig, GenesisConfig,
-	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, WrapCurrencyConfig, DOLLARS,
-	WASM_BINARY,
+	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, EvmChainIdConfig,
+	GenesisConfig, GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig,
+	WrapCurrencyConfig, DOLLARS, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
