@@ -4418,6 +4418,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-evm-chain-id"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+]
+
+[[package]]
 name = "pallet-evm-precompile-bn128"
 version = "2.0.0-dev"
 source = "git+https://github.com/web3gamesofficial/frontier?branch=web3games-v0.6#169701d317314ee3118abd10797623e76776c439"
@@ -9128,6 +9138,7 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-evm-chain-id",
  "pallet-exchange",
  "pallet-grandpa",
  "pallet-marketplace",

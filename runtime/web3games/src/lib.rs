@@ -76,6 +76,7 @@ use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
 use pallet_support::AccountMapping;
+pub use frame_support::traits::Get;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
 use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
@@ -348,7 +349,6 @@ where
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 105;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
@@ -365,7 +365,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type PrecompilesType = Web3GamesPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
-	type ChainId = ChainId;
+	type ChainId = EvmChainId;
 	type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, ()>;
 	type BlockGasLimit = BlockGasLimit;
 	type FindAuthor = FindAuthorTruncated<Aura>;
@@ -587,6 +587,8 @@ impl pallet_player_id::Config for Runtime {
 	type MaxAddressesPerChain = MaxAddressesPerChain;
 }
 
+impl pallet_evm_chain_id::Config for Runtime {}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -618,6 +620,7 @@ construct_runtime!(
 		Exchange: pallet_exchange,
 		Marketplace: pallet_marketplace,
 		PalyerId: pallet_player_id,
+		EvmChainId: pallet_evm_chain_id,
 	}
 );
 
