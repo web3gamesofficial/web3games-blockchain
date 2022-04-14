@@ -24,7 +24,7 @@ use pallet_support::{
 	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
 };
 use precompile_utils::{
-	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
 	Gasometer, LogsBuilder, RuntimeHelper,
 };
 use primitives::{Balance, TokenId, TokenIndex};

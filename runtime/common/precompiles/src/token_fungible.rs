@@ -22,8 +22,8 @@ use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{FungibleMetadata, TokenIdConversion};
 use precompile_utils::{
-	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
-	Gasometer, LogsBuilder, RuntimeHelper,
+	Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier, Gasometer,
+	RuntimeHelper,
 };
 use primitives::Balance;
 use sp_core::H160;
