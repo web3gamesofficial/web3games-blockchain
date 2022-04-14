@@ -77,7 +77,6 @@ where
 		+ pallet_token_fungible::Config
 		+ pallet_token_non_fungible::Config
 		+ pallet_token_multi::Config,
-
 	<<C as pallet_contracts::Config>::Call as Dispatchable>::Origin: From<Option<C::AccountId>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
