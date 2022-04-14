@@ -9125,7 +9125,7 @@ dependencies = [
 
 [[package]]
 name = "web3games-node"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "async-trait",
  "clap 3.1.8",
@@ -9204,7 +9204,7 @@ dependencies = [
 
 [[package]]
 name = "web3games-runtime"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "fp-rpc",
  "fp-self-contained",
