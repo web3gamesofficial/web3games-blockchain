@@ -41,7 +41,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable,
-		NumberFor, PostDispatchInfoOf, Zero,
+		NumberFor, PostDispatchInfoOf,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, Percent,
@@ -54,6 +54,7 @@ use static_assertions::const_assert;
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
+pub use frame_support::traits::Get;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
@@ -348,7 +349,6 @@ where
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 105;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
@@ -365,7 +365,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type PrecompilesType = Web3GamesPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
-	type ChainId = ChainId;
+	type ChainId = EvmChainId;
 	type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, ()>;
 	type BlockGasLimit = BlockGasLimit;
 	type FindAuthor = FindAuthorTruncated<Aura>;
@@ -587,6 +587,8 @@ impl pallet_player_id::Config for Runtime {
 	type MaxAddressesPerChain = MaxAddressesPerChain;
 }
 
+impl pallet_evm_chain_id::Config for Runtime {}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -618,6 +620,7 @@ construct_runtime!(
 		Exchange: pallet_exchange,
 		Marketplace: pallet_marketplace,
 		PalyerId: pallet_player_id,
+		EvmChainId: pallet_evm_chain_id,
 	}
 );
 
