@@ -51,7 +51,7 @@ pub mod pallet {
 		type PalletId: Get<PalletId>;
 
 		#[pallet::constant]
-		type CreateTokenDeposit: Get<BalanceOf<Self>>;
+		type CreateFungibleTokenDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
@@ -67,7 +67,7 @@ pub mod pallet {
 
 	#[pallet::genesis_config]
 	#[derive(Default)]
-	pub struct GenesisConfig {}
+	pub struct GenesisConfig;
 
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig
@@ -108,7 +108,7 @@ pub mod pallet {
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				token_id,
 				&vault_account,
-				who.clone(),
+				&who,
 				amount.into(),
 			)?;
 
@@ -144,7 +144,7 @@ where
 	fn create_wrap_token() -> DispatchResult {
 		let vault_account = Self::account_id();
 
-		let deposit = <T as Config>::CreateTokenDeposit::get();
+		let deposit = <T as Config>::CreateFungibleTokenDeposit::get();
 		<T as Config>::Currency::deposit_creating(&vault_account, deposit);
 
 		let id: T::FungibleTokenId = 0u128.into();

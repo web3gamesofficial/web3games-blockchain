@@ -24,11 +24,11 @@ use pallet_support::{
 	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
 };
 use precompile_utils::{
-	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
+	keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
 	Gasometer, LogsBuilder, RuntimeHelper,
 };
-use primitives::{TokenId, TokenIndex};
-use sp_core::{H160, U256};
+use primitives::{Balance, TokenId, TokenIndex};
+use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
 /// Solidity selector of the Transfer log, which is the Keccak of the Log signature.
@@ -245,7 +245,7 @@ where
 
 		let owner: H160 = input.read::<Address>(gasometer)?.into();
 
-		let balance: U256 = {
+		let balance: Balance = {
 			let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
 			pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into()
 		};

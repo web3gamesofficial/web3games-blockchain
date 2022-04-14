@@ -551,7 +551,7 @@ impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
-	type CreateTokenDeposit = CreateTokenDeposit;
+	type CreateFungibleTokenDeposit = CreateTokenDeposit;
 	type Randomness = RandomnessCollectiveFlip;
 }
 

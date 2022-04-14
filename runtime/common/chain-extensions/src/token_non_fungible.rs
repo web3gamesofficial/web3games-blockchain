@@ -16,7 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use crate::RuntimeHelper;
 use codec::Encode;
+use frame_support::dispatch::Dispatchable;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, Result, RetVal, SysConfig, UncheckedFrom,
 };
@@ -28,6 +30,7 @@ pub struct NonFungibleTokenExtension;
 impl<C> ChainExtension<C> for NonFungibleTokenExtension
 where
 	C: pallet_contracts::Config + pallet_token_non_fungible::Config,
+	<<C as pallet_contracts::Config>::Call as Dispatchable>::Origin: From<Option<C::AccountId>>,
 	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
@@ -41,27 +44,23 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 
-				let (non_fungible_token_id, name, symbol, base_uri): (
+				let (id, name, symbol, base_uri): (
 					<C as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					Vec<u8>,
 					Vec<u8>,
 					Vec<u8>,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_create_token(
-					&caller,
-					non_fungible_token_id,
-					name,
-					symbol,
-					base_uri,
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::create_token {
+						id,
+						name,
+						symbol,
+						base_uri,
+					},
 				)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call create token")
-				})?;
+				env.charge_weight(used_weight)?;
 			},
 			// approve
 			65602 => {
@@ -74,16 +73,12 @@ where
 					<E::T as SysConfig>::AccountId,
 					<E::T as pallet_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_approve(
-					&caller, id, &to, token_id,
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::approve { id, to, token_id },
 				)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None)
-					.map_err(|_| DispatchError::Other("ChainExtension failed to call approve"))?;
+				env.charge_weight(used_weight)?;
 			},
 			// set_approve_for_all
 			65603 => {
@@ -96,17 +91,16 @@ where
 					<E::T as SysConfig>::AccountId,
 					bool,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_set_approve_for_all(
-					&caller, id, &operator, approved,
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::set_approve_for_all {
+						id,
+						operator,
+						approved,
+					},
 				)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
-				})?;
+				env.charge_weight(used_weight)?;
 			},
 			// transfer_from
 			65604 => {
@@ -120,38 +114,40 @@ where
 					<E::T as SysConfig>::AccountId,
 					<E::T as pallet_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_transfer_from(
-					&caller, id, &from, &to, token_id,
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::transfer_from {
+						id,
+						from,
+						to,
+						token_id,
+					},
 				)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call set_approve_for_all")
-				})?;
+				env.charge_weight(used_weight)?;
 			},
 			// mint
 			65605 => {
 				let mut env = env.buf_in_buf_out();
-
 				let caller = env.ext().caller().clone();
 
-				let (id, to, token_id): (
+				let (id, from, to, token_id): (
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as pallet_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id =
-					pallet_token_non_fungible::Pallet::<E::T>::do_mint(&caller, id, &to, token_id)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None)
-					.map_err(|_| DispatchError::Other("ChainExtension failed to call mint"))?;
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::transfer_from {
+						id,
+						from,
+						to,
+						token_id,
+					},
+				)?;
+				env.charge_weight(used_weight)?;
 			},
 			// burn
 			65606 => {
@@ -163,14 +159,12 @@ where
 					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as pallet_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
-				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_burn(&caller, id, token_id)?;
-
-				let id_slice = id.encode();
-
-				env.write(&id_slice, false, None)
-					.map_err(|_| DispatchError::Other("ChainExtension failed to call burn"))?;
+				let used_weight = RuntimeHelper::<E::T>::try_dispatch(
+					Some(caller).into(),
+					pallet_token_non_fungible::Call::<E::T>::burn { id, token_id },
+				)?;
+				env.charge_weight(used_weight)?;
 			},
 			// exists
 			65607 => {
@@ -181,17 +175,10 @@ where
 
 				let exists: bool = pallet_token_non_fungible::Pallet::<E::T>::exists(id);
 
-				let exists_slice = exists.encode();
+				let output = exists.encode();
 
-				log::trace!(
-					target: "runtime",
-					"[ChainExtension]|call|func_id:{:}",
-					func_id
-				);
-
-				env.write(&exists_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call create collection")
-				})?;
+				env.write(&output, false, None)
+					.map_err(|_| DispatchError::Other("ChainExtension failed to call exists"))?;
 			},
 			// token_exists
 			65608 => {
@@ -205,16 +192,10 @@ where
 				let token_exists: bool =
 					pallet_token_non_fungible::Pallet::<E::T>::token_exists(id, token_id);
 
-				let token_exists_slice = token_exists.encode();
+				let output = token_exists.encode();
 
-				log::trace!(
-					target: "runtime",
-					"[ChainExtension]|call|func_id:{:}",
-					func_id
-				);
-
-				env.write(&token_exists_slice, false, None).map_err(|_| {
-					DispatchError::Other("ChainExtension failed to call create collection")
+				env.write(&output, false, None).map_err(|_| {
+					DispatchError::Other("ChainExtension failed to call token_exists")
 				})?;
 			},
 			_ => {

@@ -17,25 +17,47 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use super::*;
-use crate::{mock::*, Error};
-use frame_support::{assert_noop, assert_ok};
+use crate::mock::*;
+use frame_support::assert_ok;
 
 #[test]
 fn test_register_works() {
 	new_test_ext().execute_with(|| {
-		let player_id_vec = "tester".as_bytes().to_vec();
-		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), player_id_vec, ALICE));
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
 	});
 }
 
-// #[test]
-// fn test_add_address_works() {
-// 	new_test_ext().execute_with(|| {
-// 		let player_id_vec = "tester".as_bytes().to_vec();
-// 		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), player_id_vec.clone(), ALICE));
+#[test]
+fn test_add_address_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
 
-// 		let player_id = PlayerId::try_from(player_id_vec).unwrap();
-// 		let eth_address = "6Be02d1d3665660d22FF9624b7BE0551ee1Ac91b".as_bytes().to_vec();
-// 		assert_ok!(PlayerIdModule::add_address(Origin::signed(ALICE), player_id, Chains::ETH, eth_address));
-// 	});
-// }
+		assert_ok!(PlayerIdModule::add_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			vec![0u8, 20],
+		));
+	});
+}
+
+#[test]
+fn test_remove_address_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
+
+		assert_ok!(PlayerIdModule::add_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			vec![0u8, 20],
+		));
+
+		assert_ok!(PlayerIdModule::remove_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			Address::try_from(vec![0u8, 20]).unwrap(),
+		));
+	});
+}

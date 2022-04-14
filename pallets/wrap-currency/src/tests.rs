@@ -16,26 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-// use crate::{mock::*, Error};
-// use frame_support::{assert_noop, assert_ok};
+use crate::mock::*;
+use frame_support::assert_ok;
 
-// #[test]
-// fn it_works_for_default_value() {
-//     new_test_ext().execute_with(|| {
-//         // Dispatch a signed extrinsic.
-//         assert_ok!(TemplateModule::do_something(Origin::signed(1), 42));
-//         // Read pallet storage and assert an expected result.
-//         assert_eq!(TemplateModule::something(), Some(42));
-//     });
-// }
-//
-// #[test]
-// fn correct_error_for_none_value() {
-//     new_test_ext().execute_with(|| {
-//         // Ensure the expected error is thrown when no value is present.
-//         assert_noop!(
-//             TemplateModule::cause_error(Origin::signed(1)),
-//             Error::<Test>::NoneValue
-//         );
-//     });
-// }
+#[test]
+fn test_deposit_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(WrapCurrency::deposit(Origin::signed(1), 1000,));
+		assert_eq!(TokenFungible::balance_of(0, 1), 1000);
+	})
+}
+
+#[test]
+fn test_withdraw_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(WrapCurrency::deposit(Origin::signed(1), 1000,));
+		assert_eq!(TokenFungible::balance_of(0, 1), 1000);
+
+		assert_ok!(WrapCurrency::withdraw(Origin::signed(1), 500,));
+		assert_eq!(TokenFungible::balance_of(0, 1), 500);
+	})
+}

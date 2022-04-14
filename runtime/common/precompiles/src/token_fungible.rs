@@ -22,11 +22,11 @@ use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
 use pallet_support::{FungibleMetadata, TokenIdConversion};
 use precompile_utils::{
-	error, keccak256, Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier,
-	Gasometer, LogsBuilder, RuntimeHelper,
+	Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, FunctionModifier, Gasometer,
+	RuntimeHelper,
 };
 use primitives::Balance;
-use sp_core::{H160, U256};
+use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
 pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;

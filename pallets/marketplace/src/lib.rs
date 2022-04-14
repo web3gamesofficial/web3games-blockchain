@@ -22,7 +22,11 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
-	traits::{Currency, ExistenceRequirement::KeepAlive, Get, ReservableCurrency, Time},
+	traits::{
+		Currency,
+		ExistenceRequirement::{AllowDeath, KeepAlive},
+		Get, ReservableCurrency, Time,
+	},
 	PalletId,
 };
 use scale_info::TypeInfo;
@@ -61,21 +65,21 @@ pub type OrderId = u32;
 pub type BidId = u32;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct NFTAsset<NFTGroupId, NFTokenId> {
-	pub group_id: NFTGroupId,
+pub struct NFTAsset<NFTCollectionId, NFTokenId> {
+	pub collection_id: NFTCollectionId,
 	pub token_id: NFTokenId,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct MTAsset<MTGroupId, MTokenId> {
-	pub group_id: MTGroupId,
+pub struct MTAsset<MTCollectionId, MTokenId> {
+	pub collection_id: MTCollectionId,
 	pub token_id: MTokenId,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub enum Asset<NFTGroupId, NFTokenId, MTGroupId, MTokenId> {
-	NFT(NFTAsset<NFTGroupId, NFTokenId>),
-	MT(MTAsset<MTGroupId, MTokenId>),
+pub enum Asset<NFTCollectionId, NFTokenId, MTCollectionId, MTokenId> {
+	NFT(NFTAsset<NFTCollectionId, NFTokenId>),
+	MT(MTAsset<MTCollectionId, MTokenId>),
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
@@ -104,6 +108,7 @@ pub struct Royalty<AccountId> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
+	use frame_support::traits::ExistenceRequirement::AllowDeath;
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
@@ -196,30 +201,34 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			ensure!(price > Zero::zero(), Error::<T>::ZeroPrice);
-			ensure!(T::Time::now() > expires_at, Error::<T>::InvalidExpiresAt);
+			ensure!(expires_at > T::Time::now(), Error::<T>::InvalidExpiresAt);
 
 			// check owner
 			match asset {
 				Asset::NFT(ref a) => {
-					let owner =
-						pallet_token_non_fungible::Pallet::<T>::owner_of(a.group_id, a.token_id)
-							.ok_or(Error::<T>::AssetNotFound)?;
+					let owner = pallet_token_non_fungible::Pallet::<T>::owner_of(
+						a.collection_id,
+						a.token_id,
+					)
+					.ok_or(Error::<T>::AssetNotFound)?;
 					ensure!(owner == who, Error::<T>::NotOwner);
 					pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
 						&who,
-						a.group_id,
+						a.collection_id,
 						&who,
 						&Self::account_id(),
 						a.token_id,
 					)?;
 				},
 				Asset::MT(ref a) => {
-					let balance =
-						pallet_token_multi::Pallet::<T>::balance_of(a.group_id, (a.token_id, &who));
+					let balance = pallet_token_multi::Pallet::<T>::balance_of(
+						a.collection_id,
+						(a.token_id, &who),
+					);
 					ensure!(balance > Zero::zero(), Error::<T>::NotOwner);
 					pallet_token_multi::Pallet::<T>::do_transfer_from(
 						&who,
-						a.group_id,
+						a.collection_id,
 						&who,
 						&Self::account_id(),
 						a.token_id,
@@ -274,7 +283,7 @@ pub mod pallet {
 
 			ensure!(order.price == price, Error::<T>::InvalidPrice);
 			ensure!(order.seller != who, Error::<T>::CallerIsSeller);
-			ensure!(order.expires_at < T::Time::now(), Error::<T>::OrderExpired);
+			ensure!(T::Time::now() < order.expires_at, Error::<T>::OrderExpired);
 
 			// Transfer share fees
 			let saled_amount = Self::transfer_share_fees(&who, &asset, price)?;
@@ -377,7 +386,7 @@ pub mod pallet {
 				&Self::account_id(),
 				&order.seller,
 				saled_amount,
-				KeepAlive,
+				AllowDeath,
 			)?;
 
 			Self::transfer_asset_to(&order, &bid.bidder)?;
@@ -452,7 +461,7 @@ impl<T: Config> Pallet<T> {
 			Asset::NFT(a) => {
 				pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
 					&Self::account_id(),
-					a.group_id,
+					a.collection_id,
 					&Self::account_id(),
 					to,
 					a.token_id,
@@ -461,7 +470,7 @@ impl<T: Config> Pallet<T> {
 			Asset::MT(a) => {
 				pallet_token_multi::Pallet::<T>::do_transfer_from(
 					&Self::account_id(),
-					a.group_id,
+					a.collection_id,
 					&Self::account_id(),
 					to,
 					a.token_id,
@@ -473,7 +482,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn do_cancel_bid(asset: &AssetOf<T>, bid: BidOf<T>) -> DispatchResult {
-		<T as Config>::Currency::transfer(&Self::account_id(), &bid.bidder, bid.price, KeepAlive)?;
+		<T as Config>::Currency::transfer(&Self::account_id(), &bid.bidder, bid.price, AllowDeath)?;
 
 		Bids::<T>::remove(asset.clone());
 

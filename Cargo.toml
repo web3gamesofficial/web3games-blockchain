@@ -30,6 +30,7 @@ frame-support = { git = "https://github.com/paritytech//substrate", rev = "5597a
 frame-support-procedural = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
 frame-support-procedural-tools = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
 frame-support-procedural-tools-derive = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
+frame-support-test = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
 frame-system = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }
 # frame-try-runtime = { git = "https://github.com/paritytech//substrate", rev = "5597a93a8c8b1ab578693c68549e3ce1902f3eaf" }

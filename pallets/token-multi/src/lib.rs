@@ -143,12 +143,10 @@ pub mod pallet {
 		NumOverflow,
 		LengthMismatch,
 		NoPermission,
-		NotOwner,
 		InvalidId,
 		TokenNonExistent,
 		BadMetadata,
 		NotOwnerOrApproved,
-		ConfuseBehavior,
 		InsufficientTokens,
 		InsufficientAuthorizedTokens,
 	}

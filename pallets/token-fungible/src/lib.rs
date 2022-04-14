@@ -133,16 +133,15 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		Unknown,
+		NotFound,
 		NoAvailableTokenId,
-		NumOverflow,
+		Overflow,
 		NoPermission,
 		NotOwner,
 		InvalidId,
-		AmountExceedAllowance,
 		BadMetadata,
-		InsufficientAuthorizedTokens,
-		InsufficientTokens,
-		ConfuseBehavior,
+		InsufficientBalance,
+		InsufficientAllowance,
 		ApproveToCurrentOwner,
 	}
 
@@ -205,7 +204,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			Self::do_mint(id, &who, account, amount)
+			Self::do_mint(id, &who, &account, amount)
 		}
 
 		#[pallet::weight(10_000)]
@@ -273,13 +272,10 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(spender != who, Error::<T>::ApproveToCurrentOwner);
 
-		ensure!(
-			Balances::<T>::get(id, who.clone()) >= amount,
-			Error::<T>::InsufficientAuthorizedTokens
-		);
+		ensure!(Balances::<T>::get(id, who.clone()) >= amount, Error::<T>::InsufficientBalance);
 
 		Allowances::<T>::try_mutate(id, (&who, &spender), |allowance| -> DispatchResult {
-			*allowance = allowance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+			*allowance = allowance.checked_add(amount).ok_or(Error::<T>::Overflow)?;
 			Ok(())
 		})?;
 
@@ -295,15 +291,17 @@ impl<T: Config> Pallet<T> {
 		recipient: T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		ensure!(who != recipient, Error::<T>::ConfuseBehavior);
-
 		ensure!(
 			Allowances::<T>::get(id, (&sender, &who)) >= amount,
-			Error::<T>::InsufficientAuthorizedTokens
+			Error::<T>::InsufficientAllowance
 		);
 
+		if sender == recipient {
+			return Ok(());
+		}
+
 		Allowances::<T>::try_mutate(id, (&sender, &who), |allowance| -> DispatchResult {
-			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+			*allowance = allowance.checked_sub(amount).ok_or(Error::<T>::Overflow)?;
 			Ok(())
 		})?;
 
@@ -318,9 +316,11 @@ impl<T: Config> Pallet<T> {
 		recipient: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
-		ensure!(who != recipient, Error::<T>::ConfuseBehavior);
+		if who == recipient {
+			return Ok(());
+		}
 
-		ensure!(Balances::<T>::get(id, who.clone()) >= amount, Error::<T>::InsufficientTokens);
+		ensure!(Balances::<T>::get(id, who.clone()) >= amount, Error::<T>::InsufficientBalance);
 
 		Self::internal_transfer(id, who, recipient, amount)?;
 
@@ -344,12 +344,12 @@ impl<T: Config> Pallet<T> {
 	pub fn do_mint(
 		id: T::FungibleTokenId,
 		who: &T::AccountId,
-		account: T::AccountId,
+		account: &T::AccountId,
 		amount: Balance,
 	) -> DispatchResult {
 		Self::maybe_check_permission(id, &who)?;
 
-		Self::internal_mint(id, &account, amount)?;
+		Self::internal_mint(id, account, amount)?;
 
 		Ok(())
 	}
@@ -400,7 +400,7 @@ impl<T: Config> Pallet<T> {
 		amount: Balance,
 	) -> DispatchResult {
 		Balances::<T>::try_mutate(id, to, |balance| -> DispatchResult {
-			*balance = balance.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
+			*balance = balance.checked_add(amount).ok_or(Error::<T>::Overflow)?;
 			Ok(())
 		})?;
 
@@ -413,7 +413,7 @@ impl<T: Config> Pallet<T> {
 		amount: Balance,
 	) -> DispatchResult {
 		Balances::<T>::try_mutate(id, from, |balance| -> DispatchResult {
-			*balance = balance.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
+			*balance = balance.checked_sub(amount).ok_or(Error::<T>::Overflow)?;
 			Ok(())
 		})?;
 
@@ -421,8 +421,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn maybe_check_permission(id: T::FungibleTokenId, who: &T::AccountId) -> DispatchResult {
-		let token = Tokens::<T>::get(id);
-		ensure!(*who == token.unwrap().owner, Error::<T>::NoPermission);
+		let token = Tokens::<T>::get(id).ok_or(Error::<T>::NotFound)?;
+		ensure!(*who == token.owner, Error::<T>::NoPermission);
 
 		Ok(())
 	}

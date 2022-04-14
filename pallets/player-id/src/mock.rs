@@ -21,7 +21,6 @@ use crate as pallet_palyer_id;
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
-	PalletId,
 };
 use sp_core::H256;
 use sp_runtime::{
@@ -41,7 +40,6 @@ pub const DOLLARS: Balance = 100 * CENTS;
 
 pub const ALICE: AccountId32 = AccountId32::new([1u8; 32]);
 pub const BOB: AccountId32 = AccountId32::new([2u8; 32]);
-pub const CHARLIE: AccountId32 = AccountId32::new([3u8; 32]);
 
 construct_runtime!(
 	pub enum Test where
