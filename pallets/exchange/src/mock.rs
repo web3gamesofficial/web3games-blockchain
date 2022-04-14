@@ -22,6 +22,7 @@ use frame_support::{
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
+use frame_support_test::TestRandomness;
 use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
@@ -45,7 +46,6 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Randomness: pallet_randomness_collective_flip::{Pallet, Storage},
 		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
 		Exchange: pallet_exchange::{Pallet, Call, Storage, Event<T>},
 	}
@@ -94,8 +94,6 @@ impl pallet_balances::Config for Test {
 	type ReserveIdentifier = [u8; 8];
 }
 
-impl pallet_randomness_collective_flip::Config for Test {}
-
 parameter_types! {
 	pub const TokenFungiblePalletId: PalletId = PalletId(*b"w3g/tfpi");
 	pub const StringLimit: u32 = 50;
@@ -122,7 +120,7 @@ impl pallet_exchange::Config for Test {
 	type PoolId = u32;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
-	type Randomness = Randomness;
+	type Randomness = TestRandomness<Self>;
 }
 
 // Build genesis storage according to the mock runtime.

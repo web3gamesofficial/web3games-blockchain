@@ -198,7 +198,7 @@ pub mod pallet {
 				&Self::account_id(),
 				amount_b,
 			)?;
-			let liquidity = Self::mint(&who, id, &to)?;
+			let liquidity = Self::mint(id, &to)?;
 
 			Self::deposit_event(Event::LiquidityAdded(id, amount_a, amount_b, liquidity));
 
@@ -476,11 +476,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn mint(
-		who: &T::AccountId,
-		id: T::PoolId,
-		to: &T::AccountId,
-	) -> Result<Balance, DispatchError> {
+	pub fn mint(id: T::PoolId, to: &T::AccountId) -> Result<Balance, DispatchError> {
 		let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
@@ -503,8 +499,8 @@ impl<T: Config> Pallet<T> {
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
-				who,
-				Self::zero_account_id(),
+				&Self::account_id(),
+				&Self::zero_account_id(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
 		} else {
@@ -512,7 +508,12 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, who, to.clone(), liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_mint(
+			pool.lp_token,
+			&Self::account_id(),
+			&to,
+			liquidity,
+		)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 
@@ -568,6 +569,7 @@ impl<T: Config> Pallet<T> {
 		Ok((amount_a, amount_b))
 	}
 
+	// update reserves
 	fn do_update(
 		id: T::PoolId,
 		balance_a: Balance,
@@ -575,14 +577,7 @@ impl<T: Config> Pallet<T> {
 		_reserve_a: Balance,
 		_reserve_b: Balance,
 	) -> DispatchResult {
-		// println!("balance_a = {},balance_b = {}",balance_a,balance_b);
-		// ensure!(
-		// 	balance_a < Zero::zero() && balance_b < Zero::zero(),
-		// 	Error::<T>::Overflow
-		// );
-
 		Reserves::<T>::mutate(id, |reserve| *reserve = (balance_a, balance_b));
-
 		Ok(())
 	}
 

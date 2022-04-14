@@ -26,7 +26,7 @@ use precompile_utils::{
 	Gasometer, LogsBuilder, RuntimeHelper,
 };
 use primitives::Balance;
-use sp_core::{H160, U256};
+use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
 pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;

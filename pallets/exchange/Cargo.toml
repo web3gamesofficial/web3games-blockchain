@@ -23,7 +23,7 @@ pallet-token-fungible = { path = "../token-fungible", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate" }
-pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate" }
+frame-support-test = { git = "https://github.com/paritytech/substrate" }
 
 [features]
 default = ["std"]

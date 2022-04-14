@@ -220,7 +220,6 @@ pub mod pallet {
 		TokenNonExistent,
 		ApproveToCurrentOwner,
 		NotOwnerOrApproved,
-		ApproveToCaller,
 		BadMetadata,
 		ConfuseBehavior,
 		TransferTokenNotOwn,
@@ -374,7 +373,7 @@ impl<T: Config> Pallet<T> {
 		operator: &T::AccountId,
 		approved: bool,
 	) -> DispatchResult {
-		ensure!(operator != who, Error::<T>::ApproveToCaller);
+		ensure!(operator != who, Error::<T>::ApproveToCurrentOwner);
 
 		OperatorApprovals::<T>::insert(id, (who, operator), approved);
 
