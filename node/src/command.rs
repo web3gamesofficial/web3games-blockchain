@@ -56,8 +56,8 @@ impl SubstrateCli for Cli {
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 		Ok(match id {
 			"dev" => Box::new(chain_spec::development_config()?),
-			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
-			"staging" => Box::new(chain_spec::staging_testnet_config()?),
+			"devnet" => Box::new(chain_spec::local_devnet_config()?),
+			"testnet" => Box::new(chain_spec::staging_testnet_config()?),
 			"web3games" => {
 				return Err("The mainnet is not yet available.".into());
 				// Box::new(chain_spec::RawChainSpec::from_json_bytes(
