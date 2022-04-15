@@ -5,7 +5,7 @@
 <div align="center">
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/web3gamesofficial/web3games-blockchain/Rust)](https://github.com/web3gamesofficial/web3games-blockchain/actions)
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://github.com/web3gamesofficial/web3games-blockchain/blob/main/LICENSE)
 [![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fweb3games)](https://twitter.com/web3games)
 [![Discord](https://img.shields.io/badge/Discord-gray?logo=discord)](https://discord.gg/web3games)
 [![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://blog.web3games.com/)
