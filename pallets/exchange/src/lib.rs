@@ -26,6 +26,7 @@ use frame_support::{
 	PalletId,
 };
 use integer_sqrt::IntegerSquareRoot;
+use log::log;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_core::U256;
@@ -253,6 +254,7 @@ pub mod pallet {
 			let _pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 			let amounts = Self::get_amounts_out(id, amount_in, path.clone())?;
+
 			ensure!(
 				amounts[amounts.len() - 1] >= amount_out_min,
 				Error::<T>::InsufficientOutAmount
@@ -501,9 +503,11 @@ impl<T: Config> Pallet<T> {
 			let value = amount_a * amount_b;
 			liquidity = value.integer_sqrt() - Balance::from(MINIMUM_LIQUIDITY);
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
+
+			log::info!("-----11111");
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
-				who,
+				&Self::account_id(),
 				Self::zero_account_id(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
@@ -512,7 +516,8 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, who, to.clone(), liquidity)?;
+		log::info!("-----222222");
+		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, &Self::account_id(), to.clone(), liquidity)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 
@@ -645,10 +650,13 @@ impl<T: Config> Pallet<T> {
 		);
 
 		let amount_in_with_fee: U256 = U256::from(amount_in).saturating_mul(U256::from(997u128));
+
 		let numerator: U256 =
 			U256::from(amount_in_with_fee).saturating_mul(U256::from(reserve_out));
+
 		let denominator: U256 = (U256::from(reserve_in).saturating_mul(U256::from(1000u128)))
 			.saturating_add(amount_in_with_fee);
+
 		let amount_out = numerator
 			.checked_div(denominator)
 			.and_then(|n| TryInto::<Balance>::try_into(n).ok())
@@ -690,7 +698,6 @@ impl<T: Config> Pallet<T> {
 			let (reserve_in, reserve_out) = Self::get_reserves(id, path[i], path[i + 1]);
 			amounts[i + 1] = Self::get_amount_out(amounts[i], reserve_in, reserve_out)?;
 		}
-
 		Ok(amounts)
 	}
 
