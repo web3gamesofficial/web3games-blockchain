@@ -109,7 +109,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		PoolCreated(T::PoolId, T::AccountId),
+		PoolCreated(T::PoolId,T::FungibleTokenId,T::FungibleTokenId, T::AccountId),
 		LiquidityAdded(T::PoolId, Balance, Balance, Balance),
 		LiquidityRemoved(T::PoolId),
 		Swapped(T::PoolId),
@@ -347,7 +347,7 @@ impl<T: Config> Pallet<T> {
 		Pools::<T>::insert(id, pool);
 		GetPool::<T>::insert((token_a, token_b), id);
 
-		Self::deposit_event(Event::PoolCreated(id, who.clone()));
+		Self::deposit_event(Event::PoolCreated(id,token_a,token_b,who.clone()));
 
 		Ok(id)
 	}
