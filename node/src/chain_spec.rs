@@ -1,6 +1,6 @@
 // This file is part of Web3Games.
 
-// Copyright (C) 2021 Web3Games https://web3games.org
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -22,15 +22,14 @@ use sc_service::ChainType;
 use sc_telemetry::TelemetryEndpoints;
 use serde_json::json;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::crypto::UncheckedInto;
-use sp_core::{sr25519, Pair, Public, H160};
+use sp_core::{crypto::UncheckedInto, sr25519, Pair, Public, H160};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, CurrencyId, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, OrmlTokensConfig, Precompiles, Signature, SudoConfig,
-	SystemConfig, TokenSymbol, DOLLARS, WASM_BINARY,
+	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, EvmChainIdConfig,
+	GenesisConfig, GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig,
+	WrapCurrencyConfig, DOLLARS, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -70,7 +69,7 @@ pub fn get_account_id_from_evm_address(address: &str) -> AccountId {
 pub fn development_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Web3Games Development Testnet",
+		"Web3Games Development",
 		// ID
 		"web3games_dev",
 		ChainType::Development,
@@ -88,7 +87,8 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
 				],
-				true,
+				// ChainId
+				104,
 			)
 		},
 		// Bootnodes
@@ -96,6 +96,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
+		None,
 		None,
 		// Properties
 		Some(
@@ -112,12 +113,12 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
+pub fn local_devnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Web3Games Local Testnet",
+		"Web3Games Local Devnet",
 		// ID
-		"web3games_local",
+		"web3games_devnet",
 		ChainType::Local,
 		move || {
 			testnet_genesis(
@@ -141,7 +142,8 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
 				],
-				true,
+				// ChainId
+				105,
 			)
 		},
 		// Bootnodes
@@ -149,6 +151,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		None,
 		// Protocol ID
+		None,
 		None,
 		// Properties
 		Some(
@@ -204,7 +207,8 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 					// 5EUp2vXWQEmbT6ceUA5t3XCaHzvAbBgtXPYenE4ui6mhwX89
 					hex!["6adb264c6a79923eb1b3d47feab4db75b0fd140ba31a1f0bfee91ba3070f3541"].into(),
 				],
-				true,
+				// ChainId
+				102,
 			)
 		},
 		// Bootnodes
@@ -212,6 +216,7 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 		// Telemetry
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID
+		None,
 		None,
 		// Properties
 		Some(
@@ -233,7 +238,7 @@ fn testnet_genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	_enable_println: bool,
+	chain_id: u64,
 ) -> GenesisConfig {
 	// This is the simplest bytecode to revert without returning any data.
 	// We will pre-deploy it under all of our precompiles to ensure they can be called from
@@ -258,8 +263,7 @@ fn testnet_genesis(
 		grandpa: GrandpaConfig {
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
-		sudo: SudoConfig { key: root_key },
-		scheduler: Default::default(),
+		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
 		evm: EVMConfig {
 			// We need _some_ code inserted at the precompile address so that
@@ -269,7 +273,7 @@ fn testnet_genesis(
 				.map(|addr| {
 					(
 						addr.clone(),
-						pallet_evm::GenesisAccount {
+						fp_evm::GenesisAccount {
 							nonce: Default::default(),
 							balance: Default::default(),
 							storage: Default::default(),
@@ -280,17 +284,10 @@ fn testnet_genesis(
 				.collect(),
 		},
 		ethereum: EthereumConfig {},
-		orml_tokens: OrmlTokensConfig {
-			balances: endowed_accounts
-				.iter()
-				.flat_map(|x| {
-					vec![
-						(x.clone(), CurrencyId::Token(TokenSymbol::DOT), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::ACA), 1000000 * DOLLARS),
-						(x.clone(), CurrencyId::Token(TokenSymbol::AUSD), 1000000 * DOLLARS),
-					]
-				})
-				.collect(),
-		},
+		dynamic_fee: Default::default(),
+		base_fee: Default::default(),
+		treasury: Default::default(),
+		wrap_currency: WrapCurrencyConfig {},
+		evm_chain_id: EvmChainIdConfig { chain_id },
 	}
 }

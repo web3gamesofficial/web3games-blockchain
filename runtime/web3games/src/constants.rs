@@ -1,6 +1,6 @@
 // This file is part of Web3Games.
 
-// Copyright (C) 2021 Web3Games https://web3games.org
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -26,13 +26,17 @@ pub mod currency {
 	pub const KILOWEI: Balance = 1_000;
 	pub const MEGAWEI: Balance = 1_000_000;
 	pub const GIGAWEI: Balance = 1_000_000_000;
+	pub const MICROW3G: Balance = 1_000_000_000_000;
+	pub const MILLIW3G: Balance = 1_000_000_000_000_000;
+	pub const W3G: Balance = 1_000_000_000_000_000_000;
+	pub const KILOW3G: Balance = 1_000_000_000_000_000_000_000;
 
-	pub const MILLICENTS: Balance = 10_000_000_000_000;
-	pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
-	pub const DOLLARS: Balance = 100 * CENTS;
+	pub const DOLLARS: Balance = W3G;
+	pub const CENTS: Balance = DOLLARS / 100;
+	pub const MILLICENTS: Balance = CENTS / 1_000;
 
 	pub const fn deposit(items: u32, bytes: u32) -> Balance {
-		items as Balance * 15 * CENTS + (bytes as Balance) * 6 * CENTS
+		items as Balance * 1_000 * CENTS + (bytes as Balance) * 100 * MILLICENTS
 	}
 }
 

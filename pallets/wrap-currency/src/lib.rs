@@ -1,6 +1,6 @@
 // This file is part of Web3Games.
 
-// Copyright (C) 2021 Web3Games https://web3games.org
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -18,12 +18,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
-use frame_support::{traits::Get, PalletId};
-use orml_traits::{MultiCurrency, MultiCurrencyExtended};
-use primitives::{Balance, CurrencyId};
-use scale_info::TypeInfo;
-use sp_runtime::{traits::AccountIdConversion, RuntimeDebug};
+use frame_support::{
+	dispatch::DispatchResult,
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get, Randomness, ReservableCurrency},
+	PalletId,
+};
+use sp_runtime::traits::AccountIdConversion;
 use sp_std::prelude::*;
 
 pub use pallet::*;
@@ -34,11 +34,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-#[derive(Clone, Encode, Decode, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct WrapToken<FungibleTokenId> {
-	token_id: FungibleTokenId,
-	total_supply: Balance,
-}
+type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -53,17 +50,12 @@ pub mod pallet {
 		// #[pallet::constant]
 		type PalletId: Get<PalletId>;
 
-		type Currency: MultiCurrencyExtended<
-			Self::AccountId,
-			CurrencyId = CurrencyId,
-			Balance = Balance,
-		>;
-
 		#[pallet::constant]
-		type CreateWrapTokenDeposit: Get<Balance>;
+		type CreateFungibleTokenDeposit: Get<BalanceOf<Self>>;
 
-		#[pallet::constant]
-		type GetNativeCurrencyId: Get<CurrencyId>;
+		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -71,110 +63,98 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type WrapTokens<T: Config> =
-		StorageMap<_, Blake2_128Concat, CurrencyId, WrapToken<T::FungibleTokenId>>;
+	pub(super) type WrapToken<T: Config> = StorageValue<_, T::FungibleTokenId, ValueQuery>;
+
+	#[pallet::genesis_config]
+	#[derive(Default)]
+	pub struct GenesisConfig;
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig
+	where
+		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
+	{
+		fn build(&self) {
+			let result = Pallet::<T>::create_wrap_token();
+			assert!(result.is_ok());
+		}
+	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		TokenCreated(CurrencyId, T::AccountId),
-		TokenMint(CurrencyId, Balance, T::AccountId),
-		TokenBurn(CurrencyId, Balance, T::AccountId),
-	}
-
-	// Errors inform users that something went wrong.
-	#[pallet::error]
-	pub enum Error<T> {
-		Unknown,
-		NumOverflow,
-		WrapTokenNotFound,
+		Deposited(T::AccountId, BalanceOf<T>),
+		Withdrawn(T::AccountId, BalanceOf<T>),
 	}
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>
+	where
+		BalanceOf<T>: Into<u128>,
+		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
+	{
 		#[pallet::weight(10_000)]
-		pub fn create_wrap_token(origin: OriginFor<T>, currency_id: CurrencyId) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+		pub fn deposit(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
 
 			let vault_account = Self::account_id();
 
-			let token_id = pallet_token_fungible::Pallet::<T>::do_create_token(
+			<T as Config>::Currency::transfer(&who, &vault_account, amount, KeepAlive)?;
+
+			let token_id = WrapToken::<T>::get();
+			pallet_token_fungible::Pallet::<T>::do_mint(
+				token_id,
 				&vault_account,
-				[].to_vec(),
-				[].to_vec(),
-				18,
+				&who,
+				amount.into(),
 			)?;
 
-			let wrap_token = WrapToken { token_id, total_supply: Default::default() };
-
-			WrapTokens::<T>::insert(currency_id, wrap_token);
+			Self::deposit_event(Event::Deposited(who, amount));
 
 			Ok(())
 		}
 
 		#[pallet::weight(10_000)]
-		pub fn deposit(
-			origin: OriginFor<T>,
-			currency_id: CurrencyId,
-			amount: Balance,
-		) -> DispatchResult {
+		pub fn withdraw(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(WrapTokens::<T>::contains_key(currency_id), Error::<T>::WrapTokenNotFound);
+			<T as Config>::Currency::transfer(&Self::account_id(), &who, amount, KeepAlive)?;
 
-			let vault_account = Self::account_id();
+			let token_id = WrapToken::<T>::get();
+			pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount.into())?;
 
-			<T as Config>::Currency::transfer(currency_id, &who, &vault_account, amount)?;
-
-			WrapTokens::<T>::try_mutate(currency_id, |wrap_token| -> DispatchResult {
-				let token = wrap_token.as_mut().ok_or(Error::<T>::Unknown)?;
-
-				pallet_token_fungible::Pallet::<T>::do_mint(token.token_id, &who, amount)?;
-
-				token.total_supply =
-					token.total_supply.checked_add(amount).ok_or(Error::<T>::NumOverflow)?;
-				Ok(())
-			})?;
-
-			Self::deposit_event(Event::TokenMint(currency_id, amount, who));
-
-			Ok(())
-		}
-
-		#[pallet::weight(10_000)]
-		pub fn withdraw(
-			origin: OriginFor<T>,
-			currency_id: CurrencyId,
-			amount: Balance,
-		) -> DispatchResult {
-			let who = ensure_signed(origin)?;
-
-			WrapTokens::<T>::try_mutate(currency_id, |wrap_token| -> DispatchResult {
-				let token = wrap_token.as_mut().ok_or(Error::<T>::Unknown)?;
-
-				let vault_account = Self::account_id();
-
-				<T as Config>::Currency::transfer(currency_id, &vault_account, &who, amount)?;
-
-				pallet_token_fungible::Pallet::<T>::do_burn(token.token_id, &who, amount)?;
-
-				token.total_supply =
-					token.total_supply.checked_sub(amount).ok_or(Error::<T>::NumOverflow)?;
-				Ok(())
-			})?;
-
-			Self::deposit_event(Event::TokenBurn(currency_id, amount, who));
+			Self::deposit_event(Event::Withdrawn(who, amount));
 
 			Ok(())
 		}
 	}
 }
 
-impl<T: Config> Pallet<T> {
+impl<T: Config> Pallet<T>
+where
+	<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
+{
 	pub fn account_id() -> T::AccountId {
 		<T as pallet::Config>::PalletId::get().into_account()
+	}
+
+	fn create_wrap_token() -> DispatchResult {
+		let vault_account = Self::account_id();
+
+		let deposit = <T as Config>::CreateFungibleTokenDeposit::get();
+		<T as Config>::Currency::deposit_creating(&vault_account, deposit);
+
+		let id: T::FungibleTokenId = 0u128.into();
+		let name: Vec<u8> = "Wrapped Currency".as_bytes().to_vec();
+		let symbol: Vec<u8> = "WW3G".as_bytes().to_vec();
+
+		pallet_token_fungible::Pallet::<T>::do_create_token(&vault_account, id, name, symbol, 18)?;
+
+		WrapToken::<T>::put(id);
+
+		Ok(())
 	}
 }

@@ -1,17 +1,23 @@
 <p align="center">
-  <img src="https://web3games-public.oss-ap-northeast-1.aliyuncs.com/logo-set/web3game-logo-icon-black.png" width="200">
+  <img src="https://user-images.githubusercontent.com/26602057/163522053-ea3ad06a-be06-4453-920b-15db4df3536a.png" width="500">
 </p>
 
 <div align="center">
-<h1>Web3Games</h1>
+
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/web3gamesofficial/web3games-blockchain/Rust)](https://github.com/web3gamesofficial/web3games-blockchain/actions)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://github.com/web3gamesofficial/web3games-blockchain/blob/main/LICENSE)
+[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fweb3games)](https://twitter.com/web3games)
+[![Discord](https://img.shields.io/badge/Discord-gray?logo=discord)](https://discord.gg/web3games)
+[![Medium](https://img.shields.io/badge/Medium-gray?logo=medium)](https://blog.web3games.com/)
+
 </div>
 
 <!-- TOC -->
 
 - [1. Introduction](#1-introduction)
-- [2. Overview](#2-overview)
-- [3. Building](#3-building)
-- [4. Run](#4-run)
+- [2. Building](#2-building)
+- [3. Run](#3-run)
+- [4. Docker](#4-run-in-docker)
 
 <!-- /TOC -->
 
@@ -19,9 +25,7 @@
 
 Web3Games is a new generation gaming ecosystem built on Substrate.
 
-## 2. Overview
-
-## 3. Building
+## 2. Building
 
 Install Rust:
 
@@ -41,7 +45,7 @@ Build Wasm and native code:
 cargo build --release
 ```
 
-## 4. Run
+## 3. Run
 
 ### Single Node Development Chain
 
@@ -92,7 +96,7 @@ cargo run -- \
   --validator
 ```
 
-## 5. Run in Docker
+## 4. Run in Docker
 
 First, install [Docker](https://docs.docker.com/get-docker/) and
 [Docker Compose](https://docs.docker.com/compose/install/).

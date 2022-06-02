@@ -18,5 +18,42 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use chain_extensions::Web3GamesChainExtensions;
-pub use precompiles::Web3GamesPrecompiles;
+use frame_support::pallet_prelude::Get;
+
+pub use pallet::*;
+
+#[frame_support::pallet]
+pub mod pallet {
+	use super::*;
+	use frame_support::pallet_prelude::*;
+
+	#[pallet::config]
+	pub trait Config: frame_system::Config {}
+
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	pub struct Pallet<T>(_);
+
+	#[pallet::storage]
+	#[pallet::getter(fn chain_id)]
+	pub type ChainId<T> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::genesis_config]
+	#[derive(Default)]
+	pub struct GenesisConfig {
+		pub chain_id: u64,
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig {
+		fn build(&self) {
+			ChainId::<T>::put(self.chain_id);
+		}
+	}
+}
+
+impl<T: Config> Get<u64> for Pallet<T> {
+	fn get() -> u64 {
+		Self::chain_id()
+	}
+}

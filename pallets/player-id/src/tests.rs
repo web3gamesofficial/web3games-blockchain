@@ -16,24 +16,48 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use super::*;
 use crate::mock::*;
 use frame_support::assert_ok;
 
 #[test]
-fn test_deposit_works() {
+fn test_register_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(WrapCurrency::deposit(Origin::signed(1), 1000,));
-		assert_eq!(TokenFungible::balance_of(0, 1), 1000);
-	})
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
+	});
 }
 
 #[test]
-fn test_withdraw_works() {
+fn test_add_address_works() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(WrapCurrency::deposit(Origin::signed(1), 1000,));
-		assert_eq!(TokenFungible::balance_of(0, 1), 1000);
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
 
-		assert_ok!(WrapCurrency::withdraw(Origin::signed(1), 500,));
-		assert_eq!(TokenFungible::balance_of(0, 1), 500);
-	})
+		assert_ok!(PlayerIdModule::add_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			vec![0u8, 20],
+		));
+	});
+}
+
+#[test]
+fn test_remove_address_works() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(PlayerIdModule::register(Origin::signed(ALICE), vec![0u8, 10], ALICE,));
+
+		assert_ok!(PlayerIdModule::add_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			vec![0u8, 20],
+		));
+
+		assert_ok!(PlayerIdModule::remove_address(
+			Origin::signed(ALICE),
+			PlayerId::try_from(vec![0u8, 10]).unwrap(),
+			Chains::ETH,
+			Address::try_from(vec![0u8, 20]).unwrap(),
+		));
+	});
 }

@@ -1,6 +1,6 @@
 // This file is part of Web3Games.
 
-// Copyright (C) 2021 Web3Games https://web3games.org
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -17,19 +17,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #[cfg(feature = "manual-seal")]
-use structopt::clap::arg_enum;
-use structopt::StructOpt;
-
-#[cfg(feature = "manual-seal")]
-arg_enum! {
-	/// Available Sealing methods.
-	#[derive(Debug, Copy, Clone, StructOpt)]
-	pub enum Sealing {
-		// Seal using rpc method.
-		Manual,
-		// Seal when transaction is executed.
-		Instant,
-	}
+#[derive(Debug, Copy, Clone, clap::ArgEnum)]
+pub enum Sealing {
+	// Seal using rpc method.
+	Manual,
+	// Seal when transaction is executed.
+	Instant,
 }
 
 #[cfg(feature = "manual-seal")]
@@ -40,42 +33,48 @@ impl Default for Sealing {
 }
 
 #[allow(missing_docs)]
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Parser)]
 pub struct RunCmd {
 	#[allow(missing_docs)]
-	#[structopt(flatten)]
+	#[clap(flatten)]
 	pub base: sc_cli::RunCmd,
 
-	#[cfg(feature = "manual-seal")]
 	/// Choose sealing method.
-	#[structopt(long = "sealing")]
+	#[cfg(feature = "manual-seal")]
+	#[clap(long, arg_enum, ignore_case = true)]
 	pub sealing: Sealing,
 
-	#[structopt(long = "enable-dev-signer")]
+	#[clap(long)]
 	pub enable_dev_signer: bool,
 
 	/// Maximum number of logs in a query.
-	#[structopt(long, default_value = "10000")]
+	#[clap(long, default_value = "10000")]
 	pub max_past_logs: u32,
 
+	/// Maximum fee history cache size.
+	#[clap(long, default_value = "2048")]
+	pub fee_history_limit: u64,
+
 	/// The dynamic-fee pallet target gas price set by block author
-	#[structopt(long, default_value = "1")]
+	#[clap(long, default_value = "1")]
 	pub target_gas_price: u64,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Parser)]
 pub struct Cli {
-	#[structopt(subcommand)]
+	#[clap(subcommand)]
 	pub subcommand: Option<Subcommand>,
 
-	#[structopt(flatten)]
+	#[clap(flatten)]
 	pub run: RunCmd,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Subcommand)]
 pub enum Subcommand {
 	/// Key management cli utilities
+	#[clap(subcommand)]
 	Key(sc_cli::KeySubcommand),
+
 	/// Build a chain specification.
 	BuildSpec(sc_cli::BuildSpecCmd),
 
@@ -97,7 +96,7 @@ pub enum Subcommand {
 	/// Revert the chain to a previous state.
 	Revert(sc_cli::RevertCmd),
 
-	/// The custom benchmark subcommmand benchmarking runtime pallets.
-	#[structopt(name = "benchmark", about = "Benchmark runtime pallets.")]
+	/// Sub-commands concerned with benchmarking.
+	#[clap(subcommand)]
 	Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 }

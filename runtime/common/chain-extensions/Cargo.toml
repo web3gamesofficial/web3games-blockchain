@@ -5,31 +5,39 @@ authors = ["Web3Games Developers"]
 edition = "2021"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = ["derive", "max-encoded-len"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
 serde = { version = "1.0.124", features = ["derive"], optional = true }
-hex = { version = "0.4.2", optional = true }
+hex = { version = "0.4", optional = true }
 log = { version = "0.4.14", default-features = false }
 
 sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false }
 randomness = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate", default-features = false }
-pallet-contracts = { git = "https://github.com/paritytech/substrate", rev = "4c98bbab7fffc9b79525b31caf0e2f346b26185e", default-features = false }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", default-features = false }
 
 primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
-pallet-token-multi = { default-features = false, path = "../../../pallets/token-multi" }
+
+pallet-token-fungible = { path = "../../../pallets/token-fungible", default-features = false }
+pallet-token-non-fungible = { path = "../../../pallets/token-non-fungible", default-features = false }
+pallet-token-multi = { path = "../../../pallets/token-multi" ,default-features = false}
 
 [features]
 default = ["std"]
 std = [
 	"codec/std",
-	"serde/std",
+	"serde",
+	"hex",
 	"log/std",
 	"sp-runtime/std",
 	"sp-std/std",
 	"frame-support/std",
+	"frame-system/std",
 	"randomness/std",
 	"pallet-contracts/std",
 	"primitives/std",
-	"pallet-token-multi/std",
+	"pallet-token-fungible/std",
+	"pallet-token-non-fungible/std",
+	"pallet-token-multi/std"
 ]

@@ -1,6 +1,6 @@
 // This file is part of Web3Games.
 
-// Copyright (C) 2021 Web3Games https://web3games.org
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
-	traits::{Currency, ExistenceRequirement::AllowDeath, Get, ReservableCurrency},
+	traits::{Currency, ExistenceRequirement::AllowDeath, Get, Randomness, ReservableCurrency},
 	PalletId,
 };
 use integer_sqrt::IntegerSquareRoot;
@@ -30,7 +30,7 @@ use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
+	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput, Zero},
 	RuntimeDebug,
 };
 use sp_std::{cmp, prelude::*};
@@ -79,6 +79,8 @@ pub mod pallet {
 		type CreatePoolDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
 	}
 
 	#[pallet::pallet]
@@ -144,17 +146,14 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			ensure!(token_a != token_b, Error::<T>::TokenRepeat);
-
 			ensure!(
 				pallet_token_fungible::Pallet::<T>::exists(token_a),
 				Error::<T>::TokenAccountNotFound,
 			);
-
 			ensure!(
 				pallet_token_fungible::Pallet::<T>::exists(token_b),
 				Error::<T>::TokenAccountNotFound,
 			);
-
 			ensure!(
 				!GetPool::<T>::contains_key((token_a, token_b)),
 				Error::<T>::PoolAlreadyCreated
@@ -199,7 +198,7 @@ pub mod pallet {
 				&Self::account_id(),
 				amount_b,
 			)?;
-			let liquidity = Self::mint(&who, id, &to)?;
+			let liquidity = Self::mint(id, &to)?;
 
 			Self::deposit_event(Event::LiquidityAdded(id, amount_a, amount_b, liquidity));
 
@@ -300,6 +299,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
+	fn zero_account_id() -> T::AccountId {
+		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
+	}
+
 	// The account ID of the vault
 	fn account_id() -> T::AccountId {
 		<T as Config>::PalletId::get().into_account()
@@ -323,12 +326,15 @@ impl<T: Config> Pallet<T> {
 		let deposit = T::CreatePoolDeposit::get();
 		<T as Config>::Currency::transfer(who, &Self::account_id(), deposit, AllowDeath)?;
 
-		let token_name: Vec<u8> = "LP Token".into();
-		let symbol_name: Vec<u8> = "LP-V1".into();
-		let lp_token = pallet_token_fungible::Pallet::<T>::do_create_token(
+		let lp_token = Self::generate_random_token_id(id);
+		let name: Vec<u8> = "LP Token".as_bytes().to_vec();
+		let symbol: Vec<u8> = "LPV1".as_bytes().to_vec();
+
+		pallet_token_fungible::Pallet::<T>::do_create_token(
 			&Self::account_id(),
-			token_name,
-			symbol_name,
+			lp_token,
+			name,
+			symbol,
 			18,
 		)?;
 
@@ -470,11 +476,7 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	pub fn mint(
-		_who: &T::AccountId,
-		id: T::PoolId,
-		to: &T::AccountId,
-	) -> Result<Balance, DispatchError> {
+	pub fn mint(id: T::PoolId, to: &T::AccountId) -> Result<Balance, DispatchError> {
 		let pool = Pools::<T>::get(id).ok_or(Error::<T>::PoolNotFound)?;
 
 		let (reserve_a, reserve_b) = Reserves::<T>::get(id);
@@ -490,25 +492,28 @@ impl<T: Config> Pallet<T> {
 
 		let liquidity: Balance;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token)?;
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 		if total_supply == Zero::zero() {
 			let value = amount_a * amount_b;
 			liquidity = value.integer_sqrt() - Balance::from(MINIMUM_LIQUIDITY);
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
-				&T::AccountId::default(),
+				&Self::account_id(),
+				&Self::zero_account_id(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
-		// println!("liquidity = {}",liquidity);
-		// println!("pool.lp_token = {:#?}",pool.lp_token);
-		// println!("account = {:#?}",&T::AccountId::default());
 		} else {
 			liquidity =
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, to, liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_mint(
+			pool.lp_token,
+			&Self::account_id(),
+			&to,
+			liquidity,
+		)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 
@@ -533,7 +538,7 @@ impl<T: Config> Pallet<T> {
 		let liquidity =
 			pallet_token_fungible::Pallet::<T>::balance_of(pool.lp_token, &vault_account);
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token)?;
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 
 		let amount_a = liquidity * balance_a / total_supply;
 		let amount_b = liquidity * balance_b / total_supply;
@@ -564,6 +569,7 @@ impl<T: Config> Pallet<T> {
 		Ok((amount_a, amount_b))
 	}
 
+	// update reserves
 	fn do_update(
 		id: T::PoolId,
 		balance_a: Balance,
@@ -571,14 +577,7 @@ impl<T: Config> Pallet<T> {
 		_reserve_a: Balance,
 		_reserve_b: Balance,
 	) -> DispatchResult {
-		// println!("balance_a = {},balance_b = {}",balance_a,balance_b);
-		// ensure!(
-		// 	balance_a < Zero::zero() && balance_b < Zero::zero(),
-		// 	Error::<T>::Overflow
-		// );
-
 		Reserves::<T>::mutate(id, |reserve| *reserve = (balance_a, balance_b));
-
 		Ok(())
 	}
 
@@ -728,5 +727,12 @@ impl<T: Config> Pallet<T> {
 				true,
 			)
 		}
+	}
+
+	fn generate_random_token_id(seed: T::PoolId) -> T::FungibleTokenId {
+		let (random_seed, _) = T::Randomness::random(&(Self::account_id(), seed).encode());
+		let random_id = <T::FungibleTokenId>::decode(&mut random_seed.as_ref())
+			.expect("Failed to decode random seed");
+		random_id
 	}
 }
