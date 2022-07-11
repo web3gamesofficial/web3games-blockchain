@@ -82,6 +82,9 @@ pub mod pallet {
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
 		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+
+		#[pallet::constant]
+		type FeesCollector: Get<Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -100,6 +103,7 @@ pub mod pallet {
 	#[pallet::getter(fn get_pool)]
 	pub(super) type GetPool<T: Config> =
 		StorageMap<_, Blake2_128, (T::FungibleTokenId, T::FungibleTokenId), T::PoolId, ValueQuery>;
+
 
 	#[pallet::storage]
 	#[pallet::getter(fn reserves)]
@@ -229,6 +233,7 @@ pub mod pallet {
 				liquidity,
 			)?;
 
+
 			let (amount_0, amount_1) = Self::burn(&who, id, &to)?;
 			let (token_0, _token_1) = Self::sort_tokens(token_a, token_b);
 			let (amount_a, amount_b) =
@@ -236,7 +241,6 @@ pub mod pallet {
 
 			ensure!(amount_a >= amount_a_min, Error::<T>::InsufficientAAmount);
 			ensure!(amount_b >= amount_b_min, Error::<T>::InsufficientBAmount);
-
 			Ok(())
 		}
 
@@ -301,9 +305,10 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	fn zero_account_id() -> T::AccountId {
-		T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
-	}
+	// fn zero_account_id() -> T::AccountId {
+	// 	// T::AccountId::decode(&mut TrailingZeroInput::zeroes()).expect("infinite input; qed")
+	// 	FeesCollector
+	// }
 
 	// The account ID of the vault
 	fn account_id() -> T::AccountId {
@@ -342,7 +347,7 @@ impl<T: Config> Pallet<T> {
 
 		let (token_0, token_1) = Self::sort_tokens(token_a, token_b);
 
-		let pool = Pool { owner: who.clone(), token_0, token_1, lp_token };
+		let pool = Pool { owner: Self::account_id(), token_0, token_1, lp_token };
 
 		Pools::<T>::insert(id, pool);
 		GetPool::<T>::insert((token_a, token_b), id);
@@ -508,7 +513,7 @@ impl<T: Config> Pallet<T> {
 			pallet_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
 				&Self::account_id(),
-				Self::zero_account_id(),
+				T::FeesCollector::get(),
 				Balance::from(MINIMUM_LIQUIDITY),
 			)?;
 		} else {
@@ -516,7 +521,6 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		log::info!("-----222222");
 		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, &Self::account_id(), to.clone(), liquidity)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;

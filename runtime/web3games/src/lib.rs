@@ -562,6 +562,7 @@ impl pallet_exchange::Config for Runtime {
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
+	type FeesCollector = TreasuryAccount;
 }
 
 parameter_types! {
