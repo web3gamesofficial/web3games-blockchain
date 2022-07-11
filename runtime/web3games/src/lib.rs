@@ -40,8 +40,8 @@ use sp_core::{
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, Dispatchable,
-		NumberFor, PostDispatchInfoOf, Zero,DispatchInfoOf,UniqueSaturatedInto
+		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf,
+		Dispatchable, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, Percent,
@@ -334,7 +334,7 @@ impl<F: FindAuthor<u32>> FindAuthor<H160> for FindAuthorTruncated<F> {
 	{
 		if let Some(author_index) = F::find_author(digests) {
 			let authority_id = Aura::authorities()[author_index as usize].clone();
-			return Some(H160::from_slice(&authority_id.to_raw_vec()[4..24]));
+			return Some(H160::from_slice(&authority_id.to_raw_vec()[4..24]))
 		}
 		None
 	}
@@ -549,7 +549,6 @@ impl pallet_token_multi::Config for Runtime {
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
-
 
 construct_runtime!(
 	pub enum Runtime where

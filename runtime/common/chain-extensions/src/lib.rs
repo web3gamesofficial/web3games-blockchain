@@ -76,7 +76,7 @@ where
 			// id if id >= 65665 && id < 65729 => MultiTokenExtension::call(func_id, env),
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
+				return Err(DispatchError::Other("Unimplemented func_id"))
 			},
 		}
 	}

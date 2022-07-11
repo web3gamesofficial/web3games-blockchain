@@ -411,7 +411,7 @@ impl<T: Config> Pallet<T> {
 		);
 
 		if from == to {
-			return Ok(());
+			return Ok(())
 		}
 
 		let balance_from = Self::balance_of(id, from);
@@ -508,9 +508,9 @@ impl<T: Config> Pallet<T> {
 	) -> Result<bool, DispatchError> {
 		let owner = Self::owner_of(id, token_id).ok_or(Error::<T>::NotFound)?;
 
-		Ok(*spender == owner
-			|| Self::get_approved(id, token_id) == Some(spender.clone())
-			|| Self::is_approved_for_all(id, (&owner, spender)))
+		Ok(*spender == owner ||
+			Self::get_approved(id, token_id) == Some(spender.clone()) ||
+			Self::is_approved_for_all(id, (&owner, spender)))
 	}
 
 	fn has_permission(id: T::NonFungibleTokenId, who: &T::AccountId) -> bool {

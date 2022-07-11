@@ -173,7 +173,7 @@ where
 		if let Some(gas_limit) = gasometer.remaining_gas()? {
 			let required_gas = Runtime::GasWeightMapping::weight_to_gas(dispatch_info.weight);
 			if required_gas > gas_limit {
-				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas });
+				return Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
 			}
 		}
 
@@ -262,9 +262,8 @@ impl Gasometer {
 			.ok_or(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })?;
 
 		match self.target_gas {
-			Some(gas_limit) if self.used_gas > gas_limit => {
-				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas })
-			},
+			Some(gas_limit) if self.used_gas > gas_limit =>
+				Err(PrecompileFailure::Error { exit_status: ExitError::OutOfGas }),
 			_ => Ok(()),
 		}
 	}
@@ -345,11 +344,11 @@ impl Gasometer {
 		modifier: FunctionModifier,
 	) -> EvmResult {
 		if is_static && modifier != FunctionModifier::View {
-			return Err(self.revert("can't call non-static function in static context"));
+			return Err(self.revert("can't call non-static function in static context"))
 		}
 
 		if modifier != FunctionModifier::Payable && context.apparent_value > U256::zero() {
-			return Err(self.revert("function is not payable"));
+			return Err(self.revert("function is not payable"))
 		}
 
 		Ok(())

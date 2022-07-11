@@ -308,7 +308,7 @@ where
 			},
 			_ => {
 				log::error!("call an unregistered `func_id`, func_id:{:}", func_id);
-				return Err(DispatchError::Other("Unimplemented func_id"));
+				return Err(DispatchError::Other("Unimplemented func_id"))
 			},
 		}
 		Ok(RetVal::Converging(0))

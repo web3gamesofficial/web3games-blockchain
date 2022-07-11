@@ -28,8 +28,7 @@ use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig,
-	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, DOLLARS,
-	WASM_BINARY,
+	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, DOLLARS, WASM_BINARY,
 };
 
 // The URL for the telemetry server.

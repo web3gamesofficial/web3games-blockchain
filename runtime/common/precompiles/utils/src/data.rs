@@ -96,7 +96,7 @@ impl<'a> EvmDataReader<'a> {
 		T: num_enum::TryFromPrimitive<Primitive = u32>,
 	{
 		if input.len() < 4 {
-			return Err(gasometer.revert("tried to parse selector out of bounds"));
+			return Err(gasometer.revert("tried to parse selector out of bounds"))
 		}
 
 		let mut buffer = [0u8; 4];
@@ -113,7 +113,8 @@ impl<'a> EvmDataReader<'a> {
 		Ok((Self::new(&input[4..]), selector))
 	}
 
-	/// Check the input has at least the correct amount of arguments before the end (32 bytes values).
+	/// Check the input has at least the correct amount of arguments before the end (32 bytes
+	/// values).
 	pub fn expect_arguments(&self, gasometer: &mut Gasometer, args: usize) -> EvmResult {
 		if self.input.len() >= self.cursor + args * 32 {
 			Ok(())
@@ -152,7 +153,7 @@ impl<'a> EvmDataReader<'a> {
 			.map_err(|_| gasometer.revert("array offset is too large"))?;
 
 		if offset >= self.input.len() {
-			return Err(gasometer.revert("pointer points out of bounds"));
+			return Err(gasometer.revert("pointer points out of bounds"))
 		}
 
 		Ok(Self { input: &self.input[offset..], cursor: 0 })
@@ -205,8 +206,8 @@ struct OffsetDatum {
 	offset_position: usize,
 	// Data pointed by the offset that must be inserted at the end of container data.
 	data: Vec<u8>,
-	// Inside of arrays, the offset is not from the start of array data (length), but from the start
-	// of the item. This shift allow to correct this.
+	// Inside of arrays, the offset is not from the start of array data (length), but from the
+	// start of the item. This shift allow to correct this.
 	offset_shift: usize,
 }
 

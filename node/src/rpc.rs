@@ -18,15 +18,13 @@
 
 //! A collection of node-specific RPC methods.
 
-use std::sync::Arc;
-use jsonrpsee::RpcModule;
 use fc_rpc::{
 	EthBlockDataCacheTask, OverrideHandle, RuntimeApiStorageOverride, SchemaV1Override,
 	SchemaV2Override, SchemaV3Override, StorageOverride,
 };
-use fc_rpc_core::types::{FeeHistoryCache,FeeHistoryCacheLimit, FilterPool};
+use fc_rpc_core::types::{FeeHistoryCache, FeeHistoryCacheLimit, FilterPool};
 use fp_storage::EthereumStorageSchema;
-use jsonrpc_pubsub::manager::SubscriptionManager;
+use jsonrpsee::RpcModule;
 use sc_client_api::{
 	backend::{AuxStore, Backend, StateBackend, StorageProvider},
 	client::BlockchainEvents,
@@ -41,7 +39,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use sp_runtime::traits::BlakeTwo256;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::Arc};
 use web3games_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
 
 /// Full client dependencies.
@@ -163,52 +161,57 @@ where
 
 	io.merge(System::new(Arc::clone(&client), Arc::clone(&pool), deny_unsafe).into_rpc())?;
 	io.merge(TransactionPayment::new(Arc::clone(&client)).into_rpc())?;
-	io.merge(Contracts::new(Arc::clone(&client),).into_rpc())?;
+	io.merge(Contracts::new(Arc::clone(&client)).into_rpc())?;
 
 	let mut signers = Vec::new();
 	if enable_dev_signer {
 		signers.push(Box::new(EthDevSigner::new()) as Box<dyn EthSigner>);
 	}
 
-	io.merge(Eth::new(
-		Arc::clone(&client),
-		Arc::clone(&pool),
-		graph,
-		Some(web3games_runtime::TransactionConverter),
-		Arc::clone(&network),
-		signers,
-		Arc::clone(&overrides),
-		Arc::clone(&backend),
-		// Is authority.
-		is_authority,
-		Arc::clone(&block_data_cache),
-		fc_rpc::format::Geth,
-		fee_history_cache,
-		fee_history_limit
-	).into_rpc(),
+	io.merge(
+		Eth::new(
+			Arc::clone(&client),
+			Arc::clone(&pool),
+			graph,
+			Some(web3games_runtime::TransactionConverter),
+			Arc::clone(&network),
+			signers,
+			Arc::clone(&overrides),
+			Arc::clone(&backend),
+			// Is authority.
+			is_authority,
+			Arc::clone(&block_data_cache),
+			fc_rpc::format::Geth,
+			fee_history_cache,
+			fee_history_limit,
+		)
+		.into_rpc(),
 	)?;
 
 	if let Some(filter_pool) = filter_pool {
-		io.merge(EthFilter::new(
-			client.clone(),
-			backend,
-			filter_pool.clone(),
-			500 as usize, // max stored filters
-			max_past_logs,
-			block_data_cache.clone(),
-		).into_rpc(),
+		io.merge(
+			EthFilter::new(
+				client.clone(),
+				backend,
+				filter_pool.clone(),
+				500 as usize, // max stored filters
+				max_past_logs,
+				block_data_cache.clone(),
+			)
+			.into_rpc(),
 		)?;
 	}
 
-	io.merge(Net::new(
-		Arc::clone(&client),
-		network.clone(),
-		// Whether to format the `peer_count` response as Hex (default) or not.
-		true,
-	).into_rpc(),
+	io.merge(
+		Net::new(
+			Arc::clone(&client),
+			network.clone(),
+			// Whether to format the `peer_count` response as Hex (default) or not.
+			true,
+		)
+		.into_rpc(),
 	)?;
 	io.merge(Web3::new(Arc::clone(&client)).into_rpc())?;
-
 
 	io.merge(
 		EthPubSub::new(
@@ -218,7 +221,7 @@ where
 			subscription_task_executor,
 			overrides,
 		)
-			.into_rpc(),
+		.into_rpc(),
 	)?;
 
 	match command_sink {

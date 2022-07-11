@@ -59,14 +59,13 @@ impl SubstrateCli for Cli {
 			"" | "local" => Box::new(chain_spec::local_testnet_config()?),
 			"staging" => Box::new(chain_spec::staging_testnet_config()?),
 			"web3games" => {
-				return Err("The mainnet is not yet available.".into());
+				return Err("The mainnet is not yet available.".into())
 				// Box::new(chain_spec::RawChainSpec::from_json_bytes(
 				// 	&include_bytes!("../../../specs/web3games.json")[..],
 				// )?)
 			},
-			path => {
-				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?)
-			},
+			path =>
+				Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 		})
 	}
 
@@ -122,7 +121,7 @@ pub fn run() -> sc_cli::Result<()> {
 			runner.sync_run(|config| {
 				// Remove Frontier offchain db
 				let frontier_database_config = sc_service::DatabaseSource::RocksDb {
-					path: frontier_database_dir(&config,"db"),
+					path: frontier_database_dir(&config, "db"),
 					cache_size: 0,
 				};
 				cmd.run(frontier_database_config)?;
@@ -157,7 +156,7 @@ pub fn run() -> sc_cli::Result<()> {
 								"Runtime benchmarking wasn't enabled when building the node. \
 							You can enable it with `--features runtime-benchmarks`."
 									.into(),
-							);
+							)
 						}
 
 						cmd.run::<Block, service::ExecutorDispatch>(config)
@@ -174,10 +173,8 @@ pub fn run() -> sc_cli::Result<()> {
 
 						cmd.run(config, client, inherent_benchmark_data()?, Arc::new(ext_builder))
 					},
-					BenchmarkCmd::Machine(cmd) => cmd.run(
-						&config,
-						frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE.clone(),
-					),
+					BenchmarkCmd::Machine(cmd) => cmd
+						.run(&config, frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE.clone()),
 				}
 			})
 		},

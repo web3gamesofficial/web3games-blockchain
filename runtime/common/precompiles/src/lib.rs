@@ -20,7 +20,7 @@
 
 use codec::Decode;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
-use pallet_evm::{Context, Precompile,PrecompileHandle, PrecompileResult, PrecompileSet};
+use pallet_evm::{Precompile, PrecompileHandle, PrecompileResult, PrecompileSet};
 use pallet_evm_precompile_bn128::{Bn128Add, Bn128Mul, Bn128Pairing};
 use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
@@ -86,9 +86,7 @@ where
 	<R as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 	R: AccountMapping<R::AccountId>,
 {
-	fn execute(
-		&self, handle: &mut impl PrecompileHandle
-	) -> Option<PrecompileResult> {
+	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
 			// Ethereum precompiles
 			// Ethereum precompiles :
@@ -102,15 +100,9 @@ where
 			a if a == hash(8) => Some(Bn128Pairing::execute(handle)),
 
 			// Non-Web3Games specific nor Ethereum precompiles
-			a if a == hash(1024) => {
-				Some(Sha3FIPS256::execute(handle))
-			},
-			a if a == hash(1025) => {
-				Some(Dispatch::<R>::execute(handle))
-			},
-			a if a == hash(1026) => {
-				Some(ECRecoverPublicKey::execute(handle))
-			},
+			a if a == hash(1024) => Some(Sha3FIPS256::execute(handle)),
+			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
+			a if a == hash(1026) => Some(ECRecoverPublicKey::execute(handle)),
 
 			// // Web3Games precompiles
 			// a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {

@@ -416,7 +416,7 @@ impl<T: Config> Pallet<T> {
 		);
 
 		if from == to {
-			return Ok(());
+			return Ok(())
 		}
 
 		Self::decrease_balance(id, from, token_id, amount)?;
@@ -440,7 +440,7 @@ impl<T: Config> Pallet<T> {
 		ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
 
 		if from == to {
-			return Ok(());
+			return Ok(())
 		}
 
 		let n = token_ids.len();

@@ -21,14 +21,12 @@
 use crate::cli::Cli;
 #[cfg(feature = "manual-seal")]
 use crate::cli::Sealing;
-use async_trait::async_trait;
 use fc_consensus::FrontierBlockImport;
+use fc_db::DatabaseSource;
 use fc_mapping_sync::{MappingSyncWorker, SyncStrategy};
 use fc_rpc::EthTask;
 use fc_rpc_core::types::{FeeHistoryCache, FilterPool};
-use fc_db::DatabaseSource;
 use futures::StreamExt;
-use sc_cli::SubstrateCli;
 use sc_client_api::{BlockBackend, BlockchainEvents, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 #[cfg(feature = "manual-seal")]
@@ -129,27 +127,20 @@ pub fn frontier_database_dir(config: &Configuration, path: &str) -> std::path::P
 	config_dir.join("frontier").join(path)
 }
 pub fn open_frontier_backend(config: &Configuration) -> Result<Arc<fc_db::Backend<Block>>, String> {
-	Ok(Arc::new(fc_db::Backend::<Block>::new(
-		&fc_db::DatabaseSettings {
-			source: match config.database {
-				DatabaseSource::RocksDb { .. } => DatabaseSource::RocksDb {
-					path: frontier_database_dir(config, "db"),
-					cache_size: 0,
-				},
-				DatabaseSource::ParityDb { .. } => DatabaseSource::ParityDb {
-					path: frontier_database_dir(config, "paritydb"),
-				},
-				DatabaseSource::Auto { .. } => DatabaseSource::Auto {
-					rocksdb_path: frontier_database_dir(config, "db"),
-					paritydb_path: frontier_database_dir(config, "paritydb"),
-					cache_size: 0,
-				},
-				_ => {
-					return Err("Supported db sources: `rocksdb` | `paritydb` | `auto`".to_string())
-				}
+	Ok(Arc::new(fc_db::Backend::<Block>::new(&fc_db::DatabaseSettings {
+		source: match config.database {
+			DatabaseSource::RocksDb { .. } =>
+				DatabaseSource::RocksDb { path: frontier_database_dir(config, "db"), cache_size: 0 },
+			DatabaseSource::ParityDb { .. } =>
+				DatabaseSource::ParityDb { path: frontier_database_dir(config, "paritydb") },
+			DatabaseSource::Auto { .. } => DatabaseSource::Auto {
+				rocksdb_path: frontier_database_dir(config, "db"),
+				paritydb_path: frontier_database_dir(config, "paritydb"),
+				cache_size: 0,
 			},
+			_ => return Err("Supported db sources: `rocksdb` | `paritydb` | `auto`".to_string()),
 		},
-	)?))
+	})?))
 }
 
 pub fn new_partial(
@@ -173,7 +164,7 @@ pub fn new_partial(
 	ServiceError,
 > {
 	if config.keystore_remote.is_some() {
-		return Err(ServiceError::Other(format!("Remote Keystores are not supported.")));
+		return Err(ServiceError::Other(format!("Remote Keystores are not supported.")))
 	}
 
 	let telemetry = config
@@ -341,12 +332,11 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 	if let Some(url) = &config.keystore_remote {
 		match remote_keystore(url) {
 			Ok(k) => keystore_container.set_remote_keystore(k),
-			Err(e) => {
+			Err(e) =>
 				return Err(ServiceError::Other(format!(
 					"Error hooking up remote keystore for {}: {}",
 					url, e
-				)))
-			},
+				))),
 		};
 	}
 	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
@@ -385,7 +375,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 		})?;
 
 	// Channel for the rpc handler to communicate with the authorship task.
-	let (command_sink, commands_stream) = futures::channel::mpsc::channel(1000);
+	let (command_sink, _commands_stream) = futures::channel::mpsc::channel(1000);
 
 	if config.offchain_worker.enabled {
 		sc_service::build_offchain_workers(
@@ -530,7 +520,7 @@ pub fn new_full(mut config: Configuration, cli: &Cli) -> Result<TaskManager, Ser
 							env,
 							client,
 							pool: transaction_pool.clone(),
-							commands_stream,
+							_commands_stream,
 							select_chain,
 							consensus_data_provider: None,
 							create_inherent_data_providers: move |_, ()| async move {
