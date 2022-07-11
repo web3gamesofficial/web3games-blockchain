@@ -28,7 +28,7 @@ use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, EVMConfig, EthereumConfig, GenesisConfig,
-	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, WrapCurrencyConfig, DOLLARS,
+	GrandpaConfig, Precompiles, Signature, SudoConfig, SystemConfig, DOLLARS,
 	WASM_BINARY,
 };
 
@@ -284,6 +284,5 @@ fn testnet_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		treasury: Default::default(),
-		wrap_currency: WrapCurrencyConfig {},
 	}
 }

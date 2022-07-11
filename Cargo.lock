@@ -4493,27 +4493,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-balances",
- "pallet-randomness-collective-flip",
- "pallet-timestamp",
- "pallet-token-fungible",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.23#76522d7937ba94ff1becef4e4e3ca78e3e1de341"
@@ -4533,41 +4512,6 @@ dependencies = [
  "sp-runtime",
  "sp-session",
  "sp-staking",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-marketplace"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-multi",
- "pallet-token-non-fungible",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
-]
-
-[[package]]
-name = "pallet-player-id"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "pallet-balances",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
  "sp-std",
 ]
 
@@ -4798,24 +4742,6 @@ dependencies = [
  "serde",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-wrap-currency"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "pallet-token-fungible",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -9200,10 +9126,7 @@ dependencies = [
  "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-exchange",
  "pallet-grandpa",
- "pallet-marketplace",
- "pallet-player-id",
  "pallet-preimage",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
@@ -9216,7 +9139,6 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
- "pallet-wrap-currency",
  "parity-scale-codec",
  "runtime-common",
  "scale-info",

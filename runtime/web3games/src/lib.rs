@@ -550,46 +550,6 @@ impl pallet_token_multi::Config for Runtime {
 	type Currency = Balances;
 }
 
-impl pallet_wrap_currency::Config for Runtime {
-	type Event = Event;
-	type PalletId = WrapCurrencyPalletId;
-	type Currency = Balances;
-	type CreateTokenDeposit = CreateTokenDeposit;
-	type Randomness = RandomnessCollectiveFlip;
-}
-
-impl pallet_exchange::Config for Runtime {
-	type Event = Event;
-	type PalletId = ExchangePalletId;
-	type PoolId = u32;
-	type CreatePoolDeposit = CreatePoolDeposit;
-	type Currency = Balances;
-	type Randomness = RandomnessCollectiveFlip;
-	type FeesCollector = TreasuryAccount;
-}
-
-parameter_types! {
-	pub const FeesCollectorShareCut: Percent = Percent::from_percent(2);
-	pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account_truncating();
-}
-
-impl pallet_marketplace::Config for Runtime {
-	type Event = Event;
-	type Time = Timestamp;
-	type PalletId = MarketplacePalletId;
-	type Currency = Balances;
-	type FeesCollectorShareCut = FeesCollectorShareCut;
-	type FeesCollector = TreasuryAccount;
-}
-
-parameter_types! {
-	pub const MaxAddressesPerChain: u32 = 10;
-}
-
-impl pallet_player_id::Config for Runtime {
-	type Event = Event;
-	type MaxAddressesPerChain = MaxAddressesPerChain;
-}
 
 construct_runtime!(
 	pub enum Runtime where
@@ -618,10 +578,6 @@ construct_runtime!(
 		TokenFungible: pallet_token_fungible,
 		TokenNonFungible: pallet_token_non_fungible,
 		TokenMulti: pallet_token_multi,
-		WrapCurrency: pallet_wrap_currency,
-		Exchange: pallet_exchange,
-		Marketplace: pallet_marketplace,
-		PalyerId: pallet_player_id,
 	}
 );
 
