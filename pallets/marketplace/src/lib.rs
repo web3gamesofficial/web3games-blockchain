@@ -409,7 +409,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn account_id() -> T::AccountId {
-		<T as pallet::Config>::PalletId::get().into_account()
+		<T as pallet::Config>::PalletId::get().into_account_truncating()
 	}
 
 	fn transfer_share_fees(

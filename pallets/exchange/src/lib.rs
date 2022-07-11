@@ -312,7 +312,7 @@ impl<T: Config> Pallet<T> {
 
 	// The account ID of the vault
 	fn account_id() -> T::AccountId {
-		<T as Config>::PalletId::get().into_account()
+		<T as Config>::PalletId::get().into_account_truncating()
 	}
 
 	pub fn exists(token_a: T::FungibleTokenId, token_b: T::FungibleTokenId) -> bool {

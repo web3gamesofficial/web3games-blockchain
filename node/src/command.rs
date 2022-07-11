@@ -122,7 +122,7 @@ pub fn run() -> sc_cli::Result<()> {
 			runner.sync_run(|config| {
 				// Remove Frontier offchain db
 				let frontier_database_config = sc_service::DatabaseSource::RocksDb {
-					path: frontier_database_dir(&config),
+					path: frontier_database_dir(&config,"db"),
 					cache_size: 0,
 				};
 				cmd.run(frontier_database_config)?;
@@ -174,6 +174,10 @@ pub fn run() -> sc_cli::Result<()> {
 
 						cmd.run(config, client, inherent_benchmark_data()?, Arc::new(ext_builder))
 					},
+					BenchmarkCmd::Machine(cmd) => cmd.run(
+						&config,
+						frame_benchmarking_cli::SUBSTRATE_REFERENCE_HARDWARE.clone(),
+					),
 				}
 			})
 		},

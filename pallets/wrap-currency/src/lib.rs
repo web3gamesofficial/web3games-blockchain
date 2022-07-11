@@ -138,7 +138,7 @@ where
 	<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
 {
 	pub fn account_id() -> T::AccountId {
-		<T as pallet::Config>::PalletId::get().into_account()
+		<T as pallet::Config>::PalletId::get().into_account_truncating()
 	}
 
 	fn create_wrap_token() -> DispatchResult {

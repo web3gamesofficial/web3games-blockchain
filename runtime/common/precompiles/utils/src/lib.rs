@@ -332,7 +332,6 @@ impl Gasometer {
 		PrecompileFailure::Revert {
 			exit_status: ExitRevert::Reverted,
 			output: output.as_ref().to_owned(),
-			cost: self.used_gas,
 		}
 	}
 
