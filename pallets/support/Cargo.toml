@@ -15,7 +15,7 @@ sp-runtime = {git = "https://github.com/paritytech/substrate", branch = "polkado
 sp-core = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" , default-features = false }
 sp-std = {git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" , default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../primitives", default-features = false }
+primitives = {path = "../../primitives", default-features = false }
 
 [features]
 default = ["std"]

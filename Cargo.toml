@@ -4,9 +4,8 @@ members = [
 	"pallets/token-multi",
 	"pallets/token-non-fungible",
 	"primitives",
-	"runtime/common",
-	"runtime/common/chain-extensions",
-	"runtime/common/precompiles",
+	"chain-extensions",
+	"precompiles",
 	"runtime/web3games",
 	"node",
 ]

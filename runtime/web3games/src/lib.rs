@@ -95,7 +95,8 @@ pub use primitives::{
 	TokenAssetId, TokenId,
 };
 
-use runtime_common::{Web3GamesChainExtensions, Web3GamesPrecompiles};
+pub use precompiles::Web3GamesPrecompiles;
+pub use chain_extensions::Web3GamesChainExtensions;
 pub type Precompiles = Web3GamesPrecompiles<Runtime>;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know

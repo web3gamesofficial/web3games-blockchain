@@ -16,11 +16,11 @@ frame-support = { git = "https://github.com/paritytech/substrate", branch = "pol
 randomness = { package = "pallet-randomness-collective-flip", git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" , default-features = false }
 pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23" , default-features = false }
 
-primitives = { package = "web3games-primitives", path = "../../../primitives", default-features = false }
+primitives = {path = "../primitives", default-features = false }
 
-pallet-token-fungible = { path = "../../../pallets/token-fungible", default-features = false }
-pallet-token-non-fungible = { path = "../../../pallets/token-non-fungible", default-features = false }
-pallet-token-multi = { path = "../../../pallets/token-multi" ,default-features = false}
+pallet-token-fungible = { path = "../pallets/token-fungible", default-features = false }
+pallet-token-non-fungible = { path = "../pallets/token-non-fungible", default-features = false }
+pallet-token-multi = { path = "../pallets/token-multi" ,default-features = false}
 
 [features]
 default = ["std"]

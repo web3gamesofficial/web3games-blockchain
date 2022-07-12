@@ -725,10 +725,10 @@ dependencies = [
  "pallet-token-multi",
  "pallet-token-non-fungible",
  "parity-scale-codec",
+ "primitives",
  "serde",
  "sp-runtime",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -4574,12 +4574,12 @@ dependencies = [
  "frame-system",
  "log",
  "parity-scale-codec",
+ "primitives",
  "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -4610,13 +4610,13 @@ dependencies = [
  "pallet-balances",
  "pallet-support",
  "parity-scale-codec",
+ "primitives",
  "scale-info",
  "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -4628,13 +4628,13 @@ dependencies = [
  "pallet-balances",
  "pallet-support",
  "parity-scale-codec",
+ "primitives",
  "scale-info",
  "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -4647,13 +4647,13 @@ dependencies = [
  "pallet-balances",
  "pallet-support",
  "parity-scale-codec",
+ "primitives",
  "scale-info",
  "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -5114,10 +5114,10 @@ dependencies = [
  "pallet-token-non-fungible",
  "parity-scale-codec",
  "precompile-utils",
+ "primitives",
  "rustc-hex",
  "sp-core",
  "sp-std",
- "web3games-primitives",
 ]
 
 [[package]]
@@ -5132,6 +5132,20 @@ dependencies = [
  "impl-serde",
  "scale-info",
  "uint",
+]
+
+[[package]]
+name = "primitives"
+version = "0.1.0"
+dependencies = [
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -5664,14 +5678,6 @@ dependencies = [
  "netlink-proto",
  "nix",
  "thiserror",
-]
-
-[[package]]
-name = "runtime-common"
-version = "0.1.0"
-dependencies = [
- "chain-extensions",
- "precompiles",
 ]
 
 [[package]]
@@ -9058,23 +9064,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "web3games-primitives"
-version = "0.1.0"
-dependencies = [
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-application-crypto",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "web3games-runtime"
 version = "0.0.1"
 dependencies = [
+ "chain-extensions",
  "fp-rpc",
  "fp-self-contained",
  "frame-benchmarking",
@@ -9107,7 +9100,8 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
  "parity-scale-codec",
- "runtime-common",
+ "precompiles",
+ "primitives",
  "scale-info",
  "smallvec",
  "sp-api",
@@ -9123,7 +9117,6 @@ dependencies = [
  "sp-version",
  "static_assertions",
  "substrate-wasm-builder",
- "web3games-primitives",
 ]
 
 [[package]]
