@@ -14,10 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Moonbeam.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::{EvmResult, Gasometer};
+pub mod xcm;
 
+use crate::{revert, EvmResult};
 use alloc::borrow::ToOwned;
 use core::{any::type_name, ops::Range};
+use impl_trait_for_tuples::impl_for_tuples;
 use sp_core::{H160, H256, U256};
 use sp_std::{convert::TryInto, vec, vec::Vec};
 
@@ -91,12 +93,12 @@ impl<'a> EvmDataReader<'a> {
 	}
 
 	/// Create a new input parser from a selector-initial input.
-	pub fn new_with_selector<T>(gasometer: &mut Gasometer, input: &'a [u8]) -> EvmResult<(Self, T)>
+	pub fn read_selector<T>(input: &'a [u8]) -> EvmResult<T>
 	where
 		T: num_enum::TryFromPrimitive<Primitive = u32>,
 	{
 		if input.len() < 4 {
-			return Err(gasometer.revert("tried to parse selector out of bounds"))
+			return Err(revert("tried to parse selector out of bounds"))
 		}
 
 		let mut buffer = [0u8; 4];
@@ -107,66 +109,73 @@ impl<'a> EvmDataReader<'a> {
 				"Failed to match function selector for {}",
 				type_name::<T>()
 			);
-			gasometer.revert("unknown selector")
+			revert("unknown selector")
 		})?;
 
-		Ok((Self::new(&input[4..]), selector))
+		Ok(selector)
+	}
+
+	/// Create a new input parser from a selector-initial input.
+	pub fn new_skip_selector(input: &'a [u8]) -> EvmResult<Self> {
+		if input.len() < 4 {
+			return Err(revert("input is too short"))
+		}
+
+		Ok(Self::new(&input[4..]))
 	}
 
 	/// Check the input has at least the correct amount of arguments before the end (32 bytes
 	/// values).
-	pub fn expect_arguments(&self, gasometer: &mut Gasometer, args: usize) -> EvmResult {
+	pub fn expect_arguments(&self, args: usize) -> EvmResult {
 		if self.input.len() >= self.cursor + args * 32 {
 			Ok(())
 		} else {
-			Err(gasometer.revert("input doesn't match expected length"))
+			Err(revert("input doesn't match expected length"))
 		}
 	}
 
 	/// Read data from the input.
-	/// Must be provided a gasometer to generate correct Revert errors.
-	/// TODO : Benchmark and add cost of parsing to gasometer ?
-	pub fn read<T: EvmData>(&mut self, gasometer: &mut Gasometer) -> EvmResult<T> {
-		T::read(self, gasometer)
+	pub fn read<T: EvmData>(&mut self) -> EvmResult<T> {
+		T::read(self)
 	}
 
 	/// Read raw bytes from the input.
-	/// Doesn't handle any alignement checks, prefer using `read` instead of possible.
+	/// Doesn't handle any alignment checks, prefer using `read` instead of possible.
 	/// Returns an error if trying to parse out of bounds.
-	pub fn read_raw_bytes(&mut self, gasometer: &mut Gasometer, len: usize) -> EvmResult<&[u8]> {
-		let range = self.move_cursor(gasometer, len)?;
+	pub fn read_raw_bytes(&mut self, len: usize) -> EvmResult<&[u8]> {
+		let range = self.move_cursor(len)?;
 
 		let data = self
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse raw bytes out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse raw bytes out of bounds"))?;
 
 		Ok(data)
 	}
 
 	/// Reads a pointer, returning a reader targetting the pointed location.
-	pub fn read_pointer(&mut self, gasometer: &mut Gasometer) -> EvmResult<Self> {
+	pub fn read_pointer(&mut self) -> EvmResult<Self> {
 		let offset: usize = self
-			.read::<U256>(gasometer)
-			.map_err(|_| gasometer.revert("tried to parse array offset out of bounds"))?
+			.read::<U256>()
+			.map_err(|_| revert("tried to parse array offset out of bounds"))?
 			.try_into()
-			.map_err(|_| gasometer.revert("array offset is too large"))?;
+			.map_err(|_| revert("array offset is too large"))?;
 
 		if offset >= self.input.len() {
-			return Err(gasometer.revert("pointer points out of bounds"))
+			return Err(revert("pointer points out of bounds"))
 		}
 
 		Ok(Self { input: &self.input[offset..], cursor: 0 })
 	}
 
 	/// Read remaining bytes
-	pub fn read_till_end(&mut self, gasometer: &mut Gasometer) -> EvmResult<&[u8]> {
-		let range = self.move_cursor(gasometer, self.input.len() - self.cursor)?;
+	pub fn read_till_end(&mut self) -> EvmResult<&[u8]> {
+		let range = self.move_cursor(self.input.len() - self.cursor)?;
 
 		let data = self
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse raw bytes out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse raw bytes out of bounds"))?;
 
 		Ok(data)
 	}
@@ -174,12 +183,12 @@ impl<'a> EvmDataReader<'a> {
 	/// Move the reading cursor with provided length, and return a range from the previous cursor
 	/// location to the new one.
 	/// Checks cursor overflows.
-	fn move_cursor(&mut self, gasometer: &mut Gasometer, len: usize) -> EvmResult<Range<usize>> {
+	fn move_cursor(&mut self, len: usize) -> EvmResult<Range<usize>> {
 		let start = self.cursor;
 		let end = self
 			.cursor
 			.checked_add(len)
-			.ok_or_else(|| gasometer.revert("data reading cursor overflow"))?;
+			.ok_or_else(|| revert("data reading cursor overflow"))?;
 
 		self.cursor = end;
 
@@ -294,18 +303,45 @@ impl Default for EvmDataWriter {
 
 /// Data that can be converted from and to EVM data types.
 pub trait EvmData: Sized {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self>;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self>;
 	fn write(writer: &mut EvmDataWriter, value: Self);
+	fn has_static_size() -> bool;
+}
+
+#[impl_for_tuples(1, 18)]
+impl EvmData for Tuple {
+	fn has_static_size() -> bool {
+		for_tuples!(#( Tuple::has_static_size() )&*)
+	}
+
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		if !Self::has_static_size() {
+			let reader = &mut reader.read_pointer()?;
+			Ok(for_tuples!( ( #( reader.read::<Tuple>()? ),* ) ))
+		} else {
+			Ok(for_tuples!( ( #( reader.read::<Tuple>()? ),* ) ))
+		}
+	}
+
+	fn write(writer: &mut EvmDataWriter, value: Self) {
+		if !Self::has_static_size() {
+			let mut inner_writer = EvmDataWriter::new();
+			for_tuples!( #( Tuple::write(&mut inner_writer, value.Tuple); )* );
+			writer.write_pointer(inner_writer.build());
+		} else {
+			for_tuples!( #( Tuple::write(writer, value.Tuple); )* );
+		}
+	}
 }
 
 impl EvmData for H256 {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let range = reader.move_cursor(gasometer, 32)?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let range = reader.move_cursor(32)?;
 
 		let data = reader
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse H256 out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse H256 out of bounds"))?;
 
 		Ok(H256::from_slice(data))
 	}
@@ -313,16 +349,20 @@ impl EvmData for H256 {
 	fn write(writer: &mut EvmDataWriter, value: Self) {
 		writer.data.extend_from_slice(value.as_bytes());
 	}
+
+	fn has_static_size() -> bool {
+		true
+	}
 }
 
 impl EvmData for Address {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let range = reader.move_cursor(gasometer, 32)?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let range = reader.move_cursor(32)?;
 
 		let data = reader
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse H160 out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse H160 out of bounds"))?;
 
 		Ok(H160::from_slice(&data[12..32]).into())
 	}
@@ -330,16 +370,20 @@ impl EvmData for Address {
 	fn write(writer: &mut EvmDataWriter, value: Self) {
 		H256::write(writer, value.0.into());
 	}
+
+	fn has_static_size() -> bool {
+		true
+	}
 }
 
 impl EvmData for U256 {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let range = reader.move_cursor(gasometer, 32)?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let range = reader.move_cursor(32)?;
 
 		let data = reader
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse U256 out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse U256 out of bounds"))?;
 
 		Ok(U256::from_big_endian(data))
 	}
@@ -349,64 +393,44 @@ impl EvmData for U256 {
 		value.to_big_endian(&mut buffer);
 		writer.data.extend_from_slice(&buffer);
 	}
+
+	fn has_static_size() -> bool {
+		true
+	}
 }
 
 macro_rules! impl_evmdata_for_uints {
 	($($uint:ty, )*) => {
 		$(
 			impl EvmData for $uint {
-				fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-					let range = reader.move_cursor(gasometer, 32)?;
+				fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+					let value256: U256 = reader.read()?;
 
-					let data = reader
-						.input
-						.get(range)
-						.ok_or_else(|| gasometer.revert(alloc::format!(
-							"tried to parse {} out of bounds", core::any::type_name::<Self>()
-						)))?;
-
-					let mut buffer = [0u8; core::mem::size_of::<Self>()];
-					buffer.copy_from_slice(&data[32 - core::mem::size_of::<Self>()..]);
-					Ok(Self::from_be_bytes(buffer))
+					value256
+						.try_into()
+						.map_err(|_| revert(alloc::format!(
+							"value too big for {}",
+							core::any::type_name::<Self>()
+						)))
 				}
 
 				fn write(writer: &mut EvmDataWriter, value: Self) {
-					let mut buffer = [0u8; 32];
-					buffer[32 - core::mem::size_of::<Self>()..].copy_from_slice(&value.to_be_bytes());
-					writer.data.extend_from_slice(&buffer);
+					U256::write(writer, value.into());
+				}
+
+				fn has_static_size() -> bool {
+					true
 				}
 			}
 		)*
 	};
 }
 
-impl_evmdata_for_uints!(u16, u32, u64, u128,);
-
-// The implementation for u8 is specific, for performance reasons.
-impl EvmData for u8 {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let range = reader.move_cursor(gasometer, 32)?;
-
-		let data = reader
-			.input
-			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse u64 out of bounds"))?;
-
-		Ok(data[31])
-	}
-
-	fn write(writer: &mut EvmDataWriter, value: Self) {
-		let mut buffer = [0u8; 32];
-		buffer[31] = value;
-
-		writer.data.extend_from_slice(&buffer);
-	}
-}
+impl_evmdata_for_uints!(u8, u16, u32, u64, u128,);
 
 impl EvmData for bool {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let h256 = H256::read(reader, gasometer)
-			.map_err(|_| gasometer.revert("tried to parse bool out of bounds"))?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let h256 = H256::read(reader).map_err(|_| revert("tried to parse bool out of bounds"))?;
 
 		Ok(!h256.is_zero())
 	}
@@ -419,17 +443,21 @@ impl EvmData for bool {
 
 		writer.data.extend_from_slice(&buffer);
 	}
+
+	fn has_static_size() -> bool {
+		true
+	}
 }
 
 impl<T: EvmData> EvmData for Vec<T> {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let mut inner_reader = reader.read_pointer(gasometer)?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let mut inner_reader = reader.read_pointer()?;
 
 		let array_size: usize = inner_reader
-			.read::<U256>(gasometer)
-			.map_err(|_| gasometer.revert("tried to parse array length out of bounds"))?
+			.read::<U256>()
+			.map_err(|_| revert("tried to parse array length out of bounds"))?
 			.try_into()
-			.map_err(|_| gasometer.revert("array length is too large"))?;
+			.map_err(|_| revert("array length is too large"))?;
 
 		let mut array = vec![];
 
@@ -437,12 +465,12 @@ impl<T: EvmData> EvmData for Vec<T> {
 			input: inner_reader
 				.input
 				.get(32..)
-				.ok_or_else(|| gasometer.revert("try to read array items out of bound"))?,
+				.ok_or_else(|| revert("try to read array items out of bound"))?,
 			cursor: 0,
 		};
 
 		for _ in 0..array_size {
-			array.push(item_reader.read(gasometer)?);
+			array.push(item_reader.read()?);
 		}
 
 		Ok(array)
@@ -469,26 +497,30 @@ impl<T: EvmData> EvmData for Vec<T> {
 
 		writer.write_pointer(inner_writer.build());
 	}
+
+	fn has_static_size() -> bool {
+		false
+	}
 }
 
 impl EvmData for Bytes {
-	fn read(reader: &mut EvmDataReader, gasometer: &mut Gasometer) -> EvmResult<Self> {
-		let mut inner_reader = reader.read_pointer(gasometer)?;
+	fn read(reader: &mut EvmDataReader) -> EvmResult<Self> {
+		let mut inner_reader = reader.read_pointer()?;
 
 		// Read bytes/string size.
 		let array_size: usize = inner_reader
-			.read::<U256>(gasometer)
-			.map_err(|_| gasometer.revert("tried to parse bytes/string length out of bounds"))?
+			.read::<U256>()
+			.map_err(|_| revert("tried to parse bytes/string length out of bounds"))?
 			.try_into()
-			.map_err(|_| gasometer.revert("bytes/string length is too large"))?;
+			.map_err(|_| revert("bytes/string length is too large"))?;
 
 		// Get valid range over the bytes data.
-		let range = inner_reader.move_cursor(gasometer, array_size)?;
+		let range = inner_reader.move_cursor(array_size)?;
 
 		let data = inner_reader
 			.input
 			.get(range)
-			.ok_or_else(|| gasometer.revert("tried to parse bytes/string out of bounds"))?;
+			.ok_or_else(|| revert("tried to parse bytes/string out of bounds"))?;
 
 		let bytes = Self(data.to_owned());
 
@@ -513,5 +545,9 @@ impl EvmData for Bytes {
 		writer.write_pointer(
 			EvmDataWriter::new().write(U256::from(length)).write_raw_bytes(&value).build(),
 		);
+	}
+
+	fn has_static_size() -> bool {
+		false
 	}
 }

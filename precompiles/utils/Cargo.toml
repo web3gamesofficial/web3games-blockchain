@@ -1,38 +1,49 @@
 [package]
 name = "precompile-utils"
-version = "0.1.0"
-authors = ["PureStake", "Web3Games Developers"]
+authors = [ "PureStake" ]
+description = "Utils to write EVM precompiles."
 edition = "2021"
+version = "0.1.0"
 
 [dependencies]
-log = "0.4.17"
-sha3 = { version = "0.9", default-features = false }
+impl-trait-for-tuples = "0.2.2"
+log = "0.4"
 num_enum = { version = "0.5.3", default-features = false }
+sha3 = { version = "0.9", default-features = false }
+similar-asserts = { version = "1.1.0", optional = true }
 
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
-sp-core = { git = "https://github.com/paritytech/substrate",branch = "polkadot-v0.9.23",  default-features = false }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
-codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
-frame-support = { git = "https://github.com/paritytech/substrate",branch = "polkadot-v0.9.23",  default-features = false }
-frame-system = { git = "https://github.com/paritytech/substrate",branch = "polkadot-v0.9.23",  default-features = false }
-
-fp-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "polkadot-v0.9.23" }
-pallet-evm = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "polkadot-v0.9.23" }
-
+# Moonbeam
 precompile-utils-macro = { path = "macro" }
+
+# Substrate
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.23", default-features = false }
+
+# Frontier
+evm = { git = "https://github.com/rust-blockchain/evm", branch = "master", default-features = false, features = [ "with-codec" ] }
+fp-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "polkadot-v0.9.23", default-features = false }
+pallet-evm = { git = "https://github.com/web3gamesofficial/frontier", branch = "polkadot-v0.9.23", default-features = false }
+
+# Polkadot / XCM
+xcm = { git = "https://github.com/purestake/polkadot", branch = "moonbeam-polkadot-v0.9.23", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3.1"
 
 [features]
-default = ["std"]
+default = [ "std" ]
 std = [
 	"codec/std",
-	"sp-std/std",
-	"sp-core/std",
-	"sp-io/std",
+	"fp-evm/std",
 	"frame-support/std",
 	"frame-system/std",
 	"pallet-evm/std",
-	# "evm/std",
+	"sp-core/std",
+	"sp-io/std",
+	"sp-std/std",
 ]
+testing = [ "similar-asserts", "std" ]

@@ -30,13 +30,13 @@ use pallet_support::AccountMapping;
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
 
-// mod token_fungible;
-// mod token_multi;
-// mod token_non_fungible;
+mod token_fungible;
+mod token_multi;
+mod token_non_fungible;
 
-// pub use token_fungible::FungibleTokenExtension;
-// pub use token_multi::MultiTokenExtension;
-// pub use token_non_fungible::NonFungibleTokenExtension;
+pub use token_fungible::FungibleTokenExtension;
+pub use token_multi::MultiTokenExtension;
+pub use token_non_fungible::NonFungibleTokenExtension;
 
 /// Function Selector of "create": 0x42ecabc0
 pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
@@ -88,7 +88,6 @@ where
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
 		match handle.code_address() {
-			// Ethereum precompiles
 			// Ethereum precompiles :
 			a if a == hash(1) => Some(ECRecover::execute(handle)),
 			a if a == hash(2) => Some(Sha256::execute(handle)),
@@ -104,19 +103,13 @@ where
 			a if a == hash(1025) => Some(Dispatch::<R>::execute(handle)),
 			a if a == hash(1026) => Some(ECRecoverPublicKey::execute(handle)),
 
-			// // Web3Games precompiles
-			// a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX => {
-			// 	FungibleTokenExtension::<R>::new()
-			// 		.execute(handle)
-			// },
-			// a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX => {
-			// 	NonFungibleTokenExtension::<R>::new()
-			// 		.execute(handle)
-			// },
-			// a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX => {
-			// 	MultiTokenExtension::<R>::new()
-			// 		.execute(handle)
-			// },
+			// Web3Games precompiles
+			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX =>
+				Some(<FungibleTokenExtension<R> as Precompile>::execute(handle)),
+			a if &a.to_fixed_bytes()[0..4] == NFT_PRECOMPILE_ADDRESS_PREFIX =>
+				Some(<NonFungibleTokenExtension<R> as Precompile>::execute(handle)),
+			a if &a.to_fixed_bytes()[0..4] == MT_PRECOMPILE_ADDRESS_PREFIX =>
+				Some(<MultiTokenExtension<R> as Precompile>::execute(handle)),
 
 			// Not support
 			_ => None,
