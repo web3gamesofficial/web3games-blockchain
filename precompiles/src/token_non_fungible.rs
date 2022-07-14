@@ -19,7 +19,7 @@
 use crate::{CREATE_SELECTOR, NFT_PRECOMPILE_ADDRESS_PREFIX};
 use fp_evm::PrecompileOutput;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
-use pallet_evm::{AddressMapping, PrecompileHandle};
+use pallet_evm::{AddressMapping, PrecompileHandle, PrecompileSet};
 use pallet_support::{
 	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
 };
@@ -81,7 +81,7 @@ where
 	}
 }
 
-impl<Runtime> fp_evm::Precompile for NonFungibleTokenExtension<Runtime>
+impl<Runtime> PrecompileSet for NonFungibleTokenExtension<Runtime>
 where
 	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
@@ -91,50 +91,65 @@ where
 	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
-	fn execute(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
+			log::debug!(target: "token-non_fungible","withdraw balance: err = {:?}", address);
+			log::debug!(target: "token-non_fungible","withdraw balance: err = {:?}", non_fungible_token_id);
 			if pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
-				let selector = handle.read_selector()?;
-				handle.check_function_modifier(match selector {
-					Action::Name |
-					Action::Symbol |
-					Action::OwnerOf |
-					Action::TotalSupply |
-					Action::TokenURI |
-					Action::TokenOfOwnerByIndex |
-					Action::TokenByIndex |
-					Action::BalanceOf => FunctionModifier::View,
-					Action::TransferFrom | Action::Mint | Action::Burn =>
-						FunctionModifier::NonPayable,
-				})?;
-				let (origin, call) = match selector {
-					// storage getters
-					Action::Name => return Self::name(non_fungible_token_id, handle),
-					Action::Symbol => return Self::symbol(non_fungible_token_id, handle),
-					Action::TokenURI => return Self::token_uri(non_fungible_token_id, handle),
-					Action::TotalSupply => return Self::total_supply(non_fungible_token_id, handle),
-					Action::TokenByIndex =>
-						return Self::token_by_index(non_fungible_token_id, handle),
-					Action::TokenOfOwnerByIndex =>
-						return Self::token_of_owner_by_index(non_fungible_token_id, handle),
-					Action::BalanceOf => return Self::balance_of(non_fungible_token_id, handle),
-					Action::OwnerOf => return Self::owner_of(non_fungible_token_id, handle),
-					// call methods (dispatchable)
-					Action::TransferFrom => Self::transfer_from(non_fungible_token_id, handle)?,
-					Action::Mint => Self::mint(non_fungible_token_id, handle)?,
-					Action::Burn => Self::burn(non_fungible_token_id, handle)?,
+				let result = {
+					let selector = match handle.read_selector() {
+						Ok(selector) => selector,
+						Err(e) => return Some(Err(e)),
+					};
+					if let Err(err) = handle.check_function_modifier(match selector {
+						Action::Name |
+						Action::Symbol |
+						Action::OwnerOf |
+						Action::TotalSupply |
+						Action::TokenURI |
+						Action::TokenOfOwnerByIndex |
+						Action::TokenByIndex |
+						Action::BalanceOf => FunctionModifier::View,
+						Action::TransferFrom | Action::Mint | Action::Burn =>
+							FunctionModifier::NonPayable,
+					}) {
+						return Some(Err(err))
+					}
+					match selector {
+						// storage getters
+						Action::Name => Self::name(non_fungible_token_id, handle),
+						Action::Symbol => Self::symbol(non_fungible_token_id, handle),
+						Action::TokenURI => Self::token_uri(non_fungible_token_id, handle),
+						Action::TotalSupply => Self::total_supply(non_fungible_token_id, handle),
+						Action::TokenByIndex => Self::token_by_index(non_fungible_token_id, handle),
+						Action::TokenOfOwnerByIndex =>
+							Self::token_of_owner_by_index(non_fungible_token_id, handle),
+						Action::BalanceOf => Self::balance_of(non_fungible_token_id, handle),
+						Action::OwnerOf => Self::owner_of(non_fungible_token_id, handle),
+						// call methods (dispatchable)
+						Action::TransferFrom => Self::transfer_from(non_fungible_token_id, handle),
+						Action::Mint => Self::mint(non_fungible_token_id, handle),
+						Action::Burn => Self::burn(non_fungible_token_id, handle),
+					}
 				};
-				// Dispatch call (if enough gas).
-				RuntimeHelper::<Runtime>::try_dispatch(handle, origin, call)?;
+				return Some(result)
 			} else {
 				if &input[0..4] == CREATE_SELECTOR {
-					Self::create(handle)?;
+					let result = Self::create(handle);
+					return Some(result)
 				}
 			}
 		}
-		Ok(succeed([]))
+		None
+	}
+	fn is_precompile(&self, address: H160) -> bool {
+		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
+			pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id)
+		} else {
+			false
+		}
 	}
 }
 
@@ -154,14 +169,7 @@ where
 	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
-	fn create(
-		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(
-		<Runtime::Call as Dispatchable>::Origin,
-		pallet_token_non_fungible::Call<Runtime>,
-	)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	fn create(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(4)?;
 
@@ -170,23 +178,28 @@ where
 		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
 		let base_uri: Vec<u8> = input.read::<Bytes>()?.into();
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-
-		// Dispatch call (if enough gas).
-		let call =
-			pallet_token_non_fungible::Call::<Runtime>::create_token { id, name, symbol, base_uri };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_non_fungible::Call::<Runtime>::create_token {
+					id,
+					name,
+					symbol,
+					base_uri,
+				},
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn balance_of(
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
@@ -204,8 +217,6 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
@@ -222,112 +233,112 @@ where
 	fn transfer_from(
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(
-		<Runtime::Call as Dispatchable>::Origin,
-		pallet_token_non_fungible::Call<Runtime>,
-	)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(3)?;
 		let from: H160 = input.read::<Address>()?.into();
 		let to: H160 = input.read::<Address>()?.into();
 		let token_id = input.read::<TokenId>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-		let token_id: Runtime::TokenId = token_id.into();
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			let token_id: Runtime::TokenId = token_id.into();
 
-		// Dispatch call (if enough gas).
-		let call =
-			pallet_token_non_fungible::Call::<Runtime>::transfer_from { id, from, to, token_id };
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::transfer_from {
+					id,
+					from,
+					to,
+					token_id,
+				},
+			)?;
+		}
 
 		// Return call information
-		Ok((Some(origin).into(), call))
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn mint(
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(
-		<Runtime::Call as Dispatchable>::Origin,
-		pallet_token_non_fungible::Call<Runtime>,
-	)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
 		let to: H160 = input.read::<Address>()?.into();
 		let token_id = input.read::<TokenId>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-		let token_id: Runtime::TokenId = token_id.into();
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			let token_id: Runtime::TokenId = token_id.into();
 
-		// Dispatch call (if enough gas).
-		let call = pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id };
-
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id },
+			)?;
+		}
 		// Return call information
-		Ok((Some(origin).into(), call))
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn burn(
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(
-		<Runtime::Call as Dispatchable>::Origin,
-		pallet_token_non_fungible::Call<Runtime>,
-	)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
 		let token_id = input.read::<TokenId>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let token_id: Runtime::TokenId = token_id.into();
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let token_id: Runtime::TokenId = token_id.into();
 
-		// Dispatch call (if enough gas).
-		let call = pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id };
-
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id },
+			)?;
+		}
 		// Return call information
-		Ok((Some(origin).into(), call))
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn name(
 		id: NonFungibleTokenIdOf<Runtime>,
-		handle: &mut impl PrecompileHandle,
+		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+		let name = pallet_token_non_fungible::Pallet::<Runtime>::token_name(id);
 
-		let name: Vec<u8> = pallet_token_non_fungible::Pallet::<Runtime>::token_name(id);
-
-		Ok(succeed(EvmDataWriter::new().write(name).build()))
+		// Build output.
+		Ok(succeed(EvmDataWriter::new().write::<Bytes>(name.as_slice().into()).build()))
 	}
 
 	fn symbol(
 		id: NonFungibleTokenIdOf<Runtime>,
-		handle: &mut impl PrecompileHandle,
+		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
-		let symbol: Vec<u8> = pallet_token_non_fungible::Pallet::<Runtime>::token_symbol(id);
-
-		Ok(succeed(EvmDataWriter::new().write(symbol).build()))
+		let symbol = pallet_token_non_fungible::Pallet::<Runtime>::token_symbol(id);
+		// Build output.
+		Ok(succeed(EvmDataWriter::new().write::<Bytes>(symbol.as_slice().into()).build()))
 	}
 
 	fn token_uri(
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
@@ -341,10 +352,8 @@ where
 
 	fn total_supply(
 		id: NonFungibleTokenIdOf<Runtime>,
-		handle: &mut impl PrecompileHandle,
+		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let balance: u32 = pallet_token_non_fungible::Pallet::<Runtime>::total_supply(id);
 
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
@@ -354,8 +363,6 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
@@ -371,8 +378,6 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 

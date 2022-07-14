@@ -17,7 +17,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{CREATE_SELECTOR, MT_PRECOMPILE_ADDRESS_PREFIX};
-use fp_evm::{PrecompileHandle, PrecompileOutput};
+use fp_evm::{PrecompileHandle, PrecompileOutput, PrecompileSet};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
 use pallet_support::{MultiMetadata, TokenIdConversion};
@@ -70,7 +70,7 @@ where
 	}
 }
 
-impl<Runtime> fp_evm::Precompile for MultiTokenExtension<Runtime>
+impl<Runtime> PrecompileSet for MultiTokenExtension<Runtime>
 where
 	Runtime: pallet_token_multi::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
@@ -79,46 +79,59 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
 	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
-	fn execute(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(multi_token_id) = Self::try_from_address(address) {
 			if pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id) {
-				let selector = handle.read_selector()?;
-
-				handle.check_function_modifier(match selector {
-					Action::URI | Action::BalanceOfBatch | Action::BalanceOf =>
-						FunctionModifier::View,
-					Action::TransferFrom |
-					Action::BatchTransferFrom |
-					Action::Mint |
-					Action::MintBatch |
-					Action::Burn |
-					Action::BurnBatch => FunctionModifier::NonPayable,
-				})?;
-
-				let (origin, call) = match selector {
-					// storage getters
-					Action::BalanceOf => return Self::balance_of(multi_token_id, handle),
-					Action::BalanceOfBatch => return Self::balance_of_batch(multi_token_id, handle),
-					Action::URI => return Self::uri(multi_token_id, handle),
-					// runtime methods (dispatchable)
-					Action::TransferFrom => Self::transfer_from(multi_token_id, handle)?,
-					Action::BatchTransferFrom => Self::batch_transfer_from(multi_token_id, handle)?,
-					Action::Mint => Self::mint(multi_token_id, handle)?,
-					Action::MintBatch => Self::mint_batch(multi_token_id, handle)?,
-					Action::Burn => Self::burn(multi_token_id, handle)?,
-					Action::BurnBatch => Self::burn_batch(multi_token_id, handle)?,
+				let result = {
+					let selector = match handle.read_selector() {
+						Ok(selector) => selector,
+						Err(e) => return Some(Err(e)),
+					};
+					if let Err(err) = handle.check_function_modifier(match selector {
+						Action::URI | Action::BalanceOfBatch | Action::BalanceOf =>
+							FunctionModifier::View,
+						Action::TransferFrom |
+						Action::BatchTransferFrom |
+						Action::Mint |
+						Action::MintBatch |
+						Action::Burn |
+						Action::BurnBatch => FunctionModifier::NonPayable,
+					}) {
+						return Some(Err(err))
+					}
+					match selector {
+						// storage getters
+						Action::BalanceOf => Self::balance_of(multi_token_id, handle),
+						Action::BalanceOfBatch => Self::balance_of_batch(multi_token_id, handle),
+						Action::URI => Self::uri(multi_token_id, handle),
+						// runtime methods (dispatchable)
+						Action::TransferFrom => Self::transfer_from(multi_token_id, handle),
+						Action::BatchTransferFrom =>
+							Self::batch_transfer_from(multi_token_id, handle),
+						Action::Mint => Self::mint(multi_token_id, handle),
+						Action::MintBatch => Self::mint_batch(multi_token_id, handle),
+						Action::Burn => Self::burn(multi_token_id, handle),
+						Action::BurnBatch => Self::burn_batch(multi_token_id, handle),
+					}
 				};
-				// Dispatch call (if enough gas).
-				RuntimeHelper::<Runtime>::try_dispatch(handle, origin, call)?;
+				return Some(result)
 			} else {
 				if &input[0..4] == CREATE_SELECTOR {
-					Self::create(handle)?;
+					let result = Self::create(handle);
+					return Some(result)
 				}
 			}
 		}
-		Ok(succeed([]))
+		None
+	}
+	fn is_precompile(&self, address: H160) -> bool {
+		if let Some(multi_token_id) = Self::try_from_address(address) {
+			pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id)
+		} else {
+			false
+		}
 	}
 }
 
@@ -137,33 +150,30 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
 	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
-	fn create(
-		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	fn create(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
 		let id = input.read::<u128>()?.into();
 		let uri: Vec<u8> = input.read::<Bytes>()?.into();
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::create_token { id, uri };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::create_token { id, uri },
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn balance_of(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
@@ -181,8 +191,6 @@ where
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
@@ -201,15 +209,13 @@ where
 			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids)
 				.unwrap();
 
-		Ok(succeed(EvmDataWriter::new().write(balances).build()))
+		Ok(succeed(EvmDataWriter::new().write::<Vec<Balance>>(balances.as_slice().into()).build()))
 	}
 
 	fn transfer_from(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(4)?;
 
@@ -218,25 +224,32 @@ where
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 		let amount = input.read::<Balance>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-
-		// Dispatch call (if enough gas).
-		let call =
-			pallet_token_multi::Call::<Runtime>::transfer_from { id, from, to, token_id, amount };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::transfer_from {
+					id,
+					from,
+					to,
+					token_id,
+					amount,
+				},
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn batch_transfer_from(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(4)?;
 
@@ -249,27 +262,32 @@ where
 			.collect();
 		let amounts = input.read::<Vec<Balance>>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::batch_transfer_from {
-			id,
-			from,
-			to,
-			token_ids,
-			amounts,
-		};
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let from: Runtime::AccountId = Runtime::AddressMapping::into_account_id(from);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::batch_transfer_from {
+					id,
+					from,
+					to,
+					token_ids,
+					amounts,
+				},
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn mint(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
+	) -> EvmResult<PrecompileOutput> {
 		handle.record_log_costs_manual(3, 32)?;
 
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
@@ -279,23 +297,25 @@ where
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 		let amount = input.read::<Balance>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount },
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn mint_batch(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(3)?;
 
@@ -307,45 +327,48 @@ where
 			.collect();
 		let amounts = input.read::<Vec<Balance>>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts },
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn burn(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 		let amount = input.read::<Balance>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount },
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn burn_batch(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<(<Runtime::Call as Dispatchable>::Origin, pallet_token_multi::Call<Runtime>)> {
-		handle.record_log_costs_manual(3, 32)?;
-
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 
@@ -356,29 +379,31 @@ where
 			.collect();
 		let amounts = input.read::<Vec<Balance>>()?;
 
-		let origin: Runtime::AccountId =
-			Runtime::AddressMapping::into_account_id(handle.context().caller);
-
-		// Dispatch call (if enough gas).
-		let call = pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts };
-
-		// Return call information
-		Ok((Some(origin).into(), call))
+		{
+			// Build call with origin.
+			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts },
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn uri(
 		id: MultiTokenIdOf<Runtime>,
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 
-		let uri: Vec<u8> = pallet_token_multi::Pallet::<Runtime>::uri(id, token_id);
+		let uri = pallet_token_multi::Pallet::<Runtime>::uri(id, token_id);
 
-		Ok(succeed(EvmDataWriter::new().write(uri).build()))
+		// Build output.
+		Ok(succeed(EvmDataWriter::new().write::<Bytes>(uri.as_slice().into()).build()))
 	}
 }
