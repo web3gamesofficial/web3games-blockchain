@@ -83,8 +83,6 @@ where
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(fungible_token_id) = Self::try_from_address(address) {
-			log::debug!(target: "token-fungible","withdraw balance: err = {:?}", address);
-			log::debug!(target: "token-fungible","withdraw balance: err = {:?}", fungible_token_id);
 			if pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
 				let result = {
 					let selector = match handle.read_selector() {
@@ -120,7 +118,7 @@ where
 				return Some(result)
 			} else {
 				if &input[0..4] == CREATE_SELECTOR {
-					let result = Self::create(handle);
+					let result = Self::create(fungible_token_id, handle);
 					return Some(result)
 				}
 			}
@@ -150,15 +148,15 @@ where
 	Runtime::Call: From<pallet_token_fungible::Call<Runtime>>,
 	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 {
-	fn create(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+	fn create(
+		id: FungibleTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
-		input.expect_arguments(4)?;
-
-		let id = input.read::<u128>()?.into();
+		input.expect_arguments(3)?;
 		let name: Vec<u8> = input.read::<Bytes>()?.into();
 		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
 		let decimals = input.read::<u8>()?.into();
-
 		{
 			// Build call with origin.
 			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
@@ -292,7 +290,7 @@ where
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
-		input.expect_arguments(2)?;
+		input.expect_arguments(1)?;
 
 		let amount = input.read::<Balance>()?;
 
