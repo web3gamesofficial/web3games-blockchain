@@ -36,10 +36,12 @@ enum Action {
 	Decimals = "decimals()",
 	TotalSupply = "totalSupply()",
 	BalanceOf = "balanceOf(address)",
+	Allowance = "allowance(address,address)",
 	Transfer = "transfer(address,uint256)",
 	TransferFrom = "transferFrom(address,address,uint256)",
 	Mint = "mint(address,uint256)",
 	Burn = "burn(uint256)",
+	Approve = "approve(address,uint256)",
 }
 
 pub struct FungibleTokenExtension<Runtime>(PhantomData<Runtime>);
@@ -94,8 +96,9 @@ where
 						Action::Symbol |
 						Action::Decimals |
 						Action::TotalSupply |
+						Action::Allowance |
 						Action::BalanceOf => FunctionModifier::View,
-						Action::Transfer | Action::TransferFrom | Action::Mint | Action::Burn =>
+						Action::Transfer | Action::TransferFrom | Action::Mint | Action::Burn | Action::Approve =>
 							FunctionModifier::NonPayable,
 					}) {
 						return Some(Err(err))
@@ -109,10 +112,12 @@ where
 						Action::Name => Self::name(fungible_token_id, handle),
 						Action::Symbol => Self::symbol(fungible_token_id, handle),
 						Action::Decimals => Self::decimals(fungible_token_id, handle),
+						Action::Allowance => Self::allowance(fungible_token_id, handle),
 						Action::Mint => Self::mint(fungible_token_id, handle),
 						Action::Burn => Self::burn(fungible_token_id, handle),
 						Action::Transfer => Self::transfer(fungible_token_id, handle),
 						Action::TransferFrom => Self::transfer_from(fungible_token_id, handle),
+						Action::Approve => Self::approve(fungible_token_id, handle),
 					}
 				};
 				return Some(result)
@@ -195,6 +200,52 @@ where
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
+	}
+
+	fn allowance(
+		id: FungibleTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
+		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
+		// Read input.
+		input.expect_arguments(2)?;
+		let owner = input.read::<Address>()?.0;
+		let spender = input.read::<Address>()?.0;
+
+		let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
+		let spender: Runtime::AccountId = Runtime::AddressMapping::into_account_id(spender);
+
+		let balance: Balance = pallet_token_fungible::Pallet::<Runtime>::allowances(id, (owner,spender));
+
+		// Build output.
+		Ok(succeed(EvmDataWriter::new().write(balance).build()))
+	}
+
+	fn approve(
+		id: FungibleTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
+		let mut input = handle.read_input()?;
+		input.expect_arguments(2)?;
+
+		let spender: H160 = input.read::<Address>()?.into();
+		let amount = input.read::<Balance>()?;
+
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let spender: Runtime::AccountId = Runtime::AddressMapping::into_account_id(spender);
+
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(caller).into(),
+				pallet_token_fungible::Call::<Runtime>::approve { id, spender, amount },
+			)?;
+		}
+
+		// Return call information
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn transfer(
