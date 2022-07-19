@@ -13,4 +13,4 @@
 </div>
 
 ## 1. Introduction
-Web3Games Chain Media Brand Resource File.
+Web3Games Chain Node Client File.
