@@ -83,8 +83,8 @@ pub type ConsensusResult = (
 	sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 );
 
-#[cfg(feature = "manual-seal")]
-pub type ConsensusResult = (FrontierBlockImport<Block, Arc<FullClient>, FullClient>, Sealing);
+// #[cfg(feature = "manual-seal")]
+// pub type ConsensusResult = (FrontierBlockImport<Block, Arc<FullClient>, FullClient>, Sealing);
 
 /// Provide a mock duration starting at 0 in millisecond for timestamp inherent.
 /// Each call will increment timestamp by slot_duration making Aura think time has passed.
