@@ -53,10 +53,12 @@ benchmarks! {
 	transfer_from {
 		let alice: T::AccountId = account("alice", 0, SEED);
 		let bob: T::AccountId = account("bob", 0, SEED);
+		let charlie: T::AccountId = account("charlie", 0, SEED);
 
 		let _ = TokenFungible::<T>::create_token(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(alice)), 1u128, "TestToken".to_string().into(), "TK".to_string().into(), 18);
 		let _ = TokenFungible::<T>::mint(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(alice)), 1u128, alice, 100_000_000_000_000u128);
-	}: _(RawOrigin::Signed(alice), 1u32, token_amount, CurrencyId::DORA)
+		let _ = TokenFungible::<T>::approve(<T as frame_system::Config>::Origin::from(RawOrigin::Signed(alice)), 1u128, charlie, 100_000_000_000_000u128);
+	}: _(RawOrigin::Signed(charlie), 1u128, alice, bob, 100_000_000_000u128)
 }
 
 impl_benchmark_test_suite!(TokenFungible, crate::mock::new_test_ext(), crate::mock::Test,);
