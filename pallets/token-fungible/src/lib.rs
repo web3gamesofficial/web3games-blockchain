@@ -34,6 +34,8 @@ use sp_runtime::{
 };
 use sp_std::prelude::*;
 
+mod benchmarking;
+
 pub use pallet::*;
 
 #[cfg(test)]

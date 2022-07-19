@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use frame_benchmarking::{account, whitelisted_caller};
 use hex_literal::hex;
 use pallet_evm::{AddressMapping, HashedAddressMapping};
 use sc_service::ChainType;
@@ -85,6 +86,9 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
+					account("alice", 0, 0),
+					account("bob", 0, 0),
+					account("charlie", 0, 0),
 				],
 				true,
 			)
