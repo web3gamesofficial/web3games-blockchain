@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use frame_benchmarking::{account, whitelisted_caller};
+use frame_benchmarking::account;
 use hex_literal::hex;
 use pallet_evm::{AddressMapping, HashedAddressMapping};
 use sc_service::ChainType;

@@ -22,14 +22,12 @@ use frame_support::{
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
+pub use pallet_token_non_fungible::{Error, Event as TokenFungibleEvent};
 use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
-};
-pub use pallet_token_non_fungible::{
-	Error, Event as TokenFungibleEvent
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;

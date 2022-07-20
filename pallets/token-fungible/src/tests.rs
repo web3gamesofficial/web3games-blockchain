@@ -54,12 +54,12 @@ fn create_token_should_not_work() {
 		));
 		assert_noop!(
 			TokenFungible::create_token(
-			Origin::signed(ALICE),
-			1,
-			b"W3G".to_vec(),
-			b"W3G".to_vec(),
-			18
-		),
+				Origin::signed(ALICE),
+				1,
+				b"W3G".to_vec(),
+				b"W3G".to_vec(),
+				18
+			),
 			Error::<Test>::InvalidId
 		);
 	})
@@ -87,7 +87,10 @@ fn mint_should_work() {
 #[test]
 fn mint_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(TokenFungible::mint(Origin::signed(ALICE), 1, ALICE, 100),Error::<Test>::InvalidId);
+		assert_noop!(
+			TokenFungible::mint(Origin::signed(ALICE), 1, ALICE, 100),
+			Error::<Test>::InvalidId
+		);
 		assert_ok!(TokenFungible::create_token(
 			Origin::signed(ALICE),
 			1,
@@ -95,7 +98,10 @@ fn mint_should_not_work() {
 			b"W3G".to_vec(),
 			18
 		));
-		assert_noop!(TokenFungible::mint(Origin::signed(BOB), 1, ALICE, 100),Error::<Test>::NoPermission);
+		assert_noop!(
+			TokenFungible::mint(Origin::signed(BOB), 1, ALICE, 100),
+			Error::<Test>::NoPermission
+		);
 	})
 }
 
@@ -123,14 +129,13 @@ fn burn_should_work() {
 		assert_ok!(TokenFungible::burn(Origin::signed(BOB), 1, 50));
 		assert_eq!(TokenFungible::balance_of(1, BOB), 50);
 		assert_eq!(TokenFungible::total_supply(1), 100);
-
 	})
 }
 
 #[test]
 fn burn_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(TokenFungible::burn(Origin::signed(ALICE), 1, 50),Error::<Test>::Unknown);
+		assert_noop!(TokenFungible::burn(Origin::signed(ALICE), 1, 50), Error::<Test>::Unknown);
 
 		assert_ok!(TokenFungible::create_token(
 			Origin::signed(ALICE),
@@ -140,8 +145,7 @@ fn burn_should_not_work() {
 			18
 		));
 
-		assert_noop!(TokenFungible::burn(Origin::signed(BOB), 1, 100),Error::<Test>::NumOverflow);
-
+		assert_noop!(TokenFungible::burn(Origin::signed(BOB), 1, 100), Error::<Test>::NumOverflow);
 	})
 }
 
@@ -166,7 +170,6 @@ fn transfer_should_works() {
 	})
 }
 
-
 #[test]
 fn approve_should_work() {
 	new_test_ext().execute_with(|| {
@@ -189,7 +192,10 @@ fn approve_should_work() {
 #[test]
 fn approve_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(TokenFungible::approve(Origin::signed(ALICE), 1, BOB, 50),Error::<Test>::InsufficientAuthorizedTokens);
+		assert_noop!(
+			TokenFungible::approve(Origin::signed(ALICE), 1, BOB, 50),
+			Error::<Test>::InsufficientAuthorizedTokens
+		);
 		assert_ok!(TokenFungible::create_token(
 			Origin::signed(ALICE),
 			1,
@@ -198,8 +204,14 @@ fn approve_should_not_work() {
 			18
 		));
 		assert_ok!(TokenFungible::mint(Origin::signed(ALICE), 1, ALICE, 100));
-		assert_noop!(TokenFungible::approve(Origin::signed(ALICE), 1, BOB, 200),Error::<Test>::InsufficientAuthorizedTokens);
-		assert_noop!(TokenFungible::approve(Origin::signed(ALICE), 1, ALICE, 100),Error::<Test>::ApproveToCurrentOwner);
+		assert_noop!(
+			TokenFungible::approve(Origin::signed(ALICE), 1, BOB, 200),
+			Error::<Test>::InsufficientAuthorizedTokens
+		);
+		assert_noop!(
+			TokenFungible::approve(Origin::signed(ALICE), 1, ALICE, 100),
+			Error::<Test>::ApproveToCurrentOwner
+		);
 
 		assert_eq!(TokenFungible::total_supply(1), 100);
 	})
@@ -232,8 +244,14 @@ fn transfer_from_should_work() {
 #[test]
 fn transfer_from_should_not_work() {
 	new_test_ext().execute_with(|| {
-		assert_noop!(TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, CHARLIE, 20),Error::<Test>::InsufficientAuthorizedTokens);
-		assert_noop!(TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, BOB, 20),Error::<Test>::ConfuseBehavior);
+		assert_noop!(
+			TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, CHARLIE, 20),
+			Error::<Test>::InsufficientAuthorizedTokens
+		);
+		assert_noop!(
+			TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, BOB, 20),
+			Error::<Test>::ConfuseBehavior
+		);
 
 		assert_ok!(TokenFungible::create_token(
 			Origin::signed(ALICE),
@@ -248,11 +266,16 @@ fn transfer_from_should_not_work() {
 		assert_ok!(TokenFungible::approve(Origin::signed(ALICE), 1, BOB, 50));
 		assert_eq!(TokenFungible::allowances(1, (ALICE, BOB)), 50);
 
-		assert_noop!(TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, BOB, 20),Error::<Test>::ConfuseBehavior);
+		assert_noop!(
+			TokenFungible::transfer_from(Origin::signed(BOB), 1, ALICE, BOB, 20),
+			Error::<Test>::ConfuseBehavior
+		);
 
-		assert_noop!(TokenFungible::transfer_from(Origin::signed(BOB), 1, CHARLIE, ALICE, 20),Error::<Test>::InsufficientAuthorizedTokens);
+		assert_noop!(
+			TokenFungible::transfer_from(Origin::signed(BOB), 1, CHARLIE, ALICE, 20),
+			Error::<Test>::InsufficientAuthorizedTokens
+		);
 
 		assert_eq!(TokenFungible::total_supply(1), 100);
 	})
 }
-
