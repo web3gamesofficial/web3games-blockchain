@@ -447,6 +447,7 @@ impl<T: Config> Pallet<T> {
 		to: &T::AccountId,
 		token_id: T::TokenId,
 	) -> DispatchResult {
+		ensure!(Self::exists(id), Error::<T>::InvalidId);
 		ensure!(Self::has_permission(id, who), Error::<T>::NoPermission);
 		ensure!(!Self::token_exists(id, token_id), Error::<T>::TokenAlreadyMinted);
 
@@ -626,7 +627,7 @@ where
 	fn token_uri(id: Self::NonFungibleTokenId, token_id: Self::TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().base_uri.to_vec();
 		let token_id: u128 = token_id.into();
-		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		let token_id_buf: Vec<u8> = token_id.to_string().as_bytes().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }

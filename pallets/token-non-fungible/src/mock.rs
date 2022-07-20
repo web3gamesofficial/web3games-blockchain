@@ -28,6 +28,9 @@ use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
+pub use pallet_token_non_fungible::{
+	Error, Event as TokenFungibleEvent
+};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -102,7 +105,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = u32;
-	type TokenId = u32;
+	type TokenId = u128;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -116,5 +119,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
-	t.into()
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }
