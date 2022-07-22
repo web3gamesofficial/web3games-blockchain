@@ -767,6 +767,8 @@ mod benches {
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
 		[pallet_token_fungible, TokenFungible]
+		[pallet_token_multi, TokenMulti]
+		[pallet_token_non_fungible, TokenNonFungible]
 	);
 }
 
@@ -1111,6 +1113,8 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_balances, Balances);
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
 			list_benchmark!(list, extra, pallet_token_fungible, TokenFungible);
+			list_benchmark!(list, extra, pallet_token_multi, TokenMulti);
+			list_benchmark!(list, extra, pallet_token_non_fungible, TokenNonFungible);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1147,6 +1151,8 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_balances, Balances);
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, pallet_token_fungible, TokenFungible);
+			add_benchmark!(params, batches, pallet_token_multi, TokenMulti);
+			add_benchmark!(params, batches, pallet_token_non_fungible, TokenNonFungible);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

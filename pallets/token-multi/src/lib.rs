@@ -32,6 +32,9 @@ use sp_runtime::{traits::AtLeast32BitUnsigned, RuntimeDebug};
 use sp_std::prelude::*;
 
 pub use pallet::*;
+
+mod benchmarking;
+
 #[cfg(test)]
 mod mock;
 
@@ -67,7 +70,7 @@ pub mod pallet {
 			+ Copy
 			+ MaxEncodedLen;
 
-		type TokenId: Member + Parameter + Default + MaxEncodedLen + Copy;
+		type TokenId: Member + Parameter + AtLeast32BitUnsigned + Default + MaxEncodedLen + Copy;
 
 		/// The maximum length of base uri stored on-chain.
 		#[pallet::constant]
