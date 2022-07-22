@@ -98,8 +98,11 @@ where
 						Action::TotalSupply |
 						Action::Allowance |
 						Action::BalanceOf => FunctionModifier::View,
-						Action::Transfer | Action::TransferFrom | Action::Mint | Action::Burn | Action::Approve =>
-							FunctionModifier::NonPayable,
+						Action::Transfer |
+						Action::TransferFrom |
+						Action::Mint |
+						Action::Burn |
+						Action::Approve => FunctionModifier::NonPayable,
 					}) {
 						return Some(Err(err))
 					}
@@ -215,7 +218,8 @@ where
 		let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
 		let spender: Runtime::AccountId = Runtime::AddressMapping::into_account_id(spender);
 
-		let balance: Balance = pallet_token_fungible::Pallet::<Runtime>::allowances(id, (owner,spender));
+		let balance: Balance =
+			pallet_token_fungible::Pallet::<Runtime>::allowances(id, (owner, spender));
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))

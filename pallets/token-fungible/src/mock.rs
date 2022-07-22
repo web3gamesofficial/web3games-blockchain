@@ -22,6 +22,8 @@ use frame_support::{
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
+pub use pallet_balances::Error as BalancesError;
+pub use pallet_token_fungible::{Error, Event as TokenFungibleEvent, Token};
 use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
@@ -114,5 +116,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
-	t.into()
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }

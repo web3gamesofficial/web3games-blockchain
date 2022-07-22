@@ -22,6 +22,7 @@ use frame_support::{
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
+pub use pallet_token_non_fungible::{Error, Event as TokenFungibleEvent};
 use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
@@ -102,7 +103,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = u32;
-	type TokenId = u32;
+	type TokenId = u128;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
@@ -116,5 +117,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
-	t.into()
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
 }

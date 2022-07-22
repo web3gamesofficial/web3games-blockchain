@@ -163,6 +163,7 @@ pub mod pallet {
 			decimals: u8,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 			Self::do_create_token(&who, id, name, symbol, decimals)
 		}
 
@@ -208,6 +209,7 @@ pub mod pallet {
 			amount: Balance,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
+			ensure!(Self::exists(id.clone()), Error::<T>::InvalidId);
 			Self::do_mint(id, &who, account, amount)
 		}
 
@@ -250,8 +252,6 @@ impl<T: Config> Pallet<T> {
 			name.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 		let bounded_symbol: BoundedVec<u8, T::StringLimit> =
 			symbol.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
-
-		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
 		let token = Token {
 			owner: who.clone(),
