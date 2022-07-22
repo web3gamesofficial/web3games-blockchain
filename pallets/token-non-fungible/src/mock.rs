@@ -107,6 +107,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
