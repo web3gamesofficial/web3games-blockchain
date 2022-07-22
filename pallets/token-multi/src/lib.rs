@@ -18,7 +18,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode, MaxEncodedLen};
+use codec::{alloc::string::ToString, Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	ensure,
@@ -222,6 +222,7 @@ pub mod pallet {
 			token_id: T::TokenId,
 			amount: Balance,
 		) -> DispatchResult {
+			ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId);
 			let who = ensure_signed(origin)?;
 			Self::do_mint(&who, id, &to, token_id, amount)
 		}
@@ -336,6 +337,7 @@ impl<T: Config> Pallet<T> {
 		token_ids: Vec<T::TokenId>,
 		amounts: Vec<Balance>,
 	) -> DispatchResult {
+		ensure!(Tokens::<T>::contains_key(id), Error::<T>::InvalidId);
 		ensure!(Self::has_permission(id, &who), Error::<T>::NoPermission);
 		ensure!(token_ids.len() == amounts.len(), Error::<T>::LengthMismatch);
 
@@ -545,7 +547,7 @@ where
 	fn uri(id: Self::MultiTokenId, token_id: T::TokenId) -> Vec<u8> {
 		let base_uri_buf: Vec<u8> = Tokens::<T>::get(id).unwrap().uri.to_vec();
 		let token_id: u128 = token_id.into();
-		let token_id_buf: Vec<u8> = token_id.to_be_bytes().to_vec();
+		let token_id_buf: Vec<u8> = token_id.to_string().as_bytes().to_vec();
 		base_uri_buf.into_iter().chain(token_id_buf).collect::<Vec<_>>()
 	}
 }
