@@ -38,6 +38,9 @@ mod benchmarking;
 
 pub use pallet::*;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
 #[cfg(test)]
 mod mock;
 
@@ -89,6 +92,9 @@ pub mod pallet {
 		type CreateTokenDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		/// runtime weights.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::storage]
@@ -154,7 +160,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::create_token())]
 		pub fn create_token(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -167,7 +173,7 @@ pub mod pallet {
 			Self::do_create_token(&who, id, name, symbol, decimals)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::approve())]
 		pub fn approve(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -178,7 +184,7 @@ pub mod pallet {
 			Self::do_approve(id, &who, &spender, amount)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::transfer())]
 		pub fn transfer(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -189,7 +195,7 @@ pub mod pallet {
 			Self::do_transfer(id, &who, &recipient, amount)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::transfer_from())]
 		pub fn transfer_from(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -201,7 +207,7 @@ pub mod pallet {
 			Self::do_transfer_from(id, who, sender, recipient, amount)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::mint())]
 		pub fn mint(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,
@@ -213,7 +219,7 @@ pub mod pallet {
 			Self::do_mint(id, &who, account, amount)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::burn())]
 		pub fn burn(
 			origin: OriginFor<T>,
 			id: T::FungibleTokenId,

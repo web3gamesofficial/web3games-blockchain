@@ -38,6 +38,9 @@ pub use pallet::*;
 
 mod benchmarking;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
 #[cfg(test)]
 mod mock;
 
@@ -86,6 +89,9 @@ pub mod pallet {
 		type CreateTokenDeposit: Get<BalanceOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		/// runtime weights.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -234,7 +240,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::create_token())]
 		pub fn create_token(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -246,7 +252,7 @@ pub mod pallet {
 			Self::do_create_token(&who, id, name, symbol, base_uri)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::approve())]
 		pub fn approve(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -257,7 +263,7 @@ pub mod pallet {
 			Self::do_approve(&who, id, &to, token_id)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::set_approve_for_all())]
 		pub fn set_approve_for_all(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -268,7 +274,7 @@ pub mod pallet {
 			Self::do_set_approve_for_all(&who, id, &operator, approved)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::transfer_from())]
 		pub fn transfer_from(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -280,7 +286,7 @@ pub mod pallet {
 			Self::do_transfer_from(&who, id, &from, &to, token_id)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::mint())]
 		pub fn mint(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,
@@ -291,7 +297,7 @@ pub mod pallet {
 			Self::do_mint(&who, id, &to, token_id)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::burn())]
 		pub fn burn(
 			origin: OriginFor<T>,
 			id: T::NonFungibleTokenId,

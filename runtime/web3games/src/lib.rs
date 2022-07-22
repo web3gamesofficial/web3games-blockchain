@@ -588,6 +588,7 @@ impl pallet_token_fungible::Config for Runtime {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type WeightInfo = pallet_token_fungible::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_token_non_fungible::Config for Runtime {
@@ -598,6 +599,7 @@ impl pallet_token_non_fungible::Config for Runtime {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type WeightInfo = pallet_token_non_fungible::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_token_multi::Config for Runtime {
@@ -608,6 +610,7 @@ impl pallet_token_multi::Config for Runtime {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type WeightInfo = pallet_token_multi::weights::W3GWeight<Runtime>;
 }
 
 construct_runtime!(
