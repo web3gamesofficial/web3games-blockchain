@@ -102,10 +102,11 @@ impl pallet_token_multi::Config for Test {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = u32;
-	type TokenId = u32;
+	type TokenId = u128;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
