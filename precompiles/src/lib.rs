@@ -39,7 +39,13 @@ pub use token_multi::MultiTokenExtension;
 pub use token_non_fungible::NonFungibleTokenExtension;
 
 /// Function Selector of "create": 0x42ecabc0
-pub const CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
+pub const TOKEN_FUNGIBLE_CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
+
+/// Function Selector of "create": 0xe9d0638d //233,208,99,141
+pub const TOKEN_NON_FUNGIBLE_CREATE_SELECTOR: &[u8] = &[233u8, 208u8, 99u8, 141u8];
+
+/// Function Selector of "create": 0xcf5ba53f //207,91,165,63
+pub const TOKEN_MULTI_CREATE_SELECTOR: &[u8] = &[207u8, 91u8, 165u8, 63u8];
 
 /// Fungible Token prefix with 0xFFFFFFFF.
 pub const FT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[255u8; 4];

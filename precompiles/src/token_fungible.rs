@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{CREATE_SELECTOR, FT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::{FT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_FUNGIBLE_CREATE_SELECTOR};
 use fp_evm::{PrecompileHandle, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
@@ -125,7 +125,7 @@ where
 				};
 				return Some(result)
 			} else {
-				if &input[0..4] == CREATE_SELECTOR {
+				if &input[0..4] == TOKEN_FUNGIBLE_CREATE_SELECTOR {
 					let result = Self::create(fungible_token_id, handle);
 					return Some(result)
 				}

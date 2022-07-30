@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{CREATE_SELECTOR, MT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::{MT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_MULTI_CREATE_SELECTOR};
 use fp_evm::{PrecompileHandle, PrecompileOutput, PrecompileSet};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
@@ -33,13 +33,15 @@ pub type MultiTokenIdOf<Runtime> = <Runtime as pallet_token_multi::Config>::Mult
 enum Action {
 	BalanceOf = "balanceOf(address,uint256)",
 	BalanceOfBatch = "balanceOfBatch(address[],uint256[])",
-	TransferFrom = "transferFrom(address,address,uint256,uint256)",
-	BatchTransferFrom = "batchTransferFrom(address,address,uint256[],uint256[])",
+	SafeTransferFrom = "safeTransferFrom(address,address,uint256,uint256,bytes)",
+	SafeBatchTransferFrom = "safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)",
 	Mint = "mint(address,uint256,uint256)",
 	MintBatch = "mintBatch(address,uint256[],uint256[])",
 	Burn = "burn(uint256,uint256)",
 	BurnBatch = "burnBatch(uint256[],uint256[])",
 	URI = "uri(uint256)",
+	SetApprovalForAll = "setApprovalForAll(address,bool)",
+	IsApprovedForAll = "isApprovedForAll(address,address)",
 }
 pub struct MultiTokenExtension<Runtime>(PhantomData<Runtime>);
 
@@ -90,13 +92,16 @@ where
 						Err(e) => return Some(Err(e)),
 					};
 					if let Err(err) = handle.check_function_modifier(match selector {
-						Action::URI | Action::BalanceOfBatch | Action::BalanceOf =>
-							FunctionModifier::View,
-						Action::TransferFrom |
-						Action::BatchTransferFrom |
+						Action::URI |
+						Action::BalanceOfBatch |
+						Action::IsApprovedForAll |
+						Action::BalanceOf => FunctionModifier::View,
+						Action::SafeTransferFrom |
+						Action::SafeBatchTransferFrom |
 						Action::Mint |
 						Action::MintBatch |
 						Action::Burn |
+						Action::SetApprovalForAll |
 						Action::BurnBatch => FunctionModifier::NonPayable,
 					}) {
 						return Some(Err(err))
@@ -107,19 +112,23 @@ where
 						Action::BalanceOfBatch => Self::balance_of_batch(multi_token_id, handle),
 						Action::URI => Self::uri(multi_token_id, handle),
 						// runtime methods (dispatchable)
-						Action::TransferFrom => Self::transfer_from(multi_token_id, handle),
-						Action::BatchTransferFrom =>
+						Action::SafeTransferFrom => Self::transfer_from(multi_token_id, handle),
+						Action::SafeBatchTransferFrom =>
 							Self::batch_transfer_from(multi_token_id, handle),
 						Action::Mint => Self::mint(multi_token_id, handle),
 						Action::MintBatch => Self::mint_batch(multi_token_id, handle),
 						Action::Burn => Self::burn(multi_token_id, handle),
 						Action::BurnBatch => Self::burn_batch(multi_token_id, handle),
+						Action::SetApprovalForAll =>
+							Self::set_approval_for_all(multi_token_id, handle),
+						Action::IsApprovedForAll =>
+							Self::is_approval_for_all(multi_token_id, handle),
 					}
 				};
 				return Some(result)
 			} else {
-				if &input[0..4] == CREATE_SELECTOR {
-					let result = Self::create(handle);
+				if &input[0..4] == TOKEN_MULTI_CREATE_SELECTOR {
+					let result = Self::create(multi_token_id, handle);
 					return Some(result)
 				}
 			}
@@ -150,11 +159,13 @@ where
 	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
 	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
-	fn create(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+	fn create(
+		id: MultiTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
-		input.expect_arguments(2)?;
+		input.expect_arguments(1)?;
 
-		let id = input.read::<u128>()?.into();
 		let uri: Vec<u8> = input.read::<Bytes>()?.into();
 
 		{
@@ -405,5 +416,50 @@ where
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(uri.as_slice().into()).build()))
+	}
+	fn is_approval_for_all(
+		id: MultiTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
+		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
+		input.expect_arguments(2)?;
+
+		let owner: H160 = input.read::<Address>()?.into();
+		let operator: H160 = input.read::<Address>()?.into();
+
+		let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
+		let operator: Runtime::AccountId = Runtime::AddressMapping::into_account_id(operator);
+
+		let is_approved =
+			pallet_token_multi::Pallet::<Runtime>::is_approved_for_all(id, (owner, operator));
+		// Build output.
+		Ok(succeed(EvmDataWriter::new().write(is_approved).build()))
+	}
+	fn set_approval_for_all(
+		id: MultiTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
+		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
+		input.expect_arguments(2)?;
+
+		let operator: H160 = input.read::<Address>()?.into();
+		let operator: Runtime::AccountId = Runtime::AddressMapping::into_account_id(operator);
+		let approved: bool = input.read::<bool>()?.into();
+
+		{
+			// Build call with origin.
+			let origin = Runtime::AddressMapping::into_account_id(handle.context().caller);
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(origin).into(),
+				pallet_token_multi::Call::<Runtime>::set_approval_for_all {
+					id,
+					operator,
+					approved,
+				},
+			)?;
+		}
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 }

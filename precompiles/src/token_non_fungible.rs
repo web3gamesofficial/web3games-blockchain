@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{CREATE_SELECTOR, NFT_PRECOMPILE_ADDRESS_PREFIX};
+use crate::{NFT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_NON_FUNGIBLE_CREATE_SELECTOR};
 use fp_evm::PrecompileOutput;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileHandle, PrecompileSet};
@@ -48,6 +48,7 @@ enum Action {
 	TotalSupply = "totalSupply()",
 	TokenOfOwnerByIndex = "tokenOfOwnerByIndex(address,uint256)",
 	TokenByIndex = "tokenByIndex(uint256)",
+	Approve = "approve(address,uint256)",
 }
 
 pub struct NonFungibleTokenExtension<Runtime>(PhantomData<Runtime>);
@@ -95,8 +96,6 @@ where
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
-			log::debug!(target: "token-non_fungible","withdraw balance: err = {:?}", address);
-			log::debug!(target: "token-non_fungible","withdraw balance: err = {:?}", non_fungible_token_id);
 			if pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
 				let result = {
 					let selector = match handle.read_selector() {
@@ -112,7 +111,7 @@ where
 						Action::TokenOfOwnerByIndex |
 						Action::TokenByIndex |
 						Action::BalanceOf => FunctionModifier::View,
-						Action::TransferFrom | Action::Mint | Action::Burn =>
+						Action::TransferFrom | Action::Mint | Action::Burn | Action::Approve =>
 							FunctionModifier::NonPayable,
 					}) {
 						return Some(Err(err))
@@ -132,12 +131,13 @@ where
 						Action::TransferFrom => Self::transfer_from(non_fungible_token_id, handle),
 						Action::Mint => Self::mint(non_fungible_token_id, handle),
 						Action::Burn => Self::burn(non_fungible_token_id, handle),
+						Action::Approve => Self::approve(non_fungible_token_id, handle),
 					}
 				};
 				return Some(result)
 			} else {
-				if &input[0..4] == CREATE_SELECTOR {
-					let result = Self::create(handle);
+				if &input[0..4] == TOKEN_NON_FUNGIBLE_CREATE_SELECTOR {
+					let result = Self::create(non_fungible_token_id, handle);
 					return Some(result)
 				}
 			}
@@ -169,11 +169,13 @@ where
 	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
-	fn create(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
+	fn create(
+		id: NonFungibleTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
-		input.expect_arguments(4)?;
+		input.expect_arguments(3)?;
 
-		let id = input.read::<u128>()?.into();
 		let name: Vec<u8> = input.read::<Bytes>()?.into();
 		let symbol: Vec<u8> = input.read::<Bytes>()?.into();
 		let base_uri: Vec<u8> = input.read::<Bytes>()?.into();
@@ -203,12 +205,11 @@ where
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(1)?;
 
-		let owner: H160 = input.read::<Address>()?.into();
+		let address = input.read::<Address>()?.0;
+		let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(address);
 
-		let balance: U256 = {
-			let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(owner);
-			pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into()
-		};
+		let balance: U256 =
+			pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into();
 
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
 	}
@@ -224,10 +225,36 @@ where
 
 		let owner_account_id: Runtime::AccountId =
 			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
-
 		let owner = Runtime::into_evm_address(owner_account_id);
 
 		Ok(succeed(EvmDataWriter::new().write::<Address>(owner.into()).build()))
+	}
+
+	fn approve(
+		id: NonFungibleTokenIdOf<Runtime>,
+		handle: &mut impl PrecompileHandle,
+	) -> EvmResult<PrecompileOutput> {
+		let mut input = handle.read_input()?;
+		input.expect_arguments(2)?;
+
+		let spender: H160 = input.read::<Address>()?.into();
+		let token_id = input.read::<TokenId>()?.into();
+
+		{
+			let caller: Runtime::AccountId =
+				Runtime::AddressMapping::into_account_id(handle.context().caller);
+			let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(spender);
+
+			// Dispatch call (if enough gas).
+			RuntimeHelper::<Runtime>::try_dispatch(
+				handle,
+				Some(caller).into(),
+				pallet_token_non_fungible::Call::<Runtime>::approve { id, to, token_id },
+			)?;
+		}
+
+		// Return call information
+		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
 
 	fn transfer_from(
@@ -304,7 +331,6 @@ where
 			let caller: Runtime::AccountId =
 				Runtime::AddressMapping::into_account_id(handle.context().caller);
 			let token_id: Runtime::TokenId = token_id.into();
-
 			// Dispatch call (if enough gas).
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
@@ -347,7 +373,7 @@ where
 		let token_uri: Vec<u8> =
 			pallet_token_non_fungible::Pallet::<Runtime>::token_uri(id, token_id);
 
-		Ok(succeed(EvmDataWriter::new().write(token_uri).build()))
+		Ok(succeed(EvmDataWriter::new().write::<Bytes>(token_uri.as_slice().into()).build()))
 	}
 
 	fn total_supply(
