@@ -86,6 +86,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
+					get_account_id_from_evm_address("573394b77fC17F91E9E67F147A9ECe24d67C5073"),
 					account("alice", 0, 0),
 					account("bob", 0, 0),
 					account("charlie", 0, 0),
