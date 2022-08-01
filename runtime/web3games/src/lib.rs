@@ -57,6 +57,7 @@ use static_assertions::const_assert;
 
 // A few exports that help ease life for downstream crates.
 use fp_rpc::TransactionStatus;
+use frame_support::traits::ConstBool;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
@@ -423,9 +424,30 @@ impl FeeCalculator for FixedGasPrice {
 	}
 }
 
+/// Current approximation of the gas/s consumption considering
+/// EVM execution over compiled WASM (on 4.4Ghz CPU).
+/// Given the 500ms Weight, from which 75% only are used for transactions,
+/// the total EVM execution gas limit is: GAS_PER_SECOND * 0.500 * 0.75 ~= 15_000_000.
+pub const GAS_PER_SECOND: u64 = 40_000_000;
+
+/// Approximate ratio of the amount of Weight per Gas.
+/// u64 works for approximations because Weight is a very small unit compared to gas.
+pub const WEIGHT_PER_GAS: u64 = WEIGHT_PER_SECOND / GAS_PER_SECOND;
+
+pub struct Web3GamesGasWeightMapping;
+
+impl pallet_evm::GasWeightMapping for Web3GamesGasWeightMapping {
+	fn gas_to_weight(gas: u64) -> Weight {
+		gas.saturating_mul(WEIGHT_PER_GAS)
+	}
+	fn weight_to_gas(weight: Weight) -> u64 {
+		u64::try_from(weight.wrapping_div(WEIGHT_PER_GAS)).unwrap_or(u32::MAX as u64)
+	}
+}
+
 impl pallet_evm::Config for Runtime {
 	type FeeCalculator = FixedGasPrice;
-	type GasWeightMapping = ();
+	type GasWeightMapping = Web3GamesGasWeightMapping;
 	type BlockHashMapping = pallet_ethereum::EthereumBlockHashMapping<Self>;
 	type CallOrigin = EnsureAddressTruncated;
 	type WithdrawOrigin = EnsureAddressTruncated;
@@ -444,6 +466,34 @@ impl pallet_evm::Config for Runtime {
 impl pallet_ethereum::Config for Runtime {
 	type Event = Event;
 	type StateRoot = pallet_ethereum::IntermediateStateRoot<Self>;
+}
+
+frame_support::parameter_types! {
+	pub BoundDivision: U256 = U256::from(1024);
+}
+
+frame_support::parameter_types! {
+	pub DefaultBaseFeePerGas: U256 = (100 * GIGAWEI).into();
+}
+
+pub struct BaseFeeThreshold;
+impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
+	fn lower() -> Permill {
+		Permill::zero()
+	}
+	fn ideal() -> Permill {
+		Permill::from_parts(500_000)
+	}
+	fn upper() -> Permill {
+		Permill::from_parts(1_000_000)
+	}
+}
+
+impl pallet_base_fee::Config for Runtime {
+	type Event = Event;
+	type Threshold = BaseFeeThreshold;
+	type IsActive = ConstBool<false>;
+	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
 parameter_types! {
@@ -519,39 +569,6 @@ parameter_types! {
 	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
-}
-
-frame_support::parameter_types! {
-	pub BoundDivision: U256 = U256::from(1024);
-}
-
-impl pallet_dynamic_fee::Config for Runtime {
-	type MinGasPriceBoundDivisor = BoundDivision;
-}
-
-frame_support::parameter_types! {
-	pub IsActive: bool = true;
-	pub DefaultBaseFeePerGas: U256 = (100 * GIGAWEI).into();
-}
-
-pub struct BaseFeeThreshold;
-impl pallet_base_fee::BaseFeeThreshold for BaseFeeThreshold {
-	fn lower() -> Permill {
-		Permill::zero()
-	}
-	fn ideal() -> Permill {
-		Permill::from_parts(500_000)
-	}
-	fn upper() -> Permill {
-		Permill::from_parts(1_000_000)
-	}
-}
-
-impl pallet_base_fee::Config for Runtime {
-	type Event = Event;
-	type Threshold = BaseFeeThreshold;
-	type IsActive = IsActive;
-	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
 parameter_types! {
@@ -639,7 +656,6 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
-		DynamicFee: pallet_dynamic_fee,
 		BaseFee: pallet_base_fee,
 		Treasury: pallet_treasury,
 

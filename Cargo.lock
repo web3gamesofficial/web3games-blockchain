@@ -4376,25 +4376,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-dynamic-fee"
-version = "4.0.0-dev"
-source = "git+https://github.com/web3gamesofficial/frontier?branch=polkadot-v0.9.23#ec987b2e82b5b7a1c935221ff578022cb19de29e"
-dependencies = [
- "async-trait",
- "fp-dynamic-fee",
- "fp-evm",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-ethereum"
 version = "4.0.0-dev"
 source = "git+https://github.com/web3gamesofficial/frontier?branch=polkadot-v0.9.23#ec987b2e82b5b7a1c935221ff578022cb19de29e"
@@ -9166,7 +9147,6 @@ dependencies = [
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
- "pallet-dynamic-fee",
  "pallet-ethereum",
  "pallet-evm",
  "pallet-grandpa",
