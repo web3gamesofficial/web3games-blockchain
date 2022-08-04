@@ -14,4 +14,4 @@ members = [
 panic = "unwind"
 
 [patch.crates-io]
-syn = { git = "https://github.com/dtolnay/syn", rev = "19b3f0b53525ac7ab0882882a822adbd874dbe8c" }
+syn = { git = "https://github.com/dtolnay/syn", rev = "60ecbac3767338ca070cddd539e4c403241e9f6a" }

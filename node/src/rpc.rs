@@ -170,18 +170,17 @@ where
 
 	io.merge(
 		Eth::new(
-			Arc::clone(&client),
-			Arc::clone(&pool),
+			client.clone(),
+			pool.clone(),
 			graph,
 			Some(web3games_runtime::TransactionConverter),
-			Arc::clone(&network),
+			network.clone(),
 			signers,
-			Arc::clone(&overrides),
-			Arc::clone(&backend),
+			overrides.clone(),
+			backend.clone(),
 			// Is authority.
 			is_authority,
-			Arc::clone(&block_data_cache),
-			fc_rpc::format::Geth,
+			block_data_cache.clone(),
 			fee_history_cache,
 			fee_history_limit,
 		)
@@ -192,7 +191,7 @@ where
 		io.merge(
 			EthFilter::new(
 				client.clone(),
-				backend,
+				backend.clone(),
 				filter_pool.clone(),
 				500 as usize, // max stored filters
 				max_past_logs,
@@ -204,7 +203,7 @@ where
 
 	io.merge(
 		Net::new(
-			Arc::clone(&client),
+			client.clone(),
 			network.clone(),
 			// Whether to format the `peer_count` response as Hex (default) or not.
 			true,
@@ -216,7 +215,7 @@ where
 	io.merge(
 		EthPubSub::new(
 			pool,
-			Arc::clone(&client),
+			client.clone(),
 			network.clone(),
 			subscription_task_executor,
 			overrides,

@@ -17,7 +17,7 @@
 //! Provide checks related to function modifiers (view/payable).
 
 use crate::{revert, EvmResult};
-use evm::Context;
+use fp_evm::Context;
 use sp_core::U256;
 
 /// Represents modifiers a Solidity function can be annotated with.
