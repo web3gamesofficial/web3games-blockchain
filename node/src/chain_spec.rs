@@ -186,32 +186,37 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 				// Initial PoA authorities
 				vec![
 					(
-						// 5CAGc2P2g6jUVSmdcpHbGD1MWvTe7jAAmoD6riLnXUjc5PV4
-						hex!["043e7709226be05310d0632dc1f7cb1b0016b74c0c051835e1093428a472d230"]
+						// 5D9idfnat7BcmSPLYP3YCgvUVz3gAMniZGuk6ztbf29rLdXs
+						hex!["300f128295a3d0b3cc605965357173112d4c1d1c5b3cadf179e9586d92ba2e02"]
 							.unchecked_into(),
-						// 5G8WWBAq4gpFLEnQjsxPkfYRdXNs3UkaeR8QG39HVjub8agw
-						hex!["b3d7b25de30f345bfb40e0fb78f86acc36a7edc045615d5dee2cb9539faa8219"]
+						hex!["300f128295a3d0b3cc605965357173112d4c1d1c5b3cadf179e9586d92ba2e02"]
 							.unchecked_into(),
 					),
 					(
-						// 5EL1RhP3yJNVF7k1nB9U8Dm5AbcFUEbD7ZQ4f3TUeHVYV6Vj
-						hex!["64244ac1fb0854c2f101beafa5d8032d0e381705514f74cf58c8f8361d65c769"]
+						// 5HfyQpxaw5jeKLHVbqq6NojZNHC7b54TqPEnF5eDJnLgFGYv
+						hex!["f8131e0eb898448b630516acfd69be6dbf8ab37a218fcc692d3a91e4f9a63b62"]
 							.unchecked_into(),
-						// 5EaM6zor3sPnqfYLM1CRu1RFPsyMkNa1B1r3J4itBSLs8mx8
-						hex!["6f13f7e727ef6b4094b346e351e66242b51fbbb6a2eac532b55389f1314d2d11"]
+						hex!["f8131e0eb898448b630516acfd69be6dbf8ab37a218fcc692d3a91e4f9a63b62"]
+							.unchecked_into(),
+					),
+					(
+						// 5CSj6yzHxZKwFNAmZFQ3kVTT5XeZZmn3QCpQwNyWeTqeJ89K
+						hex!["10cb989431c4a409f25864824e3239fb03f13e3fb4c761d51525c16259093e69"]
+							.unchecked_into(),
+						hex!["10cb989431c4a409f25864824e3239fb03f13e3fb4c761d51525c16259093e69"]
 							.unchecked_into(),
 					),
 				],
 				// Sudo account
 				hex![
-					// 5EUp2vXWQEmbT6ceUA5t3XCaHzvAbBgtXPYenE4ui6mhwX89
-					"6adb264c6a79923eb1b3d47feab4db75b0fd140ba31a1f0bfee91ba3070f3541"
+					// 5CXy43qEuaCtCdLG572vWvfY9wJFCRRiswts69QVPyKYjjCq
+					"14cac7ed1b42d80ddef944c866cf18675039ba3fe313f5ef45cfcc5e56e2cc05"
 				]
 				.into(),
 				// Pre-funded accounts
 				vec![
-					// 5EUp2vXWQEmbT6ceUA5t3XCaHzvAbBgtXPYenE4ui6mhwX89
-					hex!["6adb264c6a79923eb1b3d47feab4db75b0fd140ba31a1f0bfee91ba3070f3541"].into(),
+					// 5CXy43qEuaCtCdLG572vWvfY9wJFCRRiswts69QVPyKYjjCq
+					hex!["14cac7ed1b42d80ddef944c866cf18675039ba3fe313f5ef45cfcc5e56e2cc05"].into(),
 				],
 				true,
 			)
