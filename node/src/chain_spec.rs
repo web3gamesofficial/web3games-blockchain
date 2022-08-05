@@ -127,24 +127,27 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		move || {
 			testnet_genesis(
 				// Initial PoA authorities
-				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
+				vec![
+					(
+						hex!["4c01dad6312d317ffeebf238975f96aa265234de7d09e3ca6e00614a5d202253"].unchecked_into(),
+						hex!["4c01dad6312d317ffeebf238975f96aa265234de7d09e3ca6e00614a5d202253"].unchecked_into(),
+
+					),
+					(
+						hex!["f24b4004e6ab8cee11a3b858a0e3a1f6f8f0ac42dea770b52307ec4363bb2c32"].unchecked_into(),
+						hex!["f24b4004e6ab8cee11a3b858a0e3a1f6f8f0ac42dea770b52307ec4363bb2c32"].unchecked_into(),
+					),
+					(
+						hex!["24ffa2f506a5fd7a224db4ba8f0185e0387610cdd870122133fe3bb75cd72e4f"].unchecked_into(),
+						hex!["24ffa2f506a5fd7a224db4ba8f0185e0387610cdd870122133fe3bb75cd72e4f"].unchecked_into(),
+					)
+				],
 				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				hex!["b08026c5beb06a7852609d2cf71c011784f1c8cbcdb7c1169de8a9ad55652635"].into(),
+
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
+					hex!["b08026c5beb06a7852609d2cf71c011784f1c8cbcdb7c1169de8a9ad55652635"].into(),
 				],
 				true,
 			)
