@@ -129,37 +129,37 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 				// Initial PoA authorities
 				vec![
 					(
-						// 5D9idfnat7BcmSPLYP3YCgvUVz3gAMniZGuk6ztbf29rLdXs
-						hex!["300f128295a3d0b3cc605965357173112d4c1d1c5b3cadf179e9586d92ba2e02"]
+						// 5GYa9WoRvmLht9iup3amFBB4UjNCW2R8xRVwhR7MCpLdSbKH
+						hex!["c631da3aef4c3e6b3bde862db96fb9a324e1a11ae9d2a30b561945cc64f2fb18"]
 							.unchecked_into(),
-						hex!["300f128295a3d0b3cc605965357173112d4c1d1c5b3cadf179e9586d92ba2e02"]
-							.unchecked_into(),
-					),
-					(
-						// 5HfyQpxaw5jeKLHVbqq6NojZNHC7b54TqPEnF5eDJnLgFGYv
-						hex!["f8131e0eb898448b630516acfd69be6dbf8ab37a218fcc692d3a91e4f9a63b62"]
-							.unchecked_into(),
-						hex!["f8131e0eb898448b630516acfd69be6dbf8ab37a218fcc692d3a91e4f9a63b62"]
+						hex!["c631da3aef4c3e6b3bde862db96fb9a324e1a11ae9d2a30b561945cc64f2fb18"]
 							.unchecked_into(),
 					),
 					(
-						// 5CSj6yzHxZKwFNAmZFQ3kVTT5XeZZmn3QCpQwNyWeTqeJ89K
-						hex!["10cb989431c4a409f25864824e3239fb03f13e3fb4c761d51525c16259093e69"]
+						// 5GHXaVCFM2LdAFNVemsCEqbsMK8LuFG8o9Pq13wywKMLaAEa
+						hex!["bab88599ead1d86bc16e74cf3ad8f2f22569a8793e54adf4fcdd6162a6f4356b"]
 							.unchecked_into(),
-						hex!["10cb989431c4a409f25864824e3239fb03f13e3fb4c761d51525c16259093e69"]
+						hex!["bab88599ead1d86bc16e74cf3ad8f2f22569a8793e54adf4fcdd6162a6f4356b"]
+							.unchecked_into(),
+					),
+					(
+						// 5DPjDKCSYdQ8m2LSkCHRYWTqUvrFyEDJreqAqu9LUskdyF2a
+						hex!["3abe75f1336eb33a5ea5a405dfea5bd4ba82d582b66c40f222ddd327e6b9e43a"]
+							.unchecked_into(),
+						hex!["3abe75f1336eb33a5ea5a405dfea5bd4ba82d582b66c40f222ddd327e6b9e43a"]
 							.unchecked_into(),
 					),
 				],
 				// Sudo account
 				hex![
-					// 5CXy43qEuaCtCdLG572vWvfY9wJFCRRiswts69QVPyKYjjCq
-					"14cac7ed1b42d80ddef944c866cf18675039ba3fe313f5ef45cfcc5e56e2cc05"
+					// 5HpyZaDZ94vnWybkUQ685wUDgSVbrWHfUbnvhmMm3ApMZRRU
+					"fef0d56a7fc5ce70f30865ec5a50acfcee298618d0bfa1cdbf966e5b3cbf537a"
 				]
 				.into(),
 				// Pre-funded accounts
 				vec![
-					// 5CXy43qEuaCtCdLG572vWvfY9wJFCRRiswts69QVPyKYjjCq
-					hex!["14cac7ed1b42d80ddef944c866cf18675039ba3fe313f5ef45cfcc5e56e2cc05"].into(),
+					// 5HpyZaDZ94vnWybkUQ685wUDgSVbrWHfUbnvhmMm3ApMZRRU
+					hex!["fef0d56a7fc5ce70f30865ec5a50acfcee298618d0bfa1cdbf966e5b3cbf537a"].into(),
 				],
 				true,
 			)
