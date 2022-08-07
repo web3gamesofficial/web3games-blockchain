@@ -117,63 +117,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	Ok(ChainSpec::from_genesis(
-		// Name
-		"Web3Games Local Testnet",
-		// ID
-		"web3games_local",
-		ChainType::Local,
-		move || {
-			testnet_genesis(
-				// Initial PoA authorities
-				vec![
-					(
-						hex!["4c01dad6312d317ffeebf238975f96aa265234de7d09e3ca6e00614a5d202253"].unchecked_into(),
-						hex!["4c01dad6312d317ffeebf238975f96aa265234de7d09e3ca6e00614a5d202253"].unchecked_into(),
-
-					),
-					(
-						hex!["f24b4004e6ab8cee11a3b858a0e3a1f6f8f0ac42dea770b52307ec4363bb2c32"].unchecked_into(),
-						hex!["f24b4004e6ab8cee11a3b858a0e3a1f6f8f0ac42dea770b52307ec4363bb2c32"].unchecked_into(),
-					),
-					(
-						hex!["24ffa2f506a5fd7a224db4ba8f0185e0387610cdd870122133fe3bb75cd72e4f"].unchecked_into(),
-						hex!["24ffa2f506a5fd7a224db4ba8f0185e0387610cdd870122133fe3bb75cd72e4f"].unchecked_into(),
-					)
-				],
-				// Sudo account
-				hex!["b08026c5beb06a7852609d2cf71c011784f1c8cbcdb7c1169de8a9ad55652635"].into(),
-
-				// Pre-funded accounts
-				vec![
-					hex!["b08026c5beb06a7852609d2cf71c011784f1c8cbcdb7c1169de8a9ad55652635"].into(),
-				],
-				true,
-			)
-		},
-		// Bootnodes
-		vec![],
-		// Telemetry
-		None,
-		// Protocol ID
-		None,
-		None,
-		// Properties
-		Some(
-			json!({
-				"tokenDecimals": 18,
-				"tokenSymbol": "W3G"
-			})
-			.as_object()
-			.expect("Provided valid json map")
-			.clone(),
-		),
-		// Extensions
-		None,
-	))
-}
-
 pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -256,7 +199,7 @@ fn testnet_genesis(
 	// (PUSH1 0x00 PUSH1 0x00 REVERT)
 	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
-	const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
+	const ENDOWMENT: Balance = 1_000_000_000 * DOLLARS;
 
 	GenesisConfig {
 		system: SystemConfig {
