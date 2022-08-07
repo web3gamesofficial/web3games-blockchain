@@ -132,21 +132,21 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 						// 5EUtNQbg2daQD7oB8tBZVZ3Gd3pVjGxgHZPXCfSoJA6QpmAj
 						hex!["6ae9bee2cebe04b6bd4acd7e629a3c8af34b65c1f9e915dcc42b5e08d7930032"]
 							.unchecked_into(),
-						hex!["6ae9bee2cebe04b6bd4acd7e629a3c8af34b65c1f9e915dcc42b5e08d7930032"]
+						hex!["2234bbfe296f6b838e722d3819a0ecc7b8888ccbed0fb9fa385c99c8ea30fa97"]
 							.unchecked_into(),
 					),
 					(
 						// 5EsokJBjEaUe2kiEDff6sgZZEWoBn9MBuxLLsc1ZmGGuTJUR
 						hex!["7c64d433048fd5333deffd3d8f94fd17c4992bdd1713d10c335fbe22480d1075"]
 							.unchecked_into(),
-						hex!["7c64d433048fd5333deffd3d8f94fd17c4992bdd1713d10c335fbe22480d1075"]
+						hex!["75635aa9b2b49d164a4842271b99ed03ea91473bba2fe89afb5f2742aa615c81"]
 							.unchecked_into(),
 					),
 					(
 						// 5HdR6zK7hSV5uQPxUCP13j7G1M8eh16qxZ1UgY4Y2HsvYzq3
 						hex!["f61fdea138c1586a3d16236c5d980b2ddad2bde3b508798ba036954922d5a63b"]
 							.unchecked_into(),
-						hex!["f61fdea138c1586a3d16236c5d980b2ddad2bde3b508798ba036954922d5a63b"]
+						hex!["566bbb4c47fe2e370969f6a50d7a74a310e8ccb0493908429e5f3041bcd5dfa7"]
 							.unchecked_into(),
 					),
 				],
