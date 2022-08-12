@@ -117,60 +117,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 	))
 }
 
-pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	Ok(ChainSpec::from_genesis(
-		// Name
-		"Web3Games Local Testnet",
-		// ID
-		"web3games_local",
-		ChainType::Local,
-		move || {
-			testnet_genesis(
-				// Initial PoA authorities
-				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
-				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
-				// Pre-funded accounts
-				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-					get_account_id_from_evm_address("6be02d1d3665660d22ff9624b7be0551ee1ac91b"),
-				],
-				true,
-			)
-		},
-		// Bootnodes
-		vec![],
-		// Telemetry
-		None,
-		// Protocol ID
-		None,
-		None,
-		// Properties
-		Some(
-			json!({
-				"tokenDecimals": 18,
-				"tokenSymbol": "W3G"
-			})
-			.as_object()
-			.expect("Provided valid json map")
-			.clone(),
-		),
-		// Extensions
-		None,
-	))
-}
-
 pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -183,32 +129,37 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 				// Initial PoA authorities
 				vec![
 					(
-						// 5CAGc2P2g6jUVSmdcpHbGD1MWvTe7jAAmoD6riLnXUjc5PV4
-						hex!["043e7709226be05310d0632dc1f7cb1b0016b74c0c051835e1093428a472d230"]
+						// 5EUtNQbg2daQD7oB8tBZVZ3Gd3pVjGxgHZPXCfSoJA6QpmAj
+						hex!["6ae9bee2cebe04b6bd4acd7e629a3c8af34b65c1f9e915dcc42b5e08d7930032"]
 							.unchecked_into(),
-						// 5G8WWBAq4gpFLEnQjsxPkfYRdXNs3UkaeR8QG39HVjub8agw
-						hex!["b3d7b25de30f345bfb40e0fb78f86acc36a7edc045615d5dee2cb9539faa8219"]
+						hex!["2234bbfe296f6b838e722d3819a0ecc7b8888ccbed0fb9fa385c99c8ea30fa97"]
 							.unchecked_into(),
 					),
 					(
-						// 5EL1RhP3yJNVF7k1nB9U8Dm5AbcFUEbD7ZQ4f3TUeHVYV6Vj
-						hex!["64244ac1fb0854c2f101beafa5d8032d0e381705514f74cf58c8f8361d65c769"]
+						// 5EsokJBjEaUe2kiEDff6sgZZEWoBn9MBuxLLsc1ZmGGuTJUR
+						hex!["7c64d433048fd5333deffd3d8f94fd17c4992bdd1713d10c335fbe22480d1075"]
 							.unchecked_into(),
-						// 5EaM6zor3sPnqfYLM1CRu1RFPsyMkNa1B1r3J4itBSLs8mx8
-						hex!["6f13f7e727ef6b4094b346e351e66242b51fbbb6a2eac532b55389f1314d2d11"]
+						hex!["75635aa9b2b49d164a4842271b99ed03ea91473bba2fe89afb5f2742aa615c81"]
+							.unchecked_into(),
+					),
+					(
+						// 5HdR6zK7hSV5uQPxUCP13j7G1M8eh16qxZ1UgY4Y2HsvYzq3
+						hex!["f61fdea138c1586a3d16236c5d980b2ddad2bde3b508798ba036954922d5a63b"]
+							.unchecked_into(),
+						hex!["566bbb4c47fe2e370969f6a50d7a74a310e8ccb0493908429e5f3041bcd5dfa7"]
 							.unchecked_into(),
 					),
 				],
 				// Sudo account
 				hex![
-					// 5EUp2vXWQEmbT6ceUA5t3XCaHzvAbBgtXPYenE4ui6mhwX89
-					"6adb264c6a79923eb1b3d47feab4db75b0fd140ba31a1f0bfee91ba3070f3541"
+					// 5FAGs5u263xUEycR5vJUqjrcjnEox2GWm4ZENsL1BYfFzhMc
+					"88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"
 				]
 				.into(),
 				// Pre-funded accounts
 				vec![
-					// 5EUp2vXWQEmbT6ceUA5t3XCaHzvAbBgtXPYenE4ui6mhwX89
-					hex!["6adb264c6a79923eb1b3d47feab4db75b0fd140ba31a1f0bfee91ba3070f3541"].into(),
+					// 5FAGs5u263xUEycR5vJUqjrcjnEox2GWm4ZENsL1BYfFzhMc
+					hex!["88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"].into(),
 				],
 				true,
 			)
@@ -248,7 +199,7 @@ fn testnet_genesis(
 	// (PUSH1 0x00 PUSH1 0x00 REVERT)
 	let revert_bytecode = vec![0x60, 0x00, 0x60, 0x00, 0xFD];
 
-	const ENDOWMENT: Balance = 100_000_000 * DOLLARS;
+	const ENDOWMENT: Balance = 1_000_000_000 * DOLLARS;
 
 	GenesisConfig {
 		system: SystemConfig {
