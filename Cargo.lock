@@ -5222,6 +5222,7 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
+ "pallet-exchange",
  "pallet-support",
  "pallet-token-fungible",
  "pallet-token-multi",

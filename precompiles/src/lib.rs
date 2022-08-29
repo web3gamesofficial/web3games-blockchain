@@ -33,10 +33,12 @@ use sp_std::{marker::PhantomData, prelude::*};
 mod token_fungible;
 mod token_multi;
 mod token_non_fungible;
+// mod exchange;
 
 pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
 pub use token_non_fungible::NonFungibleTokenExtension;
+// pub use exchange::ExchangeExtension;
 
 /// Function Selector of "create": 0x42ecabc0
 pub const TOKEN_FUNGIBLE_CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
@@ -81,10 +83,12 @@ where
 	R: pallet_evm::Config
 		+ pallet_token_fungible::Config
 		+ pallet_token_non_fungible::Config
-		+ pallet_token_multi::Config,
+		+ pallet_token_multi::Config
+		+ pallet_exchange::Config,
 	R::Call: From<pallet_token_fungible::Call<R>>,
 	R::Call: From<pallet_token_non_fungible::Call<R>>,
 	R::Call: From<pallet_token_multi::Call<R>>,
+	R::Call: From<pallet_exchange::Call<R>>,
 	<R as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
 	<R as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
@@ -110,6 +114,8 @@ where
 			a if a == hash(1026) => Some(ECRecoverPublicKey::execute(handle)),
 
 			// Web3Games precompiles
+			// a if a == hash(1027) => ExchangeExtension::<R>::new().execute(handle),
+
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX =>
 			// Some(<FungibleTokenExtension<R> as Precompile>::execute(handle)),
 				FungibleTokenExtension::<R>::new().execute(handle),
