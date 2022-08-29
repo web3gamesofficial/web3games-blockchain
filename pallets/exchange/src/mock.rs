@@ -22,11 +22,11 @@ use frame_support::{
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
-use primitives::{Balance,AccountId};
+use primitives::{AccountId, Balance};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, IdentityLookup,AccountIdConversion},
+	traits::{AccountIdConversion, BlakeTwo256, IdentityLookup},
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -134,8 +134,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
 	}
-		.assimilate_storage(&mut t)
-		.unwrap();
+	.assimilate_storage(&mut t)
+	.unwrap();
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
 	ext

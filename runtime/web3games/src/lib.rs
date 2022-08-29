@@ -618,7 +618,6 @@ impl pallet_token_fungible::Config for Runtime {
 	type WeightInfo = pallet_token_fungible::weights::W3GWeight<Runtime>;
 }
 
-
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;

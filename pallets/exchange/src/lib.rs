@@ -26,12 +26,11 @@ use frame_support::{
 	PalletId,
 };
 use integer_sqrt::IntegerSquareRoot;
-use log::log;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, TrailingZeroInput, Zero},
+	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
 	RuntimeDebug,
 };
 use sp_std::{cmp, prelude::*};
@@ -104,7 +103,6 @@ pub mod pallet {
 	pub(super) type GetPool<T: Config> =
 		StorageMap<_, Blake2_128, (T::FungibleTokenId, T::FungibleTokenId), T::PoolId, ValueQuery>;
 
-
 	#[pallet::storage]
 	#[pallet::getter(fn reserves)]
 	pub(super) type Reserves<T: Config> =
@@ -113,7 +111,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		PoolCreated(T::PoolId,T::FungibleTokenId,T::FungibleTokenId, T::AccountId),
+		PoolCreated(T::PoolId, T::FungibleTokenId, T::FungibleTokenId, T::AccountId),
 		LiquidityAdded(T::PoolId, Balance, Balance, Balance),
 		LiquidityRemoved(T::PoolId),
 		Swapped(T::PoolId),
@@ -233,7 +231,6 @@ pub mod pallet {
 				liquidity,
 			)?;
 
-
 			let (amount_0, amount_1) = Self::burn(&who, id, &to)?;
 			let (token_0, _token_1) = Self::sort_tokens(token_a, token_b);
 			let (amount_a, amount_b) =
@@ -352,7 +349,7 @@ impl<T: Config> Pallet<T> {
 		Pools::<T>::insert(id, pool);
 		GetPool::<T>::insert((token_a, token_b), id);
 
-		Self::deposit_event(Event::PoolCreated(id,token_a,token_b,who.clone()));
+		Self::deposit_event(Event::PoolCreated(id, token_a, token_b, who.clone()));
 
 		Ok(id)
 	}
@@ -473,8 +470,8 @@ impl<T: Config> Pallet<T> {
 		let balance_1_adjusted =
 			balance_1 * Balance::from(1000u128) - (amount_1_in * Balance::from(3u128));
 		ensure!(
-			balance_0_adjusted * balance_1_adjusted
-				>= reserve_0 * reserve_1 * Balance::from(1000u128) * Balance::from(1000u128),
+			balance_0_adjusted * balance_1_adjusted >=
+				reserve_0 * reserve_1 * Balance::from(1000u128) * Balance::from(1000u128),
 			Error::<T>::AdjustedError
 		);
 
@@ -484,7 +481,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn mint(
-		who: &T::AccountId,
+		_who: &T::AccountId,
 		id: T::PoolId,
 		to: &T::AccountId,
 	) -> Result<Balance, DispatchError> {
@@ -521,7 +518,12 @@ impl<T: Config> Pallet<T> {
 				cmp::min(amount_a * total_supply / reserve_a, amount_b * total_supply / reserve_b);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(pool.lp_token, &Self::account_id(), to.clone(), liquidity)?;
+		pallet_token_fungible::Pallet::<T>::do_mint(
+			pool.lp_token,
+			&Self::account_id(),
+			to.clone(),
+			liquidity,
+		)?;
 
 		Self::do_update(id, balance_a, balance_b, reserve_a, reserve_b)?;
 

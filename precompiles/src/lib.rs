@@ -29,17 +29,16 @@ use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripe
 use pallet_support::AccountMapping;
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
-use frame_support::log;
 
+mod exchange;
 mod token_fungible;
 mod token_multi;
 mod token_non_fungible;
-mod exchange;
 
+pub use exchange::ExchangeExtension;
 pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
 pub use token_non_fungible::NonFungibleTokenExtension;
-pub use exchange::ExchangeExtension;
 
 /// Function Selector of "create": 0x42ecabc0
 pub const TOKEN_FUNGIBLE_CREATE_SELECTOR: &[u8] = &[66u8, 236u8, 171u8, 192u8];
@@ -58,9 +57,6 @@ pub const NFT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[254u8, 255u8, 255u8, 255u8];
 
 /// Multi Token prefix with 0xFDFFFFFF.
 pub const MT_PRECOMPILE_ADDRESS_PREFIX: &[u8] = &[253u8, 255u8, 255u8, 255u8];
-
-/// Multi Token prefix with 0xFDFFFFFF.
-pub const EXCHANGE: &[u8] = &[0u8, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16,39];
 
 #[derive(Debug, Clone, Copy)]
 pub struct Web3GamesPrecompiles<R>(PhantomData<R>);
@@ -102,9 +98,6 @@ where
 	R: AccountMapping<R::AccountId>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {
-		log::debug!(target: "exchange", "log--------------: {:?}", handle.code_address());
-		log::debug!(target: "exchange", "log--------------SWAP: {:?}", EXCHANGE);
-		log::debug!(target: "exchange", "log--------------SWAP: {:?}", hash(1027));
 		match handle.code_address() {
 			// Ethereum precompiles :
 			a if a == hash(1) => Some(ECRecover::execute(handle)),

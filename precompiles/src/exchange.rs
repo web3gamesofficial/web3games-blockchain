@@ -16,16 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{FT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_FUNGIBLE_CREATE_SELECTOR};
 use fp_evm::{PrecompileHandle, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
-use pallet_support::{FungibleMetadata, TokenIdConversion};
 use precompile_utils::prelude::*;
 use primitives::Balance;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
-use frame_support::log;
 
 pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;
 pub type PoolId<Runtime> = <Runtime as pallet_exchange::Config>::PoolId;
@@ -36,8 +33,10 @@ enum Action {
 	CreatePool = "create_pool(uint256,uint256)",
 	AddLiquidity = "add_liquidity(uint256,uint256,uint256,uint256,uint256,address)",
 	RemoveLiquidity = "remove_liquidity(uint256,uint256,uint256,uint256,uint256,uint256,address)",
-	SwapExactTokensForTokens = "swap_exact_tokens_for_tokens(uint256,uint256,uint256,uint256[],address)",
-	SwapTokensForExactTokens = "swap_tokens_for_exact_tokens(uint256,uint256,uint256,uint256[],address)",
+	SwapExactTokensForTokens =
+		"swap_exact_tokens_for_tokens(uint256,uint256,uint256,uint256[],address)",
+	SwapTokensForExactTokens =
+		"swap_tokens_for_exact_tokens(uint256,uint256,uint256,uint256[],address)",
 }
 
 pub struct ExchangeExtension<Runtime>(PhantomData<Runtime>);
@@ -52,8 +51,6 @@ where
 	<Runtime as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
-		let address = handle.code_address();
-		let input = handle.input();
 		let result = {
 			let selector = match handle.read_selector() {
 				Ok(selector) => selector,
@@ -78,7 +75,7 @@ where
 		};
 		Some(result)
 	}
-	fn is_precompile(&self, address: H160) -> bool {
+	fn is_precompile(&self, _address: H160) -> bool {
 		true
 	}
 }
@@ -97,11 +94,8 @@ where
 	Runtime::Call: From<pallet_exchange::Call<Runtime>>,
 	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 	<Runtime as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
-
 {
-	fn create_pool(
-		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<PrecompileOutput> {
+	fn create_pool(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(2)?;
 		let token_a: FungibleTokenIdOf<Runtime> = input.read::<u128>()?.into();
@@ -113,14 +107,12 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::create_pool { token_a,token_b  },
+				pallet_exchange::Call::<Runtime>::create_pool { token_a, token_b },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
-	fn add_liquidity(
-		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<PrecompileOutput> {
+	fn add_liquidity(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(5)?;
 		let id: PoolId<Runtime> = input.read::<u128>()?.into();
@@ -137,16 +129,20 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::add_liquidity { id,amount_a_desired,amount_b_desired,amount_a_min,amount_b_min,to},
+				pallet_exchange::Call::<Runtime>::add_liquidity {
+					id,
+					amount_a_desired,
+					amount_b_desired,
+					amount_a_min,
+					amount_b_min,
+					to,
+				},
 			)?;
 		}
 
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
 	}
-	fn remove_liquidity(
-		handle: &mut impl PrecompileHandle,
-	) -> EvmResult<PrecompileOutput> {
-
+	fn remove_liquidity(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(7)?;
 		let id: PoolId<Runtime> = input.read::<u128>()?.into();
@@ -164,7 +160,15 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::remove_liquidity { id,token_a,token_b,liquidity,amount_a_min,amount_b_min,to},
+				pallet_exchange::Call::<Runtime>::remove_liquidity {
+					id,
+					token_a,
+					token_b,
+					liquidity,
+					amount_a_min,
+					amount_b_min,
+					to,
+				},
 			)?;
 		}
 
@@ -173,16 +177,15 @@ where
 	fn swap_exact_tokens_for_tokens(
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(5)?;
 		let id: PoolId<Runtime> = input.read::<u128>()?.into();
 		let amount_in: Balance = input.read::<u128>()?.into();
 		let amount_out_min: Balance = input.read::<u128>()?.into();
 		let u128_path = input.read::<Vec<u128>>()?;
-		let mut path:Vec<FungibleTokenIdOf<Runtime>> = vec![];
+		let mut path: Vec<FungibleTokenIdOf<Runtime>> = vec![];
 		for i in 0..u128_path.len() {
-			path.push( u128_path[i].into())
+			path.push(u128_path[i].into())
 		}
 		let to: H160 = input.read::<Address>()?.into();
 		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
@@ -193,7 +196,13 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_exact_tokens_for_tokens { id,amount_in,amount_out_min,path,to},
+				pallet_exchange::Call::<Runtime>::swap_exact_tokens_for_tokens {
+					id,
+					amount_in,
+					amount_out_min,
+					path,
+					to,
+				},
 			)?;
 		}
 
@@ -202,16 +211,15 @@ where
 	fn swap_tokens_for_exact_tokens(
 		handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
 		input.expect_arguments(5)?;
 		let id: PoolId<Runtime> = input.read::<u128>()?.into();
 		let amount_out: Balance = input.read::<u128>()?.into();
 		let amount_in_max: Balance = input.read::<u128>()?.into();
 		let u128_path = input.read::<Vec<u128>>()?;
-		let mut path:Vec<FungibleTokenIdOf<Runtime>> = vec![];
+		let mut path: Vec<FungibleTokenIdOf<Runtime>> = vec![];
 		for i in 0..u128_path.len() {
-			path.push( u128_path[i].into())
+			path.push(u128_path[i].into())
 		}
 		let to: H160 = input.read::<Address>()?.into();
 		let to: Runtime::AccountId = Runtime::AddressMapping::into_account_id(to);
@@ -222,7 +230,13 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_tokens_for_exact_tokens { id,amount_out,amount_in_max,path,to},
+				pallet_exchange::Call::<Runtime>::swap_tokens_for_exact_tokens {
+					id,
+					amount_out,
+					amount_in_max,
+					path,
+					to,
+				},
 			)?;
 		}
 
