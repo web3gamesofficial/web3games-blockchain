@@ -648,7 +648,7 @@ parameter_types! {
 impl pallet_exchange::Config for Runtime {
 	type Event = Event;
 	type PalletId = ExchangePalletId;
-	type PoolId = u32;
+	type PoolId = u128;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
