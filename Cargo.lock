@@ -4569,6 +4569,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-exchange"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "integer-sqrt",
+ "log",
+ "pallet-balances",
+ "pallet-randomness-collective-flip",
+ "pallet-timestamp",
+ "pallet-token-fungible",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#e8a7d161f39db70cb27fdad6c6e215cf493ebc3b"
@@ -9253,6 +9274,7 @@ dependencies = [
  "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum",
  "pallet-evm",
+ "pallet-exchange",
  "pallet-grandpa",
  "pallet-preimage",
  "pallet-randomness-collective-flip",

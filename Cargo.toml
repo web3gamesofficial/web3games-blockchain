@@ -1,8 +1,6 @@
 [workspace]
 members = [
-	"pallets/token-fungible",
-	"pallets/token-multi",
-	"pallets/token-non-fungible",
+	"pallets/*",
 	"primitives",
 	"chain-extensions",
 	"precompiles",

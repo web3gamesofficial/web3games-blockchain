@@ -618,6 +618,7 @@ impl pallet_token_fungible::Config for Runtime {
 	type WeightInfo = pallet_token_fungible::weights::W3GWeight<Runtime>;
 }
 
+
 impl pallet_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
@@ -638,6 +639,20 @@ impl pallet_token_multi::Config for Runtime {
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 	type WeightInfo = pallet_token_multi::weights::W3GWeight<Runtime>;
+}
+
+parameter_types! {
+	pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account_truncating();
+}
+
+impl pallet_exchange::Config for Runtime {
+	type Event = Event;
+	type PalletId = ExchangePalletId;
+	type PoolId = u32;
+	type CreatePoolDeposit = CreatePoolDeposit;
+	type Currency = Balances;
+	type Randomness = RandomnessCollectiveFlip;
+	type FeesCollector = TreasuryAccount;
 }
 
 construct_runtime!(
@@ -666,6 +681,7 @@ construct_runtime!(
 		TokenFungible: pallet_token_fungible,
 		TokenNonFungible: pallet_token_non_fungible,
 		TokenMulti: pallet_token_multi,
+		Exchange: pallet_exchange,
 	}
 );
 

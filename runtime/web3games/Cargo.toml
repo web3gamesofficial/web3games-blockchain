@@ -68,6 +68,7 @@ pallet-token-fungible = { path = "../../pallets/token-fungible", default-feature
 pallet-token-non-fungible = { path = "../../pallets/token-non-fungible", default-features = false }
 pallet-token-multi = { path = "../../pallets/token-multi", default-features = false }
 pallet-support = { path = "../../pallets/support", default-features = false }
+pallet-exchange = { path = "../../pallets/exchange", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
@@ -119,6 +120,7 @@ std = [
 	"pallet-token-non-fungible/std",
 	"pallet-token-multi/std",
 	"pallet-support/std",
+	"pallet-exchange/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
