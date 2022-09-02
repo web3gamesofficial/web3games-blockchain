@@ -243,5 +243,6 @@ fn testnet_genesis(
 			Permill::from_parts(1250u32),
 		),
 		treasury: Default::default(),
+		wrap_currency: Default::default(),
 	}
 }

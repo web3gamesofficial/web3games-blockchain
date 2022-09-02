@@ -654,6 +654,14 @@ impl pallet_exchange::Config for Runtime {
 	type FeesCollector = TreasuryAccount;
 }
 
+impl pallet_wrap_currency::Config for Runtime {
+	type Event = Event;
+	type PalletId = WrapCurrencyPalletId;
+	type Currency = Balances;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Randomness = RandomnessCollectiveFlip;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -681,6 +689,7 @@ construct_runtime!(
 		TokenNonFungible: pallet_token_non_fungible,
 		TokenMulti: pallet_token_multi,
 		Exchange: pallet_exchange,
+		WrapCurrency: pallet_wrap_currency,
 	}
 );
 

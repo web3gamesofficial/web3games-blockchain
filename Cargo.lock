@@ -4845,6 +4845,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-wrap-currency"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-token-fungible",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "parity-db"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9289,6 +9307,7 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-treasury",
+ "pallet-wrap-currency",
  "parity-scale-codec",
  "precompiles",
  "primitives",
