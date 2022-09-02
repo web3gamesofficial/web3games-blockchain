@@ -71,6 +71,9 @@ pallet-support = { path = "../../pallets/support", default-features = false }
 pallet-exchange = { path = "../../pallets/exchange", default-features = false }
 pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
 
+# local pallet rpc
+pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
+
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
 
@@ -123,6 +126,7 @@ std = [
 	"pallet-support/std",
 	"pallet-exchange/std",
 	"pallet-wrap-currency/std",
+	"pallet-exchange-rpc-runtime-api/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",

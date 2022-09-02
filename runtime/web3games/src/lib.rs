@@ -1149,6 +1149,24 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
+		fn get_amount_in_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
+			if let Ok(amounts) = Exchange::get_amounts_in(pool_id,supply,path) {
+				Some(amounts[0])
+			}else{
+				None
+			}
+		}
+
+		fn get_amount_out_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
+		   if let Ok(amounts) = Exchange::get_amounts_out(pool_id,supply,path) {
+				Some(amounts[amounts.len()-1])
+			}else{
+				None
+			}
+		}
+	}
+
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn benchmark_metadata(extra: bool) -> (

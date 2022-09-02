@@ -129,6 +129,7 @@ where
 	C::Api: fp_rpc::ConvertTransactionRuntimeApi<Block>,
 	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
 	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
+	C::Api: pallet_exchange_rpc::ExchangeRuntimeApi<Block, AccountId>,
 	P: TransactionPool<Block = Block> + 'static,
 	A: ChainApi<Block = Block> + 'static,
 {
@@ -137,6 +138,7 @@ where
 		EthPubSubApiServer, EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
 	};
 	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
+	use pallet_exchange_rpc::{ExchangeRpc, ExchangeRpcApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
 
@@ -162,6 +164,7 @@ where
 	io.merge(System::new(Arc::clone(&client), Arc::clone(&pool), deny_unsafe).into_rpc())?;
 	io.merge(TransactionPayment::new(Arc::clone(&client)).into_rpc())?;
 	io.merge(Contracts::new(Arc::clone(&client)).into_rpc())?;
+	io.merge(ExchangeRpc::new(Arc::clone(&client)).into_rpc())?;
 
 	let mut signers = Vec::new();
 	if enable_dev_signer {
