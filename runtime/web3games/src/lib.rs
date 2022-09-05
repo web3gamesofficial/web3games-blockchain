@@ -654,6 +654,14 @@ impl pallet_exchange::Config for Runtime {
 	type FeesCollector = TreasuryAccount;
 }
 
+impl pallet_wrap_currency::Config for Runtime {
+	type Event = Event;
+	type PalletId = WrapCurrencyPalletId;
+	type Currency = Balances;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	type Randomness = RandomnessCollectiveFlip;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -681,6 +689,7 @@ construct_runtime!(
 		TokenNonFungible: pallet_token_non_fungible,
 		TokenMulti: pallet_token_multi,
 		Exchange: pallet_exchange,
+		WrapCurrency: pallet_wrap_currency,
 	}
 );
 
@@ -1137,6 +1146,24 @@ impl_runtime_apis! {
 		}
 		fn query_fee_details(uxt: <Block as BlockT>::Extrinsic, len: u32) -> FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
+		}
+	}
+
+	impl pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
+		fn get_amount_in_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
+			if let Ok(amounts) = Exchange::get_amounts_in(pool_id,supply,path) {
+				Some(amounts[0])
+			}else{
+				None
+			}
+		}
+
+		fn get_amount_out_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
+		   if let Ok(amounts) = Exchange::get_amounts_out(pool_id,supply,path) {
+				Some(amounts[amounts.len()-1])
+			}else{
+				None
+			}
 		}
 	}
 
