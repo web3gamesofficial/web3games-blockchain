@@ -640,10 +640,6 @@ impl pallet_token_multi::Config for Runtime {
 	type WeightInfo = pallet_token_multi::weights::W3GWeight<Runtime>;
 }
 
-parameter_types! {
-	pub TreasuryAccount: AccountId = TreasuryPalletId::get().into_account_truncating();
-}
-
 impl pallet_exchange::Config for Runtime {
 	type Event = Event;
 	type PalletId = ExchangePalletId;
@@ -651,7 +647,6 @@ impl pallet_exchange::Config for Runtime {
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
-	type FeesCollector = TreasuryAccount;
 }
 
 impl pallet_wrap_currency::Config for Runtime {
@@ -1150,18 +1145,45 @@ impl_runtime_apis! {
 	}
 
 	impl pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
-		fn get_amount_in_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
-			if let Ok(amounts) = Exchange::get_amounts_in(pool_id,supply,path) {
-				Some(amounts[0])
+		fn get_amount_in_price(supply: Balance, path: Vec<u128>) -> Option<Vec<Balance>> {
+			if let Ok(amounts) = Exchange::get_amounts_in(supply,path) {
+				Some(amounts)
 			}else{
 				None
 			}
 		}
 
-		fn get_amount_out_price(pool_id:u128, supply: Balance,path: Vec<u128>) -> Option<Balance> {
-		   if let Ok(amounts) = Exchange::get_amounts_out(pool_id,supply,path) {
-				Some(amounts[amounts.len()-1])
+		fn get_amount_out_price(supply: Balance,path: Vec<u128>) -> Option<Vec<Balance>> {
+		   if let Ok(amounts) = Exchange::get_amounts_out(supply,path) {
+				Some(amounts)
 			}else{
+				None
+			}
+		}
+		fn get_estimate_lp_token(
+			token_0: u128,
+			amount_0: Balance,
+			token_1: u128,
+			amount_1: Balance
+		) -> Option<Balance> {
+			if let Ok(liquidity) = Exchange::get_liquidity(token_0,amount_0,token_1,amount_1) {
+				Some(liquidity)
+			} else {
+				None
+			}
+		}
+		fn get_estimate_out_token(
+			supply: Balance,
+			token_0: u128,
+			token_1: u128,
+		) -> Option<Balance> {
+			if let Ok((reserve_a,reserve_b)) = Exchange::get_reserves(token_0,token_1) {
+				if let Ok(amount) = Exchange::quote(supply,reserve_a,reserve_b) {
+					Some(amount)
+				}else{
+					None
+				}
+			} else {
 				None
 			}
 		}
