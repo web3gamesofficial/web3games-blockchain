@@ -63,7 +63,7 @@ pub struct Pool<AccountId, FungibleTokenId> {
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+	use frame_support::{dispatch::DispatchResult, pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
@@ -99,6 +99,11 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn next_pool_id)]
 	pub(super) type NextPoolId<T: Config> = StorageValue<_, T::PoolId, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn pool_id_to_token)]
+	pub(super) type PoolIdToToken<T: Config> =
+		StorageMap<_, Blake2_128, T::PoolId, (T::FungibleTokenId, T::FungibleTokenId)>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn reserves)]
@@ -155,6 +160,7 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn create_pool(
 			origin: OriginFor<T>,
 			token_a: T::FungibleTokenId,
@@ -177,6 +183,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn add_liquidity(
 			origin: OriginFor<T>,
 			token_a: T::FungibleTokenId,
@@ -229,6 +236,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn remove_liquidity(
 			origin: OriginFor<T>,
 			token_a: T::FungibleTokenId,
@@ -268,6 +276,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn swap_exact_tokens_for_tokens(
 			origin: OriginFor<T>,
 			#[pallet::compact] amount_in: Balance,
@@ -301,6 +310,7 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn swap_tokens_for_exact_tokens(
 			origin: OriginFor<T>,
 			#[pallet::compact] amount_out: Balance,
@@ -392,8 +402,9 @@ impl<T: Config> Pallet<T> {
 		let pool = Pool { token_0, token_1, lp_token, lp_token_account_id };
 
 		Pools::<T>::insert((token_0, token_1), pool);
+		PoolIdToToken::<T>::insert(id, (token_0, token_1));
 
-		Self::deposit_event(Event::PoolCreated(id, token_0, token_1, Self::account_id()));
+		Self::deposit_event(Event::PoolCreated(id, token_0, token_1, who));
 
 		Ok(id)
 	}
