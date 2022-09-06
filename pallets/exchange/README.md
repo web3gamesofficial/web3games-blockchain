@@ -1,13 +1,13 @@
 ## rpc
 * get_amount_in_price: 给定代币，输出得到的另一种代币金额
 ```rust
-#[method(name = "exchange_getAmountInPrice")]
-	fn get_amount_in_price(
-		&self,
-		supply: Balance,
-		path: Vec<u128>,
-		at: Option<BlockHash>,
-	) -> RpcResult<Option<Vec<Balance>>>;
+    #[method(name = "exchange_getAmountInPrice")]
+      fn get_amount_in_price(
+        &self,
+        supply: Balance,
+        path: Vec<u128>,
+        at: Option<BlockHash>,
+      ) -> RpcResult<Option<Vec<Balance>>>;
 ```
 input:
 ```json
