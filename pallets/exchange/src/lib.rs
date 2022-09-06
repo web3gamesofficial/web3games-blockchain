@@ -270,8 +270,8 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_exact_tokens_for_tokens(
 			origin: OriginFor<T>,
-			amount_in: Balance,
-			amount_out_min: Balance,
+			#[pallet::compact] amount_in: Balance,
+			#[pallet::compact] amount_out_min: Balance,
 			path: Vec<T::FungibleTokenId>,
 			to: T::AccountId,
 			#[pallet::compact] deadline: T::BlockNumber,
@@ -303,8 +303,8 @@ pub mod pallet {
 		#[pallet::weight(10_000)]
 		pub fn swap_tokens_for_exact_tokens(
 			origin: OriginFor<T>,
-			amount_out: Balance,
-			amount_in_max: Balance,
+			#[pallet::compact] amount_out: Balance,
+			#[pallet::compact] amount_in_max: Balance,
 			path: Vec<T::FungibleTokenId>,
 			to: T::AccountId,
 			#[pallet::compact] deadline: T::BlockNumber,
