@@ -21,7 +21,7 @@
 use sp_runtime::{
 	generic,
 	traits::{BlakeTwo256, IdentifyAccount, Verify},
-	MultiSignature, OpaqueExtrinsic,DispatchResult
+	MultiSignature, OpaqueExtrinsic,
 };
 
 /// An index to a block.
@@ -72,10 +72,3 @@ pub type TokenId = u128;
 
 /// Index of token created
 pub type TokenIndex = u32;
-
-/// The interface to call WrapCurrency module functions.
-pub trait WrapCurrencyOperator<AccountId,Balance>
-{
-	fn deposit(who:AccountId,amount: Balance) -> DispatchResult;
-	fn withdraw(who:AccountId,amount: Balance) -> DispatchResult;
-}

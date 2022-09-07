@@ -650,7 +650,7 @@ impl pallet_exchange::Config for Runtime {
 	type PoolId = u128;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type WW3G = WW3G;
-	type WrapCurrency = WrapCurrency;
+	// type WrapCurrency = WrapCurrency;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 }
@@ -660,7 +660,7 @@ impl pallet_wrap_currency::Config for Runtime {
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
-	type Randomness = RandomnessCollectiveFlip;
+	// type Randomness = RandomnessCollectiveFlip;
 }
 
 construct_runtime!(
