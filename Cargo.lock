@@ -4580,6 +4580,7 @@ dependencies = [
  "pallet-randomness-collective-flip",
  "pallet-timestamp",
  "pallet-token-fungible",
+ "pallet-wrap-currency",
  "parity-scale-codec",
  "primitives",
  "scale-info",

@@ -30,7 +30,7 @@ use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_core::U256;
 use sp_runtime::{
-	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero},
+	traits::{AccountIdConversion, AtLeast32BitUnsigned, CheckedAdd, One, Zero,UniqueSaturatedFrom},
 	RuntimeDebug,
 };
 use sp_std::{cmp, prelude::*};
@@ -45,6 +45,8 @@ mod tests;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
+
 
 pub const MINIMUM_LIQUIDITY: u128 = 1000; // 10**3;
 
@@ -65,6 +67,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*, transactional};
 	use frame_system::pallet_prelude::*;
+	use primitives::WrapCurrencyOperator;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_token_fungible::Config {
@@ -77,6 +80,12 @@ pub mod pallet {
 		/// The minimum balance to create pool
 		#[pallet::constant]
 		type CreatePoolDeposit: Get<BalanceOf<Self>>;
+
+		/// The minimum balance to create pool
+		#[pallet::constant]
+		type WW3G: Get<FungibleTokenIdOf<Self>>;
+
+		type WrapCurrency: WrapCurrencyOperator<Self::AccountId, Balance>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
@@ -209,6 +218,60 @@ pub mod pallet {
 				amount_b_desired,
 				amount_a_min,
 				amount_b_min,
+			)?;
+
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_0,
+				&who,
+				&pool.lp_token_account_id,
+				amount_a,
+			)?;
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				pool.token_1,
+				&who,
+				&pool.lp_token_account_id,
+				amount_b,
+			)?;
+			let liquidity = Self::mint(who, token_0, token_1, to)?;
+			//
+			Self::deposit_event(Event::LiquidityAdded(
+				pool.lp_token,
+				amount_a,
+				amount_b,
+				liquidity,
+			));
+
+			Ok(())
+		}
+
+		#[pallet::weight(10_000)]
+		#[transactional]
+		pub fn add_liquidity_w3g(
+			origin: OriginFor<T>,
+			token: T::FungibleTokenId,
+			#[pallet::compact] amount_desired: Balance,
+			#[pallet::compact] amount_w3g_desired: Balance,
+			#[pallet::compact] amount_min: Balance,
+			#[pallet::compact] amount_w3g_min: Balance,
+			to: T::AccountId,
+			#[pallet::compact] deadline: T::BlockNumber,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			ensure!(deadline > Self::now(), Error::<T>::Deadline);
+
+			T::WrapCurrency::deposit(who.clone(),amount_w3g_desired)?;
+
+			let (token_0, token_1) = Self::sort_tokens(T::WW3G::get(),token);
+
+			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
+
+			let (amount_a, amount_b) = Self::do_add_liquidity(
+				T::WW3G::get(),
+				token,
+				amount_w3g_desired,
+				amount_desired,
+				amount_min,
+				amount_w3g_min,
 			)?;
 
 			pallet_token_fungible::Pallet::<T>::do_transfer(

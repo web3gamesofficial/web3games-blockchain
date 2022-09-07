@@ -20,6 +20,7 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-
 
 primitives = { path = "../../primitives", default-features = false }
 pallet-token-fungible = { path = "../token-fungible", default-features = false }
+pallet-wrap-currency = { path = "../wrap-currency", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
@@ -40,4 +41,5 @@ std = [
 	"sp-core/std",
 	"primitives/std",
 	"pallet-token-fungible/std",
+	"pallet-wrap-currency/std",
 ]

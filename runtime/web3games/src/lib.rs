@@ -640,11 +640,17 @@ impl pallet_token_multi::Config for Runtime {
 	type WeightInfo = pallet_token_multi::weights::W3GWeight<Runtime>;
 }
 
+parameter_types! {
+	pub const WW3G: u128 = 0;
+}
+
 impl pallet_exchange::Config for Runtime {
 	type Event = Event;
 	type PalletId = ExchangePalletId;
 	type PoolId = u128;
 	type CreatePoolDeposit = CreatePoolDeposit;
+	type WW3G = WW3G;
+	type WrapCurrency = WrapCurrency;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 }
