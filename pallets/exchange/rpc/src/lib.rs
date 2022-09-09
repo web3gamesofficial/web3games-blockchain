@@ -46,18 +46,35 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 	#[method(name = "exchange_getAmountInPrice")]
 	fn get_amount_in_price(
 		&self,
-		pool_id: u128,
 		supply: Balance,
 		path: Vec<u128>,
 		at: Option<BlockHash>,
-	) -> RpcResult<Option<Balance>>;
+	) -> RpcResult<Option<Vec<Balance>>>;
 
 	#[method(name = "exchange_getAmountOutPrice")]
 	fn get_amount_out_price(
 		&self,
-		pool_id: u128,
 		supply: Balance,
 		path: Vec<u128>,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<Vec<Balance>>>;
+
+	#[method(name = "exchange_EstimateLpToken")]
+	fn get_estimate_lp_token(
+		&self,
+		token_0: u128,
+		amount_0: Balance,
+		token_1: u128,
+		amount_1: Balance,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<Balance>>;
+
+	#[method(name = "exchange_EstimateOutToken")]
+	fn get_estimate_out_token(
+		&self,
+		sopply: Balance,
+		token_0: u128,
+		token_1: u128,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Balance>>;
 }
@@ -91,24 +108,36 @@ where
 {
 	fn get_amount_in_price(
 		&self,
-		pool_id: u128,
 		supply: Balance,
 		path: Vec<u128>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> RpcResult<Option<Balance>> {
+	) -> RpcResult<Option<Vec<Balance>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 		// If the block hash is not supplied assume the best block.
 		self.client.info().best_hash));
 
-		api.get_amount_in_price(&at, pool_id, supply, path)
-			.map_err(runtime_error_into_rpc_err)
+		api.get_amount_in_price(&at, supply, path).map_err(runtime_error_into_rpc_err)
 	}
 	fn get_amount_out_price(
 		&self,
-		pool_id: u128,
 		supply: Balance,
 		path: Vec<u128>,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Option<Vec<Balance>>> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(at.unwrap_or_else(||
+		// If the block hash is not supplied assume the best block.
+		self.client.info().best_hash));
+
+		api.get_amount_out_price(&at, supply, path).map_err(runtime_error_into_rpc_err)
+	}
+	fn get_estimate_lp_token(
+		&self,
+		token_0: u128,
+		amount_0: Balance,
+		token_1: u128,
+		amount_1: Balance,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<Balance>> {
 		let api = self.client.runtime_api();
@@ -116,7 +145,22 @@ where
 		// If the block hash is not supplied assume the best block.
 		self.client.info().best_hash));
 
-		api.get_amount_out_price(&at, pool_id, supply, path)
+		api.get_estimate_lp_token(&at, token_0, amount_0, token_1, amount_1)
+			.map_err(runtime_error_into_rpc_err)
+	}
+	fn get_estimate_out_token(
+		&self,
+		supply: Balance,
+		token_0: u128,
+		token_1: u128,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Option<Balance>> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(at.unwrap_or_else(||
+		// If the block hash is not supplied assume the best block.
+		self.client.info().best_hash));
+
+		api.get_estimate_out_token(&at, supply, token_0, token_1)
 			.map_err(runtime_error_into_rpc_err)
 	}
 }
