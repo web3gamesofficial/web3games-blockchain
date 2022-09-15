@@ -59,7 +59,7 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Vec<Balance>>>;
 
-	#[method(name = "exchange_EstimateLpToken")]
+	#[method(name = "exchange_getEstimateLpToken")]
 	fn get_estimate_lp_token(
 		&self,
 		token_0: u128,
@@ -69,7 +69,7 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Balance>>;
 
-	#[method(name = "exchange_EstimateOutToken")]
+	#[method(name = "exchange_getEstimateOutToken")]
 	fn get_estimate_out_token(
 		&self,
 		supply: Balance,
