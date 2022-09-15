@@ -33,6 +33,7 @@ use sp_std::prelude::*;
 
 pub use pallet::*;
 
+#[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
 pub mod weights;

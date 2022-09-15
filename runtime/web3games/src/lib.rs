@@ -653,6 +653,7 @@ impl pallet_exchange::Config for Runtime {
 	// type WrapCurrency = WrapCurrency;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
+	type WeightInfo = pallet_exchange::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_wrap_currency::Config for Runtime {
@@ -823,6 +824,7 @@ mod benches {
 		[pallet_token_fungible, TokenFungible]
 		[pallet_token_multi, TokenMulti]
 		[pallet_token_non_fungible, TokenNonFungible]
+		[pallet_exchange, Exchange]
 	);
 }
 
@@ -1201,10 +1203,9 @@ impl_runtime_apis! {
 			Vec<frame_benchmarking::BenchmarkList>,
 			Vec<frame_support::traits::StorageInfo>,
 		) {
-			use frame_benchmarking::{baseline, Benchmarking, BenchmarkList, list_benchmark};
+			use frame_benchmarking::{Benchmarking, BenchmarkList, list_benchmark};
 			use frame_support::traits::StorageInfoTrait;
 			use frame_system_benchmarking::Pallet as SystemBench;
-			use baseline::Pallet as BaselineBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
 
@@ -1214,6 +1215,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_token_fungible, TokenFungible);
 			list_benchmark!(list, extra, pallet_token_multi, TokenMulti);
 			list_benchmark!(list, extra, pallet_token_non_fungible, TokenNonFungible);
+			list_benchmark!(list, extra, pallet_exchange, Exchange);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1225,7 +1227,6 @@ impl_runtime_apis! {
 			use frame_benchmarking::{baseline, Benchmarking, BenchmarkBatch, TrackedStorageKey, add_benchmark};
 
 			use frame_system_benchmarking::Pallet as SystemBench;
-			use baseline::Pallet as BaselineBench;
 
 			impl frame_system_benchmarking::Config for Runtime {}
 			impl baseline::Config for Runtime {}
@@ -1252,6 +1253,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_token_fungible, TokenFungible);
 			add_benchmark!(params, batches, pallet_token_multi, TokenMulti);
 			add_benchmark!(params, batches, pallet_token_non_fungible, TokenNonFungible);
+			add_benchmark!(params, batches, pallet_exchange, Exchange);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

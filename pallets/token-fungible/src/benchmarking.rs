@@ -9,7 +9,6 @@ use crate::Pallet as TokenFungible;
 use codec::alloc::string::ToString;
 use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
-use sp_runtime::traits::{Hash, StaticLookup, UniqueSaturatedFrom};
 
 const SEED: u32 = 0;
 

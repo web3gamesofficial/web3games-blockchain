@@ -17,8 +17,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use crate as pallet_exchange;
+use frame_benchmarking::whitelisted_caller;
 use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	pallet_prelude::GenesisBuild,
+	parameter_types,
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
@@ -48,6 +51,7 @@ construct_runtime!(
 		Randomness: pallet_randomness_collective_flip::{Pallet, Storage},
 		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
 		Exchange: pallet_exchange::{Pallet, Call, Storage, Event<T>},
+		WrapCurrency: pallet_wrap_currency::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -114,8 +118,10 @@ impl pallet_token_fungible::Config for Test {
 
 parameter_types! {
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
+	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 	pub const TreasuryAccount: u64 = 10;
+	pub const WW3G: u128 = 0;
 }
 
 impl pallet_exchange::Config for Test {
@@ -125,14 +131,27 @@ impl pallet_exchange::Config for Test {
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 	type Randomness = Randomness;
-	type FeesCollector = ();
+	type WW3G = WW3G;
+	type WeightInfo = ();
+}
+
+impl pallet_wrap_currency::Config for Test {
+	type Event = Event;
+	type PalletId = WrapCurrencyPalletId;
+	type Currency = Balances;
+	type CreateTokenDeposit = CreateTokenDeposit;
+	// type Randomness = RandomnessCollectiveFlip;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, 100 * DOLLARS), (2, 100 * DOLLARS)],
+		balances: vec![
+			(1, 100 * DOLLARS),
+			(2, 100 * DOLLARS),
+			(whitelisted_caller(), 100 * DOLLARS),
+		],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

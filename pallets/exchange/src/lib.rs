@@ -36,6 +36,11 @@ use sp_runtime::{
 use sp_std::{cmp, prelude::*};
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 #[cfg(test)]
 mod mock;
@@ -88,6 +93,9 @@ pub mod pallet {
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
 		type Randomness: Randomness<Self::Hash, Self::BlockNumber>;
+
+		/// runtime weights.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -166,7 +174,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::create_pool())]
 		#[transactional]
 		pub fn create_pool(
 			origin: OriginFor<T>,
@@ -189,7 +197,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::add_liquidity())]
 		#[transactional]
 		pub fn add_liquidity(
 			origin: OriginFor<T>,
@@ -242,7 +250,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::add_liquidity())]
 		#[transactional]
 		pub fn add_liquidity_w3g(
 			origin: OriginFor<T>,
@@ -296,7 +304,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::remove_liquidity())]
 		#[transactional]
 		pub fn remove_liquidity(
 			origin: OriginFor<T>,
@@ -336,7 +344,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::remove_liquidity())]
 		#[transactional]
 		pub fn remove_liquidity_w3g(
 			origin: OriginFor<T>,
@@ -377,7 +385,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::swap_exact_tokens_for_tokens())]
 		#[transactional]
 		pub fn swap_exact_tokens_for_tokens(
 			origin: OriginFor<T>,
@@ -411,7 +419,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::swap_exact_tokens_for_tokens())]
 		#[transactional]
 		pub fn swap_exact_w3g_for_tokens(
 			origin: OriginFor<T>,
@@ -448,7 +456,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::swap_tokens_for_exact_tokens())]
 		#[transactional]
 		pub fn swap_tokens_for_exact_tokens(
 			origin: OriginFor<T>,
@@ -478,7 +486,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::swap_tokens_for_exact_tokens())]
 		#[transactional]
 		pub fn swap_tokens_for_exact_w3g(
 			origin: OriginFor<T>,
