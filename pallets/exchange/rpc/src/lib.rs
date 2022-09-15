@@ -72,7 +72,7 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 	#[method(name = "exchange_EstimateOutToken")]
 	fn get_estimate_out_token(
 		&self,
-		sopply: Balance,
+		supply: Balance,
 		token_0: u128,
 		token_1: u128,
 		at: Option<BlockHash>,
