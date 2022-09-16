@@ -129,3 +129,99 @@ output:
   "id": 1
 }
 ```
+
+## rpc types
+```json
+ rpc: {
+            "exchange": {
+                "getAmountOutPrice": {
+                    "description": "get amount out price",
+                    "params": [
+                        {
+                            "name": "supply",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "path",
+                            "type": "Vec<u128>"
+                        },
+                        {
+                            "name": "at",
+                            "type": "Hash",
+                            "isOptional": true
+                        }
+                    ],
+                    "type": "Vec<u128>",
+                },
+                "getAmountInPrice": {
+                    "description": "get amount in price",
+                    "params": [
+                        {
+                            "name": "supply",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "path",
+                            "type": "Vec<u128>"
+                        },
+                        {
+                            "name": "at",
+                            "type": "Hash",
+                            "isOptional": true
+                        }
+                    ],
+                    "type": "Vec<u128>",
+                },
+                "getEstimateLpToken": {
+                    "description": "get estimate lp token",
+                    "params": [
+                        {
+                            "name": "token_0",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "amount_0",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "token_1",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "amount_1",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "at",
+                            "type": "Hash",
+                            "isOptional": true
+                        }
+                    ],
+                    "type": "u128",
+                },
+                "getEstimateOutToken": {
+                    "description": "get estimate out token",
+                    "params": [
+                        {
+                            "name": "supply",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "token_0",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "token_1",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "at",
+                            "type": "Hash",
+                            "isOptional": true
+                        }
+                    ],
+                    "type": "u128",
+                },
+            },
+        }
+```

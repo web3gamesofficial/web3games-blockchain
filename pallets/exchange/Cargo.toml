@@ -16,14 +16,15 @@ sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v
 sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false  }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true , branch = "polkadot-v0.9.26" }
 
 primitives = { path = "../../primitives", default-features = false }
 pallet-token-fungible = { path = "../token-fungible", default-features = false }
 pallet-wrap-currency = { path = "../wrap-currency", default-features = false }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
 
 [features]
@@ -34,12 +35,16 @@ std = [
 	"log/std",
 	"frame-support/std",
 	"frame-system/std",
+	"frame-benchmarking/std",
 	"sp-std/std",
 	"sp-io/std",
 	"sp-runtime/std",
 	"pallet-timestamp/std",
+	"pallet-balances/std",
 	"sp-core/std",
 	"primitives/std",
 	"pallet-token-fungible/std",
 	"pallet-wrap-currency/std",
 ]
+runtime-benchmarks = ["frame-benchmarking"]
+
