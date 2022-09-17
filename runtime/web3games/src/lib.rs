@@ -1195,6 +1195,16 @@ impl_runtime_apis! {
 				None
 			}
 		}
+		fn get_liquidity_to_tokens(
+			lp_token: u128,
+			lp_balance: Balance
+		) -> Option<(Balance,Balance)> {
+			if let Ok((amount_0,amount_1)) = Exchange::liquidity_to_token(lp_token,lp_balance) {
+				Some((amount_0,amount_1))
+			} else {
+				None
+			}
+		}
 	}
 
 	#[cfg(feature = "runtime-benchmarks")]

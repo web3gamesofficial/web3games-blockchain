@@ -116,9 +116,9 @@ pub mod pallet {
 	pub(super) type NextPoolId<T: Config> = StorageValue<_, T::PoolId, ValueQuery>;
 
 	#[pallet::storage]
-	#[pallet::getter(fn pool_id_to_token)]
-	pub(super) type PoolIdToToken<T: Config> =
-		StorageMap<_, Blake2_128, T::PoolId, (T::FungibleTokenId, T::FungibleTokenId)>;
+	#[pallet::getter(fn lp_token_to_token)]
+	pub(super) type LpTokenToToken<T: Config> =
+		StorageMap<_, Blake2_128, T::FungibleTokenId, (T::FungibleTokenId, T::FungibleTokenId)>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn reserves)]
@@ -582,7 +582,7 @@ impl<T: Config> Pallet<T> {
 		let pool = Pool { token_0, token_1, lp_token, lp_token_account_id };
 
 		Pools::<T>::insert((token_0, token_1), pool);
-		PoolIdToToken::<T>::insert(id, (token_0, token_1));
+		LpTokenToToken::<T>::insert(lp_token, (token_0, token_1));
 
 		Self::deposit_event(Event::PoolCreated(id, token_0, token_1, who));
 
@@ -841,11 +841,21 @@ impl<T: Config> Pallet<T> {
 	}
 
 	pub fn get_liquidity(
-		token_0: T::FungibleTokenId,
-		amount_0: Balance,
-		token_1: T::FungibleTokenId,
-		amount_1: Balance,
+		token_a: T::FungibleTokenId,
+		amount_a: Balance,
+		token_b: T::FungibleTokenId,
+		amount_b: Balance,
 	) -> Result<Balance, DispatchError> {
+		let (token_0, token_1) = Self::sort_tokens(token_a, token_b);
+		let amount_0;
+		let amount_1;
+		if token_a == token_0 {
+			amount_0 = amount_a;
+			amount_1 = amount_b;
+		} else {
+			amount_0 = amount_b;
+			amount_1 = amount_a;
+		}
 		let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 		let (reserve_0, reserve_1) = Reserves::<T>::get((token_0, token_1));
 		let liquidity: Balance;
@@ -872,6 +882,46 @@ impl<T: Config> Pallet<T> {
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
 
 		Ok(liquidity)
+	}
+
+	pub fn liquidity_to_token(
+		lp_token: T::FungibleTokenId,
+		lp_balance: Balance,
+	) -> Result<(Balance, Balance), DispatchError> {
+		let (token_0, token_1) =
+			LpTokenToToken::<T>::get(lp_token).ok_or(Error::<T>::PoolNotFound)?;
+		ensure!(token_0 != token_1, Error::<T>::PoolNotFound);
+		let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
+
+		let balance_0 =
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
+		let balance_1 =
+			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+
+		let liquidity_balance = pallet_token_fungible::Pallet::<T>::balance_of(
+			pool.lp_token,
+			&pool.lp_token_account_id,
+		);
+
+		let liquidity = liquidity_balance + lp_balance;
+
+		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+
+		let amount_0 = U256::from(liquidity)
+			.checked_mul(U256::from(balance_0))
+			.and_then(|l| l.checked_div(U256::from(total_supply)))
+			.and_then(|l| TryInto::<Balance>::try_into(l).ok())
+			.ok_or(Error::<T>::Overflow)?;
+		let amount_1 = U256::from(liquidity)
+			.checked_mul(U256::from(balance_1))
+			.and_then(|l| l.checked_div(U256::from(total_supply)))
+			.and_then(|l| TryInto::<Balance>::try_into(l).ok())
+			.ok_or(Error::<T>::Overflow)?;
+		ensure!(
+			amount_0 > Zero::zero() && amount_1 > Zero::zero(),
+			Error::<T>::InsufficientLiquidityBurned
+		);
+		Ok((amount_0, amount_1))
 	}
 
 	pub fn burn(

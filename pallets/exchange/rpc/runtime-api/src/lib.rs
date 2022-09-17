@@ -36,5 +36,6 @@ decl_runtime_apis! {
 			amount_1: Balance,
 		) -> Option<Balance>;
 		fn get_estimate_out_token(supply: Balance,token_0:u128,token_1:u128)-> Option<Balance>;
+		fn get_liquidity_to_tokens(lp_token_0:u128,lp_balance:Balance)-> Option<(Balance,Balance)>;
 	}
 }

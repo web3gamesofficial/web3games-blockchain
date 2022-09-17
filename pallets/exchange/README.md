@@ -67,7 +67,7 @@ output:
 }
 ```
 
-* get_estimate_lp_token:给定两个代币，输出预估得到的流动性(token_id小的代币在前面)
+* get_estimate_lp_token:给定两个代币，输出预估得到的流动性
 ```rust
     #[method(name = "exchange_EstimateLpToken")]
     fn get_estimate_lp_token(
@@ -221,6 +221,25 @@ output:
                         }
                     ],
                     "type": "u128",
+                },
+                "getLiquidityToTokens": {
+                    "description": "get liquidity to tokens",
+                    "params": [
+                        {
+                            "name": "lp_token",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "lp_balance",
+                            "type": "u128"
+                        },
+                        {
+                            "name": "at",
+                            "type": "Hash",
+                            "isOptional": true
+                        }
+                    ],
+                    "type": "(u128,u128)",
                 },
             },
         }
