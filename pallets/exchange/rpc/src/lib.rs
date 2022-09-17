@@ -77,6 +77,14 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 		token_1: u128,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Balance>>;
+
+	#[method(name = "exchange_getLiquidityToTokens")]
+	fn get_liquidity_to_tokens(
+		&self,
+		lp_token: u128,
+		lp_balance: Balance,
+		at: Option<BlockHash>,
+	) -> RpcResult<Option<(Balance, Balance)>>;
 }
 
 /// Error type of this RPC api.
@@ -161,6 +169,20 @@ where
 		self.client.info().best_hash));
 
 		api.get_estimate_out_token(&at, supply, token_0, token_1)
+			.map_err(runtime_error_into_rpc_err)
+	}
+	fn get_liquidity_to_tokens(
+		&self,
+		lp_token: u128,
+		lp_balance: Balance,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> RpcResult<Option<(Balance, Balance)>> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(at.unwrap_or_else(||
+			// If the block hash is not supplied assume the best block.
+			self.client.info().best_hash));
+
+		api.get_liquidity_to_tokens(&at, lp_token, lp_balance)
 			.map_err(runtime_error_into_rpc_err)
 	}
 }
