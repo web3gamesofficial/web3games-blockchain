@@ -331,7 +331,7 @@ impl WeightToFeePolynomial for WeightToFee {
 
 impl pallet_transaction_payment::Config for Runtime {
 	type Event = Event;
-	type OnChargeTransaction = CurrencyAdapter<Balances, DealWithFees<Runtime>>;
+	type OnChargeTransaction = ProxyPay;
 	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightToFee = WeightToFee;
 	type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
@@ -569,6 +569,7 @@ parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
 	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
+	pub const ProxyPayPalletId: PalletId = PalletId(*b"w3g/prox");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
 }
@@ -650,7 +651,6 @@ impl pallet_exchange::Config for Runtime {
 	type PoolId = u128;
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type WW3G = WW3G;
-	// type WrapCurrency = WrapCurrency;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
 	type WeightInfo = pallet_exchange::weights::W3GWeight<Runtime>;
@@ -661,7 +661,14 @@ impl pallet_wrap_currency::Config for Runtime {
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
-	// type Randomness = RandomnessCollectiveFlip;
+}
+
+impl pallet_proxy_pay::Config for Runtime {
+	type Currency = Balances;
+	type Event = Event;
+	type OnUnbalanced = Treasury;
+	type PalletId = ProxyPayPalletId;
+	type WeightInfo = ();
 }
 
 construct_runtime!(
@@ -692,6 +699,7 @@ construct_runtime!(
 		TokenMulti: pallet_token_multi,
 		Exchange: pallet_exchange,
 		WrapCurrency: pallet_wrap_currency,
+		ProxyPay: pallet_proxy_pay,
 	}
 );
 
