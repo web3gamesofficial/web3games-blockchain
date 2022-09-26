@@ -12,6 +12,7 @@ static_assertions = "1.1.0"
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "max-encoded-len"] }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 smallvec = "1.4.0"
+hex-literal = { version = "0.3.1" }
 
 pallet-aura = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
@@ -50,7 +51,6 @@ pallet-contracts-rpc-runtime-api = { git = "https://github.com/paritytech/substr
 # Used for runtime benchmarking
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false, optional = true }
 frame-system-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false, optional = true }
-hex-literal = { version = "0.3.1", optional = true }
 
 # EVM
 pallet-ethereum = { default-features = false, git = "https://github.com/web3gamesofficial/frontier", branch = "polkadot-v0.9.26" }
@@ -70,6 +70,7 @@ pallet-token-multi = { path = "../../pallets/token-multi", default-features = fa
 pallet-support = { path = "../../pallets/support", default-features = false }
 pallet-exchange = { path = "../../pallets/exchange", default-features = false }
 pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
+pallet-proxy-pay = { path = "../../pallets/proxy-pay", default-features = false }
 
 # local pallet rpc
 pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
@@ -127,6 +128,7 @@ std = [
 	"pallet-exchange/std",
 	"pallet-wrap-currency/std",
 	"pallet-exchange-rpc-runtime-api/std",
+	"pallet-proxy-pay/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -134,7 +136,6 @@ runtime-benchmarks = [
 	"frame-system-benchmarking",
 	"frame-system/runtime-benchmarks",
 	"pallet-ethereum/runtime-benchmarks",
-	"hex-literal",
 	"pallet-balances/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-contracts/runtime-benchmarks",
