@@ -214,16 +214,31 @@ pub mod pallet {
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
 			let (token_0, token_1) = Self::sort_tokens(token_a, token_b);
+			let amount_0;
+			let amount_1;
+			let amount_0_min;
+			let amount_1_min;
+			if token_a == token_0 {
+				amount_0 = amount_a_desired;
+				amount_1 = amount_b_desired;
+				amount_0_min = amount_a_min;
+				amount_1_min = amount_b_min;
+			} else {
+				amount_0 = amount_b_desired;
+				amount_1 = amount_a_desired;
+				amount_0_min = amount_b_min;
+				amount_1_min = amount_a_min;
+			}
 
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			let (amount_a, amount_b) = Self::do_add_liquidity(
 				token_0,
 				token_1,
-				amount_a_desired,
-				amount_b_desired,
-				amount_a_min,
-				amount_b_min,
+				amount_0,
+				amount_1,
+				amount_0_min,
+				amount_1_min,
 			)?;
 
 			pallet_token_fungible::Pallet::<T>::do_transfer(
