@@ -26,7 +26,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use codec::{Decode, Encode};
+use codec::{alloc::string::ToString, Decode, Encode};
 
 use pallet_balances::NegativeImbalance;
 use pallet_evm::FeeCalculator;
@@ -49,7 +49,7 @@ use sp_runtime::{
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, Percent,
 };
-use sp_std::{marker::PhantomData, prelude::*};
+use sp_std::{marker::PhantomData, prelude::*, str};
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -1161,40 +1161,71 @@ impl_runtime_apis! {
 	}
 
 	impl pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
-		fn get_amount_in_price(supply: Balance, path: Vec<u128>) -> Option<Vec<Balance>> {
-			if let Ok(amounts) = Exchange::get_amounts_in(supply,path) {
+		fn get_amount_in_price(supply: Vec<u8>, path: Vec<Vec<u8>>) -> Option<Vec<Balance>> {
+			let mut supply_u128:u128 = 0;
+			if let Ok(result) = Exchange::vec_to_u128(supply) {
+				supply_u128 = result;
+			}
+
+			let mut new_path:Vec<u128> = vec![];
+			for p in path {
+				if let Ok(result) = Exchange::vec_to_u128(p) {
+					new_path.push(result);
+				}
+			}
+			if let Ok(amounts) = Exchange::get_amounts_in(supply_u128,new_path) {
 				Some(amounts)
 			}else{
 				None
 			}
 		}
 
-		fn get_amount_out_price(supply: Balance,path: Vec<u128>) -> Option<Vec<Balance>> {
-		   if let Ok(amounts) = Exchange::get_amounts_out(supply,path) {
+		fn get_amount_out_price(supply: Vec<u8>,path: Vec<Vec<u8>>) -> Option<Vec<Balance>> {
+			let mut supply_u128:u128 = 0;
+			if let Ok(result) = Exchange::vec_to_u128(supply) {
+				supply_u128 = result;
+			}
+			let mut new_path:Vec<u128> = vec![];
+			for p in path {
+				if let Ok(result) = Exchange::vec_to_u128(p) {
+					new_path.push(result);
+				}
+			}
+		   if let Ok(amounts) = Exchange::get_amounts_out(supply_u128,new_path) {
 				Some(amounts)
 			}else{
 				None
 			}
 		}
 		fn get_estimate_lp_token(
-			token_0: u128,
-			amount_0: Balance,
-			token_1: u128,
-			amount_1: Balance
+			token_0: Vec<u8>,
+			amount_0: Vec<u8>,
+			token_1: Vec<u8>,
+			amount_1: Vec<u8>
 		) -> Option<Balance> {
-			if let Ok(liquidity) = Exchange::get_liquidity(token_0,amount_0,token_1,amount_1) {
+			let data = vec![token_0,amount_0,token_1,amount_1];
+			let mut new_data:Vec<u128> = vec![];
+			if let Ok(result) = Exchange::vecs_to_u128(data) {
+				new_data = result;
+			}
+			if let Ok(liquidity) = Exchange::get_liquidity(new_data[0],new_data[1],new_data[2],new_data[4]) {
 				Some(liquidity)
 			} else {
 				None
 			}
 		}
 		fn get_estimate_out_token(
-			supply: Balance,
-			token_0: u128,
-			token_1: u128,
+			supply: Vec<u8>,
+			token_0: Vec<u8>,
+			token_1: Vec<u8>,
 		) -> Option<Balance> {
-			if let Ok((reserve_a,reserve_b)) = Exchange::get_reserves(token_0,token_1) {
-				if let Ok(amount) = Exchange::quote(supply,reserve_a,reserve_b) {
+			let data = vec![supply,token_0,token_1];
+			let mut new_data:Vec<u128> = vec![];
+			if let Ok(result) = Exchange::vecs_to_u128(data) {
+				new_data = result;
+			}
+			if let Ok((reserve_a,reserve_b)) = Exchange::get_reserves(new_data[1],new_data[2]) {
+				if let Ok(amount) = Exchange::quote(new_data[0],reserve_a,reserve_b) {
 					Some(amount)
 				}else{
 					None
@@ -1204,10 +1235,15 @@ impl_runtime_apis! {
 			}
 		}
 		fn get_liquidity_to_tokens(
-			lp_token: u128,
-			lp_balance: Balance
+			lp_token: Vec<u8>,
+			lp_balance: Vec<u8>
 		) -> Option<(Balance,Balance)> {
-			if let Ok((amount_0,amount_1)) = Exchange::liquidity_to_token(lp_token,lp_balance) {
+			let data = vec![lp_token,lp_balance];
+			let mut new_data:Vec<u128> = vec![];
+			if let Ok(result) = Exchange::vecs_to_u128(data) {
+				new_data = result;
+			}
+			if let Ok((amount_0,amount_1)) = Exchange::liquidity_to_token(new_data[0],new_data[1]) {
 				Some((amount_0,amount_1))
 			} else {
 				None
