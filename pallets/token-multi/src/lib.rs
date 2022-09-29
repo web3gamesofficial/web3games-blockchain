@@ -276,9 +276,6 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		ensure!(!Self::exists(id.clone()), Error::<T>::InvalidId);
 
-		let deposit = T::CreateTokenDeposit::get();
-		T::Currency::reserve(&who, deposit.clone())?;
-
 		let bounded_uri: BoundedVec<u8, T::StringLimit> =
 			uri.clone().try_into().map_err(|_| Error::<T>::BadMetadata)?;
 

@@ -46,43 +46,43 @@ pub trait ExchangeRpcApi<BlockHash, AccountId> {
 	#[method(name = "exchange_getAmountInPrice")]
 	fn get_amount_in_price(
 		&self,
-		supply: Balance,
-		path: Vec<u128>,
+		supply: Vec<u8>,
+		path: Vec<Vec<u8>>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Vec<Balance>>>;
 
 	#[method(name = "exchange_getAmountOutPrice")]
 	fn get_amount_out_price(
 		&self,
-		supply: Balance,
-		path: Vec<u128>,
+		supply: Vec<u8>,
+		path: Vec<Vec<u8>>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Vec<Balance>>>;
 
 	#[method(name = "exchange_getEstimateLpToken")]
 	fn get_estimate_lp_token(
 		&self,
-		token_0: u128,
-		amount_0: Balance,
-		token_1: u128,
-		amount_1: Balance,
+		token_0: Vec<u8>,
+		amount_0: Vec<u8>,
+		token_1: Vec<u8>,
+		amount_1: Vec<u8>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Balance>>;
 
 	#[method(name = "exchange_getEstimateOutToken")]
 	fn get_estimate_out_token(
 		&self,
-		supply: Balance,
-		token_0: u128,
-		token_1: u128,
+		supply: Vec<u8>,
+		token_0: Vec<u8>,
+		token_1: Vec<u8>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<Balance>>;
 
 	#[method(name = "exchange_getLiquidityToTokens")]
 	fn get_liquidity_to_tokens(
 		&self,
-		lp_token: u128,
-		lp_balance: Balance,
+		lp_token: Vec<u8>,
+		lp_balance: Vec<u8>,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<(Balance, Balance)>>;
 }
@@ -116,8 +116,8 @@ where
 {
 	fn get_amount_in_price(
 		&self,
-		supply: Balance,
-		path: Vec<u128>,
+		supply: Vec<u8>,
+		path: Vec<Vec<u8>>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<Vec<Balance>>> {
 		let api = self.client.runtime_api();
@@ -129,8 +129,8 @@ where
 	}
 	fn get_amount_out_price(
 		&self,
-		supply: Balance,
-		path: Vec<u128>,
+		supply: Vec<u8>,
+		path: Vec<Vec<u8>>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<Vec<Balance>>> {
 		let api = self.client.runtime_api();
@@ -142,10 +142,10 @@ where
 	}
 	fn get_estimate_lp_token(
 		&self,
-		token_0: u128,
-		amount_0: Balance,
-		token_1: u128,
-		amount_1: Balance,
+		token_0: Vec<u8>,
+		amount_0: Vec<u8>,
+		token_1: Vec<u8>,
+		amount_1: Vec<u8>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<Balance>> {
 		let api = self.client.runtime_api();
@@ -158,9 +158,9 @@ where
 	}
 	fn get_estimate_out_token(
 		&self,
-		supply: Balance,
-		token_0: u128,
-		token_1: u128,
+		supply: Vec<u8>,
+		token_0: Vec<u8>,
+		token_1: Vec<u8>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<Balance>> {
 		let api = self.client.runtime_api();
@@ -173,8 +173,8 @@ where
 	}
 	fn get_liquidity_to_tokens(
 		&self,
-		lp_token: u128,
-		lp_balance: Balance,
+		lp_token: Vec<u8>,
+		lp_balance: Vec<u8>,
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<(Balance, Balance)>> {
 		let api = self.client.runtime_api();

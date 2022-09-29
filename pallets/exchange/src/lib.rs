@@ -170,6 +170,7 @@ pub mod pallet {
 		PoolAlreadyCreated,
 		TokenRepeat,
 		Deadline,
+		VecToU128Failed,
 	}
 
 	#[pallet::call]
@@ -1190,5 +1191,19 @@ impl<T: Config> Pallet<T> {
 		let lp_token_id = <T::FungibleTokenId>::decode(&mut random_seed.as_ref())
 			.expect("Failed to decode random seed");
 		lp_token_id
+	}
+
+	pub fn vec_to_u128(data: Vec<u8>) -> Result<u128, DispatchError> {
+		let data_str = sp_std::str::from_utf8(&data).map_err(|_| Error::<T>::VecToU128Failed)?;
+		let data_u128 = data_str.parse::<u128>().map_err(|_| Error::<T>::VecToU128Failed)?;
+		Ok(data_u128)
+	}
+
+	pub fn vecs_to_u128(data: Vec<Vec<u8>>) -> Result<Vec<u128>, DispatchError> {
+		let mut new_data: Vec<u128> = vec![];
+		for d in data {
+			new_data.push(Self::vec_to_u128(d)?);
+		}
+		Ok(new_data)
 	}
 }
