@@ -28,9 +28,9 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
-	AccountId, AuraConfig, Balance, BalancesConfig, BaseFeeConfig, EVMConfig, EthereumConfig,
-	GenesisConfig, GrandpaConfig, Permill, Precompiles, Signature, SudoConfig, SystemConfig,
-	DOLLARS, GIGAWEI, WASM_BINARY,
+	AccountId, AuraConfig, Balance, BalancesConfig, BaseFeeConfig, EVMConfig,
+	EthereumChainIdConfig, EthereumConfig, GenesisConfig, GrandpaConfig, Permill, Precompiles,
+	Signature, SudoConfig, SystemConfig, DOLLARS, GIGAWEI, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -92,7 +92,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					account("bob", 0, 0),
 					account("charlie", 0, 0),
 				],
-				true,
+				105,
 			)
 		},
 		// Bootnodes
@@ -161,7 +161,7 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 					// 5FAGs5u263xUEycR5vJUqjrcjnEox2GWm4ZENsL1BYfFzhMc
 					hex!["88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"].into(),
 				],
-				true,
+				104,
 			)
 		},
 		// Bootnodes
@@ -191,7 +191,7 @@ fn testnet_genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	_enable_println: bool,
+	chain_id: u64,
 ) -> GenesisConfig {
 	// This is the simplest bytecode to revert without returning any data.
 	// We will pre-deploy it under all of our precompiles to ensure they can be called from
@@ -218,6 +218,7 @@ fn testnet_genesis(
 		},
 		sudo: SudoConfig { key: Some(root_key) },
 		transaction_payment: Default::default(),
+		ethereum_chain_id: EthereumChainIdConfig { chain_id },
 		evm: EVMConfig {
 			// We need _some_ code inserted at the precompile address so that
 			// the evm will actually call the address.

@@ -26,7 +26,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use codec::{alloc::string::ToString, Decode, Encode};
+use codec::{Decode, Encode};
 
 use pallet_balances::NegativeImbalance;
 use pallet_evm::FeeCalculator;
@@ -44,7 +44,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdConversion, AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf,
-		Dispatchable, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto,
+		Dispatchable, Get, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, Percent,
@@ -414,7 +414,6 @@ where
 }
 
 parameter_types! {
-	pub const ChainId: u64 = 104;
 	pub BlockGasLimit: U256 = U256::from(u32::max_value());
 	pub PrecompilesValue: Web3GamesPrecompiles<Runtime> = Web3GamesPrecompiles::<_>::new();
 }
@@ -459,7 +458,7 @@ impl pallet_evm::Config for Runtime {
 	type Runner = pallet_evm::runner::stack::Runner<Self>;
 	type PrecompilesType = Web3GamesPrecompiles<Self>;
 	type PrecompilesValue = PrecompilesValue;
-	type ChainId = ChainId;
+	type ChainId = EthereumChainId;
 	type OnChargeTransaction = pallet_evm::EVMCurrencyAdapter<Balances, DealWithFees<Runtime>>;
 	type BlockGasLimit = BlockGasLimit;
 	type FindAuthor = FindAuthorTruncated<Aura>;
@@ -497,6 +496,8 @@ impl pallet_base_fee::Config for Runtime {
 	type IsActive = ConstBool<false>;
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
+
+impl pallet_ethereum_chain_id::Config for Runtime {}
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -659,16 +660,16 @@ impl pallet_exchange::Config for Runtime {
 impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
-	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
+	type Currency = Balances;
 }
 
 impl pallet_proxy_pay::Config for Runtime {
-	type Currency = Balances;
 	type Event = Event;
+	type WeightInfo = ();
+	type Currency = Balances;
 	type OnUnbalanced = Treasury;
 	type PalletId = ProxyPayPalletId;
-	type WeightInfo = ();
 }
 
 construct_runtime!(
@@ -684,14 +685,21 @@ construct_runtime!(
 		Grandpa: pallet_grandpa,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
-		Contracts: pallet_contracts,
-		Sudo: pallet_sudo,
-		Scheduler: pallet_scheduler,
-		Preimage: pallet_preimage,
+
+		// Ethereum
+		EthereumChainId: pallet_ethereum_chain_id,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
 		BaseFee: pallet_base_fee,
+
+		// Ink
+		Contracts: pallet_contracts,
+
+		// Gov
+		Sudo: pallet_sudo,
 		Treasury: pallet_treasury,
+		Scheduler: pallet_scheduler,
+		Preimage: pallet_preimage,
 
 		// web3games pallets
 		TokenFungible: pallet_token_fungible,
