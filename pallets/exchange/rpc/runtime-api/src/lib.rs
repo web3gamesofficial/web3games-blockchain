@@ -27,15 +27,15 @@ decl_runtime_apis! {
 	pub trait ExchangeRuntimeApi<AccountId> where
 		AccountId: Codec,
 	{
-		fn get_amount_in_price(supply: Vec<u8>, path: Vec<Vec<u8>>) -> Option<Vec<Balance>>;
-		fn get_amount_out_price(supply: Vec<u8>, path: Vec<Vec<u8>>) -> Option<Vec<Balance>>;
+		fn get_amount_in_price(supply: Balance, path: Vec<u128>) -> Option<Vec<Balance>>;
+		fn get_amount_out_price(supply: Balance, path: Vec<u128>) -> Option<Vec<Balance>>;
 		fn get_estimate_lp_token(
-			token_0: Vec<u8>,
-			amount_0: Vec<u8>,
-			token_1: Vec<u8>,
-			amount_1: Vec<u8>,
+			token_0: u128,
+			amount_0: Balance,
+			token_1: u128,
+			amount_1: Balance,
 		) -> Option<Balance>;
-		fn get_estimate_out_token(supply: Vec<u8>,token_0:Vec<u8>,token_1:Vec<u8>)-> Option<Balance>;
-		fn get_liquidity_to_tokens(lp_token_0:Vec<u8>,lp_balance:Vec<u8>)-> Option<(Balance,Balance)>;
+		fn get_estimate_out_token(supply: Balance,token_0:u128,token_1:u128)-> Option<Balance>;
+		fn get_liquidity_to_tokens(lp_token_0:u128,lp_balance:Balance)-> Option<(Balance,Balance)>;
 	}
 }
