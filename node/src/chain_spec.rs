@@ -29,8 +29,8 @@ use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, BaseFeeConfig, EVMConfig,
-	EthereumChainIdConfig, EthereumConfig, GenesisConfig, GrandpaConfig, Permill, Precompiles,
-	Signature, SudoConfig, SystemConfig, DOLLARS, GIGAWEI, WASM_BINARY,
+	EthereumChainIdConfig, EthereumConfig, GenesisConfig, GrandpaConfig, MartketplaceConfig,
+	Permill, Precompiles, Signature, SudoConfig, SystemConfig, DOLLARS, GIGAWEI, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -93,6 +93,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					account("charlie", 0, 0),
 				],
 				105,
+				Some(get_account_id_from_seed::<sr25519::Public>("Alice")),
 			)
 		},
 		// Bootnodes
@@ -162,6 +163,12 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 					hex!["88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"].into(),
 				],
 				104,
+				Some(
+					// 5FAGs5u263xUEycR5vJUqjrcjnEox2GWm4ZENsL1BYfFzhMc
+					AccountId::from(hex![
+						"88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"
+					]),
+				),
 			)
 		},
 		// Bootnodes
@@ -192,6 +199,7 @@ fn testnet_genesis(
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	chain_id: u64,
+	marketplace_admin: Option<AccountId>,
 ) -> GenesisConfig {
 	// This is the simplest bytecode to revert without returning any data.
 	// We will pre-deploy it under all of our precompiles to ensure they can be called from
@@ -245,5 +253,6 @@ fn testnet_genesis(
 		),
 		treasury: Default::default(),
 		wrap_currency: Default::default(),
+		martketplace: MartketplaceConfig { admin_key: marketplace_admin },
 	}
 }

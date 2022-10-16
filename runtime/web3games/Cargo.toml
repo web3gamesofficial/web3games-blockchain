@@ -72,6 +72,8 @@ pallet-exchange = { path = "../../pallets/exchange", default-features = false }
 pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
 pallet-proxy-pay = { path = "../../pallets/proxy-pay", default-features = false }
 pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-features = false }
+pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
+pallet-player-id = { path = "../../pallets/player-id", default-features = false }
 
 # local pallet rpc
 pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
@@ -119,6 +121,8 @@ std = [
 	"pallet-evm/std",
 	"pallet-base-fee/std",
 	"pallet-ethereum-chain-id/std",
+    "pallet-marketplace/std",
+	"pallet-player-id/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
 	"primitives/std",

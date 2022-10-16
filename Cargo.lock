@@ -4654,6 +4654,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-marketplace"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "pallet-token-multi",
+ "pallet-token-non-fungible",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-player-id"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-preimage"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#e8a7d161f39db70cb27fdad6c6e215cf493ebc3b"
@@ -9358,6 +9393,8 @@ dependencies = [
  "pallet-exchange",
  "pallet-exchange-rpc-runtime-api",
  "pallet-grandpa",
+ "pallet-marketplace",
+ "pallet-player-id",
  "pallet-preimage",
  "pallet-proxy-pay",
  "pallet-randomness-collective-flip",

@@ -672,6 +672,21 @@ impl pallet_proxy_pay::Config for Runtime {
 	type PalletId = ProxyPayPalletId;
 }
 
+impl pallet_marketplace::Config for Runtime {
+	type Event = Event;
+	type PalletId = MarketplacePalletId;
+	type Currency = Balances;
+}
+
+parameter_types! {
+	pub const MaxAddressesPerChain: u32 = 10;
+}
+
+impl pallet_player_id::Config for Runtime {
+	type Event = Event;
+	type MaxAddressesPerChain = MaxAddressesPerChain;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -708,6 +723,8 @@ construct_runtime!(
 		Exchange: pallet_exchange,
 		WrapCurrency: pallet_wrap_currency,
 		ProxyPay: pallet_proxy_pay,
+		Martketplace: pallet_marketplace,
+		PalyerId: pallet_player_id,
 	}
 );
 
