@@ -237,7 +237,7 @@ pub mod pallet {
 
 			let order = Orders::<T>::get(asset).ok_or(Error::<T>::OrderNotFound)?;
 
-			ensure!(order.start + order.duration <= Self::now(), Error::<T>::OrderExpired);
+			ensure!(order.start + order.duration >= Self::now(), Error::<T>::OrderExpired);
 
 			// Transfer service fee
 			let service_fee = match Admin::<T>::get() {
@@ -287,7 +287,7 @@ pub mod pallet {
 			let order = Orders::<T>::get(asset).ok_or(Error::<T>::OrderNotFound)?;
 
 			// check on expire time
-			ensure!(order.start + order.duration <= Self::now(), Error::<T>::OrderExpired);
+			ensure!(order.start + order.duration >= Self::now(), Error::<T>::OrderExpired);
 			//check price
 			ensure!(price >= BalanceOf::<T>::from(MIN_PRICE), Error::<T>::TooLittlePrice);
 
@@ -295,7 +295,7 @@ pub mod pallet {
 
 			// if theres no previous bid, just check price > 0
 			if let Some(bid) = bids {
-				if bid.start + bid.duration <= Self::now() {
+				if bid.start + bid.duration >= Self::now() {
 					ensure!(price > bid.price, Error::<T>::NeedHigherPrice);
 				}
 				Self::do_cancel_bid(asset, bid)?;
