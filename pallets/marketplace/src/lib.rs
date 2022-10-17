@@ -55,7 +55,7 @@ type NonFungibleTokenId = u128;
 type MultiGroupId = u128;
 type MultiTokenId = u128;
 
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo, Copy)]
+#[derive(Encode, Decode, Clone, Copy, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub enum Asset {
 	NonFungibleToken(NonFungibleGroupId, NonFungibleTokenId),
 	MultiToken(MultiGroupId, MultiTokenId),
@@ -63,15 +63,7 @@ pub enum Asset {
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Order<AccountId, Balance, BlockNumber> {
-	pub seller: AccountId,
-	pub price: Balance,
-	pub start: BlockNumber,
-	pub duration: BlockNumber,
-}
-
-#[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-pub struct Bid<AccountId, Balance, BlockNumber> {
-	pub bidder: AccountId,
+	pub creater: AccountId,
 	pub price: Balance,
 	pub start: BlockNumber,
 	pub duration: BlockNumber,
@@ -110,12 +102,10 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn orders)]
-	pub(super) type Orders<T: Config> =
-		StorageMap<_, Blake2_128Concat, Asset, OrderOf<T>, OptionQuery>;
+	pub(super) type Orders<T: Config> = StorageMap<_, Blake2_128Concat, Asset, OrderOf<T>>;
 
 	#[pallet::storage]
-	pub(super) type Bids<T: Config> =
-		StorageMap<_, Blake2_128Concat, Asset, Bid<T::AccountId, BalanceOf<T>, T::BlockNumber>>;
+	pub(super) type Bids<T: Config> = StorageMap<_, Blake2_128Concat, Asset, OrderOf<T>>;
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
@@ -145,9 +135,9 @@ pub mod pallet {
 		OrderCreated(T::AccountId, Asset, OrderOf<T>),
 		OrderCancelled(T::AccountId, Asset),
 		OrderExecuted(T::AccountId, Asset, OrderOf<T>),
-		BidCreated(T::AccountId, Asset, Bid<T::AccountId, BalanceOf<T>, T::BlockNumber>),
+		BidCreated(T::AccountId, Asset, OrderOf<T>),
 		BidCancelled(T::AccountId, Asset),
-		BidAccepted(T::AccountId, Asset, Bid<T::AccountId, BalanceOf<T>, T::BlockNumber>),
+		BidAccepted(T::AccountId, Asset, OrderOf<T>),
 	}
 
 	// Errors inform users that something went wrong.
@@ -203,7 +193,7 @@ pub mod pallet {
 			// check owner
 			Self::transfer_asset_to(who.clone(), asset, Self::account_id())?;
 
-			let order = Order { seller: who.clone(), price, start: Self::now(), duration };
+			let order = Order { creater: who.clone(), price, start: Self::now(), duration };
 
 			Orders::<T>::insert(asset, order.clone());
 
@@ -216,7 +206,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			let order = Orders::<T>::get(asset).ok_or(Error::<T>::OrderNotFound)?;
-			ensure!(order.seller == who, Error::<T>::NotSeller);
+			ensure!(order.creater == who, Error::<T>::NotSeller);
 
 			//check Bids
 			if let Some(bid) = Bids::<T>::get(asset) {
@@ -264,7 +254,7 @@ pub mod pallet {
 			}
 
 			let to_seller = order.price.saturating_sub(service_fee);
-			<T as pallet::Config>::Currency::transfer(&who, &order.seller, to_seller, KeepAlive)?;
+			<T as pallet::Config>::Currency::transfer(&who, &order.creater, to_seller, KeepAlive)?;
 
 			Self::transfer_asset_to(Self::account_id(), asset, who.clone())?;
 
@@ -305,7 +295,7 @@ pub mod pallet {
 			let admin = Admin::<T>::get().ok_or(Error::<T>::NotSetAdmin)?;
 			<T as Config>::Currency::transfer(&who, &admin, price, KeepAlive)?;
 
-			let bid = Bid { bidder: who.clone(), price, start: Self::now(), duration };
+			let bid = Order { creater: who.clone(), price, start: Self::now(), duration };
 			Bids::<T>::insert(asset, bid.clone());
 
 			Self::deposit_event(Event::BidCreated(who, asset, bid));
@@ -318,7 +308,7 @@ pub mod pallet {
 
 			let bid = Bids::<T>::get(asset).ok_or(Error::<T>::BidNotFound)?;
 
-			ensure!(bid.bidder == who, Error::<T>::NotBidder);
+			ensure!(bid.creater == who, Error::<T>::NotBidder);
 
 			Self::do_cancel_bid(asset, bid)
 		}
@@ -328,7 +318,7 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 
 			let order = Orders::<T>::get(asset).ok_or(Error::<T>::OrderNotFound)?;
-			ensure!(order.seller == who, Error::<T>::NotSeller);
+			ensure!(order.creater == who, Error::<T>::NotSeller);
 
 			let bid = Bids::<T>::get(asset).ok_or(Error::<T>::BidNotFound)?;
 			ensure!(bid.start + bid.duration <= Self::now(), Error::<T>::BidExpired);
@@ -337,11 +327,11 @@ pub mod pallet {
 			let service_fee = Self::calculate_service_fee(bid.price, fee_point);
 			let to_seller = bid.price.saturating_sub(service_fee);
 
-			// Transfer bid amount to seller
+			// Transfer bid amount to creater
 			let admin = Admin::<T>::get().ok_or(Error::<T>::NotSetAdmin)?;
-			<T as Config>::Currency::transfer(&admin, &order.seller, to_seller, KeepAlive)?;
+			<T as Config>::Currency::transfer(&admin, &order.creater, to_seller, KeepAlive)?;
 
-			Self::transfer_asset_to(Self::account_id(), asset, bid.bidder.clone())?;
+			Self::transfer_asset_to(Self::account_id(), asset, bid.creater.clone())?;
 
 			Orders::<T>::remove(asset);
 			Bids::<T>::remove(asset);
@@ -399,14 +389,11 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_cancel_bid(
-		asset: Asset,
-		bid: Bid<T::AccountId, BalanceOf<T>, T::BlockNumber>,
-	) -> DispatchResult {
+	fn do_cancel_bid(asset: Asset, bid: OrderOf<T>) -> DispatchResult {
 		let admin = Admin::<T>::get().ok_or(Error::<T>::NotSetAdmin)?;
-		<T as Config>::Currency::transfer(&admin, &bid.bidder, bid.price, KeepAlive)?;
+		<T as Config>::Currency::transfer(&admin, &bid.creater, bid.price, KeepAlive)?;
 		Bids::<T>::remove(asset);
-		Self::deposit_event(Event::BidCancelled(bid.bidder, asset));
+		Self::deposit_event(Event::BidCancelled(bid.creater, asset));
 		Ok(())
 	}
 }
