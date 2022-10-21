@@ -42,9 +42,9 @@ mod tests;
 pub const MIN_DURATION: u32 = 100;
 pub const MIN_PRICE: u32 = 10000;
 
-type BalanceOf<T> =
+pub type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-type OrderOf<T> = Order<
+pub type OrderOf<T> = Order<
 	<T as frame_system::Config>::AccountId,
 	BalanceOf<T>,
 	<T as frame_system::Config>::BlockNumber,
@@ -59,6 +59,7 @@ type MultiTokenId = u128;
 pub enum Asset {
 	NonFungibleToken(NonFungibleGroupId, NonFungibleTokenId),
 	MultiToken(MultiGroupId, MultiTokenId),
+	ErrorToken,
 }
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
@@ -154,6 +155,7 @@ pub mod pallet {
 		NotAdmin,
 		NotSetAdmin,
 		NeedHigherPrice,
+		AssetTypeError,
 	}
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
@@ -321,7 +323,7 @@ pub mod pallet {
 			ensure!(order.creater == who, Error::<T>::NotSeller);
 
 			let bid = Bids::<T>::get(asset).ok_or(Error::<T>::BidNotFound)?;
-			ensure!(bid.start + bid.duration <= Self::now(), Error::<T>::BidExpired);
+			ensure!(bid.start + bid.duration >= Self::now(), Error::<T>::BidExpired);
 
 			let fee_point = Point::<T>::get();
 			let service_fee = Self::calculate_service_fee(bid.price, fee_point);
@@ -385,6 +387,7 @@ impl<T: Config> Pallet<T> {
 					One::one(),
 				)?;
 			},
+			_ => ensure!(false, Error::<T>::AssetTypeError),
 		}
 		Ok(())
 	}

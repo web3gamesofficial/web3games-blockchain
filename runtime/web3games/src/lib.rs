@@ -688,10 +688,10 @@ impl pallet_player_id::Config for Runtime {
 }
 
 impl pallet_utility::Config for Runtime {
-    type Event = Event;
-    type Call = Call;
-    type PalletsOrigin = OriginCaller;
-    type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+	type Event = Event;
+	type Call = Call;
+	type PalletsOrigin = OriginCaller;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
 }
 
 construct_runtime!(
@@ -707,7 +707,7 @@ construct_runtime!(
 		Grandpa: pallet_grandpa,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
-        Utility: pallet_utility,
+		Utility: pallet_utility,
 
 		// Ethereum
 		EthereumChainId: pallet_ethereum_chain_id,
