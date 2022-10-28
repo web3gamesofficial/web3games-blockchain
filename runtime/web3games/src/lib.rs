@@ -71,6 +71,7 @@ pub use frame_support::{
 	},
 	ConsensusEngineId, PalletId, StorageValue,
 };
+use frame_support::log;
 pub use frame_system::Call as SystemCall;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -99,6 +100,8 @@ pub use primitives::{
 pub use chain_extensions::Web3GamesChainExtensions;
 pub use precompiles::Web3GamesPrecompiles;
 pub type Precompiles = Web3GamesPrecompiles<Runtime>;
+
+use pallet_call_switchgear::{OverallToggleFilter, SwitchOffTransactionFilter};
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -177,8 +180,24 @@ parameter_types! {
 
 const_assert!(NORMAL_DISPATCH_RATIO.deconstruct() >= AVERAGE_ON_INITIALIZE_RATIO.deconstruct());
 
+pub struct CallFilter;
+impl Contains<Call> for CallFilter {
+	fn contains(call: &Call) -> bool {
+		if matches!(call, Call::System(_) | Call::Timestamp(_) | Call::Sudo(_)) {
+			// always allow core call
+			return true
+		}
+		if OverallToggleFilter::<Runtime>::get_overall_toggle_status() ||
+			SwitchOffTransactionFilter::<Runtime>::contains(call)
+		{
+			return false
+		}
+		true
+	}
+}
+
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = Everything;
+	type BaseCallFilter = CallFilter;
 	type BlockWeights = RuntimeBlockWeights;
 	type BlockLength = RuntimeBlockLength;
 	type DbWeight = RocksDbWeight;
@@ -694,6 +713,12 @@ impl pallet_utility::Config for Runtime {
 	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
 }
 
+impl pallet_call_switchgear::Config for Runtime {
+	type Event = Event;
+	type UpdateOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -733,6 +758,7 @@ construct_runtime!(
 		ProxyPay: pallet_proxy_pay,
 		Martketplace: pallet_marketplace,
 		PalyerId: pallet_player_id,
+		CallSwitchgear: pallet_call_switchgear,
 	}
 );
 

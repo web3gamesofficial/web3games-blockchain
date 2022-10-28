@@ -75,6 +75,7 @@ pallet-proxy-pay = { path = "../../pallets/proxy-pay", default-features = false 
 pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-features = false }
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
 pallet-player-id = { path = "../../pallets/player-id", default-features = false }
+pallet-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
 
 # local pallet rpc
 pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
