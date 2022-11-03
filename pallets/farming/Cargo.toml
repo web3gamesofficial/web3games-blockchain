@@ -1,0 +1,48 @@
+[package]
+name = "pallet-farming"
+version = "0.1.0"
+authors = ["Web3Games Developers"]
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.137", optional = true }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false, optional = true }
+sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
+
+pallet-token-fungible = { path = "../token-fungible", default-features = false }
+primitives = { path = "../../primitives", default-features = false }
+
+[dev-dependencies]
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+smallvec = "1.9.0"
+
+
+[features]
+default = ["std"]
+std = [
+	"serde",
+	"codec/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-io/std",
+	"sp-std/std",
+	"scale-info/std",
+	"pallet-token-fungible/std",
+	"primitives/std",
+]
+try-runtime = ["frame-support/try-runtime"]
+
+runtime-benchmarks = [
+	"frame-benchmarking",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
+]
+
