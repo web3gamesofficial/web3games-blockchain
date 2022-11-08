@@ -76,6 +76,7 @@ pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-f
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
 pallet-player-id = { path = "../../pallets/player-id", default-features = false }
 pallet-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
+pallet-transaction-storage = { path = "../../pallets/transaction-storage", default-features = false }
 
 # local pallet rpc
 pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
@@ -100,6 +101,7 @@ std = [
 	"pallet-timestamp/std",
 	"pallet-transaction-payment/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
+	"pallet-transaction-storage/std",
 	"pallet-utility/std",
 	"sp-api/std",
 	"sp-block-builder/std",
