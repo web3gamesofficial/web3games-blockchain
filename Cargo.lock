@@ -107,12 +107,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "array-bytes"
-version = "4.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a913633b0c922e6b745072795f50d90ebea78ba31a57e2ac8c2fc7b50950949"
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4969,10 +4963,9 @@ dependencies = [
 
 [[package]]
 name = "pallet-transaction-storage"
-version = "0.1.0"
+version = "4.0.0-dev"
+source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#1cca061ede75a4c693a3b71bd1b61d7275fe29e4"
 dependencies = [
- "array-bytes",
- "frame-benchmarking",
  "frame-support",
  "frame-system",
  "log",
@@ -4980,7 +4973,6 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core",
  "sp-inherents",
  "sp-io",
  "sp-runtime",

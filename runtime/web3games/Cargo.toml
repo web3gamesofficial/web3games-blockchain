@@ -39,6 +39,8 @@ pallet-scheduler = { git = "https://github.com/paritytech/substrate", branch = "
 pallet-preimage = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 pallet-treasury = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 pallet-utility = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
+pallet-transaction-storage = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
+
 
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
@@ -76,7 +78,7 @@ pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-f
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
 pallet-player-id = { path = "../../pallets/player-id", default-features = false }
 pallet-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
-pallet-transaction-storage = { path = "../../pallets/transaction-storage", default-features = false }
+
 
 # local pallet rpc
 pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
