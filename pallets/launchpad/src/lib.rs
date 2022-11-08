@@ -20,13 +20,13 @@
 
 use frame_support::{pallet_prelude::*, PalletId};
 use frame_system::{pallet_prelude::*, WeightInfo};
+use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use sp_runtime::{
 	traits::{AccountIdConversion, UniqueSaturatedFrom},
 	DispatchResult,
 };
 use sp_std::prelude::*;
-use pallet_support::FungibleMetadata;
 
 pub use pallet::*;
 
@@ -103,7 +103,7 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn account_pool_id_locked)]
 	pub type AccountPoolIdLocked<T: Config> =
-	StorageMap<_, Blake2_128, (T::AccountId, u64), ClaimInfo>;
+		StorageMap<_, Blake2_128, (T::AccountId, u64), ClaimInfo>;
 
 	#[pallet::pallet]
 	#[pallet::without_storage_info]
@@ -150,7 +150,7 @@ pub mod pallet {
 					buy_token_id,
 					token_price,
 					total_sale_amount,
-					raise_amount:total_sale_amount
+					raise_amount: total_sale_amount,
 				},
 			);
 
@@ -164,7 +164,10 @@ pub mod pallet {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
 
-			ensure!(Self::now() >= pool.sale_start && Self::now() < pool.sale_end, Error::<T>::OutOfSaleTime);
+			ensure!(
+				Self::now() >= pool.sale_start && Self::now() < pool.sale_end,
+				Error::<T>::OutOfSaleTime
+			);
 
 			let pay_amount = amount.saturating_mul(pool.token_price);
 
@@ -177,7 +180,7 @@ pub mod pallet {
 			)?;
 
 			let decimals = pallet_token_fungible::Pallet::<T>::token_decimals(
-				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id)
+				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id),
 			);
 
 			let claim_amount = amount.saturating_mul(10u128.pow(decimals as u32));
@@ -190,8 +193,7 @@ pub mod pallet {
 			} else {
 				AccountPoolIdLocked::<T>::mutate((sender.clone(), pool_id), |old_claim_info| {
 					if let Some(claim_info) = old_claim_info {
-						claim_info.balance =
-							claim_info.balance.saturating_add(claim_amount);
+						claim_info.balance = claim_info.balance.saturating_add(claim_amount);
 					}
 				});
 			}
@@ -232,11 +234,7 @@ pub mod pallet {
 				}
 			});
 
-			Self::deposit_event(Event::Claim(
-				sender,
-				pool_id,
-				claim_info.balance,
-			));
+			Self::deposit_event(Event::Claim(sender, pool_id, claim_info.balance));
 
 			Ok(())
 		}

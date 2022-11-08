@@ -203,7 +203,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::NonFungibleTokenId,
 		Blake2_128Concat,
-		T::TokenId,
+		(T::AccountId, T::TokenId),
 		TokenIndex,
 		ValueQuery,
 	>;
@@ -537,7 +537,7 @@ impl<T: Config> Pallet<T> {
 	) -> DispatchResult {
 		let new_token_index = Self::balance_of(id, to);
 
-		OwnedTokensIndex::<T>::insert(id, token_id, new_token_index);
+		OwnedTokensIndex::<T>::insert(id, (to, token_id), new_token_index);
 		OwnedTokens::<T>::insert(id, (to, new_token_index), token_id);
 
 		Ok(())
@@ -572,15 +572,15 @@ impl<T: Config> Pallet<T> {
 			None => return Err(Error::<T>::Overflow.into()),
 		};
 
-		let token_index = OwnedTokensIndex::<T>::get(id, token_id);
+		let token_index = OwnedTokensIndex::<T>::get(id, (from, token_id));
 
 		if token_index != last_token_index {
 			let last_token_id = OwnedTokens::<T>::get(id, (from, last_token_index));
 			OwnedTokens::<T>::insert(id, (from, token_index), last_token_id);
-			OwnedTokensIndex::<T>::insert(id, last_token_id, token_index);
+			OwnedTokensIndex::<T>::insert(id, (from, last_token_id), token_index);
 		}
 
-		OwnedTokensIndex::<T>::remove(id, token_id);
+		OwnedTokensIndex::<T>::remove(id, (from, token_id));
 		OwnedTokens::<T>::remove(id, (from, last_token_index));
 
 		Ok(())

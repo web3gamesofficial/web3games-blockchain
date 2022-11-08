@@ -71,10 +71,7 @@ fn create_pool_should_work() {
 		));
 
 		let escrow_account = Launchpad::escrow_account_id(0);
-		assert_eq!(
-			TokenFungible::balance_of(TOKENA, ALICE),
-			100 * W3G - 10 * W3G
-		);
+		assert_eq!(TokenFungible::balance_of(TOKENA, ALICE), 100 * W3G - 10 * W3G);
 		assert_eq!(TokenFungible::balance_of(TOKENA, escrow_account), 10 * W3G);
 		assert_eq!(
 			Launchpad::pools(0).unwrap(),
@@ -111,10 +108,7 @@ fn buy_token_should_work() {
 		assert_ok!(Launchpad::buy_token(Origin::signed(BOB), 0, 1));
 
 		let escrow_account = Launchpad::escrow_account_id(0);
-		assert_eq!(
-			TokenFungible::balance_of(TOKENB, BOB),
-			100 * USDT - 1 * USDT
-		);
+		assert_eq!(TokenFungible::balance_of(TOKENB, BOB), 100 * USDT - 1 * USDT);
 		assert_eq!(TokenFungible::balance_of(TOKENB, escrow_account), 1 * USDT);
 		assert_eq!(
 			Launchpad::account_pool_id_locked((BOB, 0)).unwrap(),
@@ -122,24 +116,15 @@ fn buy_token_should_work() {
 		);
 		assert_eq!(Launchpad::pools(0).unwrap().raise_amount, 10 * W3G - 1 * W3G);
 
-		assert_noop!(
-			Launchpad::buy_token(Origin::signed(BOB), 1, 1),
-			Error::<Test>::PoolNotFound
-		);
+		assert_noop!(Launchpad::buy_token(Origin::signed(BOB), 1, 1), Error::<Test>::PoolNotFound);
 		assert_ok!(Launchpad::buy_token(Origin::signed(BOB), 0, 1));
 
-		assert_eq!(
-			TokenFungible::balance_of(TOKENB, BOB),
-			100 * USDT - 1 * USDT - 1 * USDT
-		);
+		assert_eq!(TokenFungible::balance_of(TOKENB, BOB), 100 * USDT - 1 * USDT - 1 * USDT);
 		assert_eq!(TokenFungible::balance_of(TOKENB, escrow_account), 2 * USDT);
 		assert_eq!(Launchpad::pools(0).unwrap().raise_amount, 10 * W3G - 1 * W3G - 1 * W3G);
 
 		run_to_block(12);
-		assert_noop!(
-			Launchpad::buy_token(Origin::signed(BOB), 0, 1),
-			Error::<Test>::OutOfSaleTime
-		);
+		assert_noop!(Launchpad::buy_token(Origin::signed(BOB), 0, 1), Error::<Test>::OutOfSaleTime);
 	})
 }
 
