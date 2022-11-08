@@ -4692,6 +4692,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-launchpad"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-support",
+ "pallet-token-fungible",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-marketplace"
 version = "0.1.0"
 dependencies = [
