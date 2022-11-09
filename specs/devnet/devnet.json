@@ -2,9 +2,7 @@
   "name": "Web3Games Development Testnet",
   "id": "web3games_dev",
   "chainType": "Development",
-  "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWLgwEc3V32gQHBtyP3VWDpwCh1e2jwo4HQb6Ap5beekqh"
-  ],
+  "bootNodes": [],
   "telemetryEndpoints": null,
   "protocolId": null,
   "properties": {
