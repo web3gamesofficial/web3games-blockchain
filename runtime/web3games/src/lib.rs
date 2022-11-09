@@ -716,6 +716,18 @@ impl pallet_call_switchgear::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl pallet_transaction_storage::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type Call = Call;
+	type FeeDestination = ();
+	type WeightInfo = pallet_transaction_storage::weights::SubstrateWeight<Runtime>;
+	type MaxBlockTransactions =
+	ConstU32<{ pallet_transaction_storage::DEFAULT_MAX_BLOCK_TRANSACTIONS }>;
+	type MaxTransactionSize =
+	ConstU32<{ pallet_transaction_storage::DEFAULT_MAX_TRANSACTION_SIZE }>;
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -756,6 +768,7 @@ construct_runtime!(
 		Martketplace: pallet_marketplace,
 		PalyerId: pallet_player_id,
 		CallSwitchgear: pallet_call_switchgear,
+		TransactionStorage: pallet_transaction_storage,
 	}
 );
 

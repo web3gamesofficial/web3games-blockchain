@@ -252,6 +252,7 @@ fn testnet_genesis(
 			Permill::from_parts(1250u32),
 		),
 		treasury: Default::default(),
+		transaction_storage: Default::default(),
 		wrap_currency: Default::default(),
 		martketplace: MartketplaceConfig { admin_key: marketplace_admin },
 	}
