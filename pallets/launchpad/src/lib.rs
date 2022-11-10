@@ -40,6 +40,7 @@ type FungibleTokenId = u128;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
 pub struct Pool<AccountId, BlockNumber> {
+	pub owner: AccountId,
 	pub escrow_account: AccountId,
 	pub sale_start: BlockNumber,
 	pub sale_end: BlockNumber,
@@ -82,6 +83,7 @@ pub mod pallet {
 		ClaimNotStart,
 		AlreadyClaim,
 		NotBuy,
+		NotOwner,
 	}
 
 	#[pallet::event]
@@ -90,6 +92,7 @@ pub mod pallet {
 		PoolCreated(u64),
 		BuyToken(T::AccountId, u64, Balance),
 		Claim(T::AccountId, u64, Balance),
+		OwnerClaim(T::AccountId, u64, Balance, Balance),
 	}
 
 	#[pallet::storage]
@@ -143,6 +146,7 @@ pub mod pallet {
 			Pools::<T>::insert(
 				pool_id,
 				Pool {
+					owner: sender,
 					escrow_account,
 					sale_start,
 					sale_end: sale_start + sale_duration,
@@ -235,6 +239,42 @@ pub mod pallet {
 			});
 
 			Self::deposit_event(Event::Claim(sender, pool_id, claim_info.balance));
+
+			Ok(())
+		}
+
+		#[pallet::weight(2000)]
+		pub fn owner_claim(origin: OriginFor<T>, pool_id: u64) -> DispatchResult {
+			let sender = ensure_signed(origin)?;
+			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
+
+			ensure!(Self::now() > pool.sale_end, Error::<T>::ClaimNotStart);
+			ensure!(pool.owner == sender, Error::<T>::NotOwner);
+
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id),
+				&pool.escrow_account,
+				&sender,
+				pool.raise_amount,
+			)?;
+
+			let buy_token_amount = pallet_token_fungible::Pallet::<T>::balance_of(
+				FungibleTokenIdOf::<T>::unique_saturated_from(pool.buy_token_id),
+				&pool.escrow_account,
+			);
+			pallet_token_fungible::Pallet::<T>::do_transfer(
+				FungibleTokenIdOf::<T>::unique_saturated_from(pool.buy_token_id),
+				&pool.escrow_account,
+				&sender,
+				buy_token_amount,
+			)?;
+
+			Self::deposit_event(Event::OwnerClaim(
+				sender,
+				pool_id,
+				pool.raise_amount,
+				buy_token_amount,
+			));
 
 			Ok(())
 		}
