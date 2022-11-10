@@ -586,6 +586,7 @@ parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const ExchangePalletId: PalletId = PalletId(*b"w3g/expi");
 	pub const MarketplacePalletId: PalletId = PalletId(*b"w3g/mpct");
+	pub const FarmingPalletId: PalletId = PalletId(*b"w3g/farm");
 	pub const ProxyPayPalletId: PalletId = PalletId(*b"w3g/prox");
 	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
 	pub const StringLimit: u32 = 50;
@@ -728,6 +729,18 @@ impl pallet_transaction_storage::Config for Runtime {
 		ConstU32<{ pallet_transaction_storage::DEFAULT_MAX_TRANSACTION_SIZE }>;
 }
 
+impl pallet_farming::Config for Runtime {
+	type Event = Event;
+	type PalletId = FarmingPalletId;
+	type WeightInfo = ();
+}
+
+impl pallet_launchpad::Config for Runtime {
+	type Event = Event;
+	type PalletId = FarmingPalletId;
+	type WeightInfo = ();
+}
+
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -769,6 +782,8 @@ construct_runtime!(
 		PalyerId: pallet_player_id,
 		CallSwitchgear: pallet_call_switchgear,
 		TransactionStorage: pallet_transaction_storage,
+		Farming: pallet_farming,
+		Launchpad: pallet_launchpad
 	}
 );
 

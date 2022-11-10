@@ -78,6 +78,8 @@ pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-f
 pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
 pallet-player-id = { path = "../../pallets/player-id", default-features = false }
 pallet-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
+pallet-farming = { path = "../../pallets/farming", default-features = false }
+pallet-launchpad = { path = "../../pallets/launchpad", default-features = false }
 
 
 # local pallet rpc
@@ -142,6 +144,8 @@ std = [
 	"pallet-wrap-currency/std",
 	"pallet-exchange-rpc-runtime-api/std",
 	"pallet-proxy-pay/std",
+	"pallet-farming/std",
+	"pallet-launchpad/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
