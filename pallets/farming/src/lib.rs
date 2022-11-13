@@ -34,6 +34,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
 type FungibleTokenId = u128;
 
@@ -41,7 +44,8 @@ type FungibleTokenId = u128;
 pub struct Pool<AccountId, BlockNumber> {
 	pub escrow_account: AccountId,
 	pub start_at: BlockNumber,
-	pub end_time: BlockNumber,
+	pub staking_duration: BlockNumber,
+	pub locked_duration: BlockNumber,
 	pub locked_token_id: FungibleTokenId,
 	pub award_token_id: FungibleTokenId,
 	pub total_locked: Balance,
@@ -52,6 +56,14 @@ pub struct Pool<AccountId, BlockNumber> {
 pub struct StakingInfo {
 	pub staking_balance: Balance,
 	pub is_claimed: bool,
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+pub enum Status {
+	StakingNotStart,
+	Staking,
+	Locked,
+	Claim,
 }
 
 #[frame_support::pallet]
@@ -76,7 +88,11 @@ pub mod pallet {
 		NoPermisson,
 		ArithmeticOverflow,
 		PoolNotFound,
+		StakingNotStart,
 		StakingTimeout,
+		CurrentStakingTime,
+		CurrentLockedTime,
+		CurrentClaimTime,
 		ClaimNotStart,
 		AlreadyClaim,
 		NotStaking,
@@ -128,7 +144,8 @@ pub mod pallet {
 		pub fn create_pool(
 			origin: OriginFor<T>,
 			start_at: T::BlockNumber,
-			duration: T::BlockNumber,
+			staking_duration: T::BlockNumber,
+			locked_duration: T::BlockNumber,
 			locked_token_id: FungibleTokenId,
 			award_token_id: FungibleTokenId,
 			total_award: Balance,
@@ -155,7 +172,8 @@ pub mod pallet {
 				Pool {
 					escrow_account,
 					start_at,
-					end_time: start_at + duration,
+					staking_duration,
+					locked_duration,
 					locked_token_id,
 					award_token_id,
 					total_locked: 0,
@@ -173,7 +191,12 @@ pub mod pallet {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
 
-			ensure!(Self::now() <= pool.end_time, Error::<T>::StakingTimeout);
+			match Self::pool_status(Self::now(), &pool) {
+				Status::StakingNotStart => ensure!(false, Error::<T>::StakingNotStart),
+				Status::Staking => {},
+				Status::Locked => ensure!(false, Error::<T>::CurrentLockedTime),
+				Status::Claim => ensure!(false, Error::<T>::CurrentClaimTime),
+			};
 
 			pallet_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.locked_token_id),
@@ -191,7 +214,7 @@ pub mod pallet {
 				AccountPoolIdLocked::<T>::mutate((sender.clone(), pool_id), |old_staking_info| {
 					if let Some(staking_info) = old_staking_info {
 						staking_info.staking_balance =
-							staking_info.staking_balance.saturating_sub(amount);
+							staking_info.staking_balance.saturating_add(amount);
 					}
 				});
 			}
@@ -212,7 +235,12 @@ pub mod pallet {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
 
-			ensure!(Self::now() > pool.end_time, Error::<T>::ClaimNotStart);
+			match Self::pool_status(Self::now(), &pool) {
+				Status::StakingNotStart => ensure!(false, Error::<T>::StakingNotStart),
+				Status::Staking => ensure!(false, Error::<T>::CurrentStakingTime),
+				Status::Locked => ensure!(false, Error::<T>::CurrentLockedTime),
+				Status::Claim => {},
+			};
 
 			let pool_id_locked = AccountPoolIdLocked::<T>::get((sender.clone(), pool_id))
 				.ok_or(Error::<T>::NotStaking)?;
@@ -299,5 +327,17 @@ impl<T: Config> Pallet<T> {
 
 	pub fn escrow_account_id(pool_id: u64) -> T::AccountId {
 		<T as pallet::Config>::PalletId::get().into_sub_account_truncating(pool_id)
+	}
+
+	pub fn pool_status(now: T::BlockNumber, pool: &Pool<T::AccountId, T::BlockNumber>) -> Status {
+		let start_at = pool.start_at;
+		let staking_end_time = pool.start_at + pool.staking_duration;
+		let locked_end_time = pool.start_at + pool.staking_duration + pool.locked_duration;
+		match now {
+			now if now < start_at => Status::StakingNotStart,
+			now if start_at <= now && now < staking_end_time => Status::Staking,
+			now if staking_end_time <= now && now < locked_end_time => Status::Locked,
+			_ => Status::Claim,
+		}
 	}
 }
