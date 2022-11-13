@@ -161,4 +161,5 @@ runtime-benchmarks = [
 	"pallet-token-multi/runtime-benchmarks",
 	"pallet-token-non-fungible/runtime-benchmarks",
 	"pallet-exchange/runtime-benchmarks",
+	"pallet-farming/runtime-benchmarks",
 ]

@@ -4,12 +4,11 @@
 
 use super::*;
 use crate::Pallet as Farming;
-use frame_benchmarking::{account, benchmarks, impl_benchmark_test_suite, whitelisted_caller};
+use frame_benchmarking::{account, benchmarks};
 use frame_support::assert_ok;
-use frame_system::{Origin, Pallet as System, RawOrigin};
-use pallet_token_fungible as TokenFungbile;
+use frame_system::{Pallet as System, RawOrigin};
 use pallet_token_fungible::Pallet as TokenFungible;
-use sp_runtime::traits::{StaticLookup, UniqueSaturatedFrom};
+use sp_runtime::traits::UniqueSaturatedFrom;
 
 const W3G: u128 = 1;
 const USDT: u128 = 2;

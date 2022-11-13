@@ -917,6 +917,7 @@ mod benches {
 		[pallet_token_multi, TokenMulti]
 		[pallet_token_non_fungible, TokenNonFungible]
 		[pallet_exchange, Exchange]
+		[pallet_farming, Farming]
 	);
 }
 
@@ -1318,6 +1319,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_token_multi, TokenMulti);
 			list_benchmark!(list, extra, pallet_token_non_fungible, TokenNonFungible);
 			list_benchmark!(list, extra, pallet_exchange, Exchange);
+			list_benchmark!(list, extra, pallet_farming, Farming);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1356,6 +1358,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_token_multi, TokenMulti);
 			add_benchmark!(params, batches, pallet_token_non_fungible, TokenNonFungible);
 			add_benchmark!(params, batches, pallet_exchange, Exchange);
+			add_benchmark!(params, batches, pallet_farming, Farming);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
