@@ -5429,6 +5429,8 @@ dependencies = [
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
  "pallet-exchange",
+ "pallet-farming",
+ "pallet-launchpad",
  "pallet-marketplace",
  "pallet-support",
  "pallet-token-fungible",

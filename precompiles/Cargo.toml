@@ -27,6 +27,8 @@ pallet-token-non-fungible = { path = "../pallets/token-non-fungible", default-fe
 pallet-token-multi = { path = "../pallets/token-multi", default-features = false }
 pallet-exchange = { path = "../pallets/exchange", default-features = false }
 pallet-marketplace = { path = "../pallets/marketplace", default-features = false }
+pallet-farming = { path = "../pallets/farming", default-features = false }
+pallet-launchpad = { path = "../pallets/launchpad", default-features = false }
 pallet-support = { path = "../pallets/support", default-features = false }
 primitives = {path = "../primitives", default-features = false }
 precompile-utils = { path = "./utils", default-features = false }
@@ -53,6 +55,8 @@ std = [
 	"pallet-token-multi/std",
 	"pallet-exchange/std",
 	"pallet-marketplace/std",
+	"pallet-farming/std",
+	"pallet-launchpad/std",
 	"pallet-support/std",
 	"primitives/std",
 	"precompile-utils/std",

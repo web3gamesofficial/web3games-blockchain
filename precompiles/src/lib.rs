@@ -31,12 +31,16 @@ use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
 
 mod exchange;
+mod farming;
+mod launchpad;
 mod marketplace;
 mod token_fungible;
 mod token_multi;
 mod token_non_fungible;
 
 pub use exchange::ExchangeExtension;
+pub use farming::FarmingExtension;
+pub use launchpad::LaunchpadExtension;
 pub use marketplace::MarketplaceExtension;
 pub use token_fungible::FungibleTokenExtension;
 pub use token_multi::MultiTokenExtension;
@@ -87,12 +91,16 @@ where
 		+ pallet_token_non_fungible::Config
 		+ pallet_token_multi::Config
 		+ pallet_exchange::Config
-		+ pallet_marketplace::Config,
+		+ pallet_marketplace::Config
+		+ pallet_farming::Config
+		+ pallet_launchpad::Config,
 	R::Call: From<pallet_token_fungible::Call<R>>,
 	R::Call: From<pallet_token_non_fungible::Call<R>>,
 	R::Call: From<pallet_token_multi::Call<R>>,
 	R::Call: From<pallet_exchange::Call<R>>,
 	R::Call: From<pallet_marketplace::Call<R>>,
+	R::Call: From<pallet_farming::Call<R>>,
+	R::Call: From<pallet_launchpad::Call<R>>,
 	<R as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 	<R as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
 	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
@@ -121,6 +129,8 @@ where
 			// Web3Games precompiles
 			a if a == hash(1027) => ExchangeExtension::<R>::new().execute(handle),
 			a if a == hash(1028) => MarketplaceExtension::<R>::new().execute(handle),
+			a if a == hash(1029) => FarmingExtension::<R>::new().execute(handle),
+			a if a == hash(1030) => LaunchpadExtension::<R>::new().execute(handle),
 			a if &a.to_fixed_bytes()[0..4] == FT_PRECOMPILE_ADDRESS_PREFIX =>
 			// Some(<FungibleTokenExtension<R> as Precompile>::execute(handle)),
 				FungibleTokenExtension::<R>::new().execute(handle),
