@@ -19,7 +19,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, PalletId};
-use frame_system::{pallet_prelude::*, WeightInfo};
+use frame_system::pallet_prelude::*;
 use primitives::Balance;
 use sp_runtime::{
 	traits::{AccountIdConversion, UniqueSaturatedFrom},
@@ -28,6 +28,8 @@ use sp_runtime::{
 use sp_std::prelude::*;
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -133,14 +135,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_admin())]
 		pub fn set_admin(origin: OriginFor<T>, new_admin: T::AccountId) -> DispatchResult {
 			ensure_root(origin)?;
 			Admin::<T>::mutate(|admin| *admin = Some(new_admin));
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::create_pool())]
 		pub fn create_pool(
 			origin: OriginFor<T>,
 			start_at: T::BlockNumber,
@@ -186,7 +188,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::staking())]
 		pub fn staking(origin: OriginFor<T>, pool_id: u64, amount: Balance) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
@@ -230,7 +232,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::claim())]
 		pub fn claim(origin: OriginFor<T>, pool_id: u64) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
@@ -279,7 +281,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::force_claim())]
 		pub fn force_claim(
 			origin: OriginFor<T>,
 			traget: T::AccountId,

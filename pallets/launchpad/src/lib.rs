@@ -19,7 +19,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, PalletId};
-use frame_system::{pallet_prelude::*, WeightInfo};
+use frame_system::pallet_prelude::*;
 use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use sp_runtime::{
@@ -29,6 +29,11 @@ use sp_runtime::{
 use sp_std::prelude::*;
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 #[cfg(test)]
 mod mock;
@@ -117,7 +122,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::create_pool())]
 		pub fn create_pool(
 			origin: OriginFor<T>,
 			sale_start: T::BlockNumber,
@@ -163,7 +168,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::buy_token())]
 		pub fn buy_token(origin: OriginFor<T>, pool_id: u64, amount: Balance) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
@@ -213,7 +218,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::claim())]
 		pub fn claim(origin: OriginFor<T>, pool_id: u64) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;
@@ -243,7 +248,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::owner_claim())]
 		pub fn owner_claim(origin: OriginFor<T>, pool_id: u64) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			let pool = Pools::<T>::get(pool_id).ok_or(Error::<T>::PoolNotFound)?;

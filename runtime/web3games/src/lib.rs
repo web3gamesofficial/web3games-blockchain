@@ -732,13 +732,13 @@ impl pallet_transaction_storage::Config for Runtime {
 impl pallet_farming::Config for Runtime {
 	type Event = Event;
 	type PalletId = FarmingPalletId;
-	type WeightInfo = ();
+	type WeightInfo = pallet_farming::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_launchpad::Config for Runtime {
 	type Event = Event;
 	type PalletId = FarmingPalletId;
-	type WeightInfo = ();
+	type WeightInfo = pallet_launchpad::weights::W3GWeight<Runtime>;
 }
 
 construct_runtime!(
@@ -918,6 +918,7 @@ mod benches {
 		[pallet_token_non_fungible, TokenNonFungible]
 		[pallet_exchange, Exchange]
 		[pallet_farming, Farming]
+		[pallet_launchpad, Launchpad]
 	);
 }
 
@@ -1320,6 +1321,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_token_non_fungible, TokenNonFungible);
 			list_benchmark!(list, extra, pallet_exchange, Exchange);
 			list_benchmark!(list, extra, pallet_farming, Farming);
+			list_benchmark!(list, extra, pallet_launchpad, Launchpad);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1359,6 +1361,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_token_non_fungible, TokenNonFungible);
 			add_benchmark!(params, batches, pallet_exchange, Exchange);
 			add_benchmark!(params, batches, pallet_farming, Farming);
+			add_benchmark!(params, batches, pallet_launchpad, Launchpad);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
