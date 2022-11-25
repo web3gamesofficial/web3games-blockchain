@@ -18,6 +18,7 @@ scale-info = { version = "2.1.2", default-features = false, features = ["derive"
 [dev-dependencies]
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
+primitives = { path = "../../primitives"}
 smallvec = "1.9.0"
 
 

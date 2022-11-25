@@ -1,6 +1,6 @@
-// This file is part of Bifrost.
+// This file is part of Web3Games.
 
-// Copyright (C) 2019-2022 Liebi Technologies (UK) Ltd.
+// Copyright (C) 2021-2022 Web3Games https://web3games.org
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
 // This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,15 @@ use sp_std::prelude::*;
 
 pub use pallet::*;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -40,9 +49,6 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
-		/// The origin which may set filter.
-		type UpdateOrigin: EnsureOrigin<Self::Origin>;
 
 		/// Weight information for the extrinsics in this module.
 		type WeightInfo: WeightInfo;
@@ -96,7 +102,7 @@ pub mod pallet {
 			pallet_name: Vec<u8>,
 			function_name: Vec<u8>,
 		) -> DispatchResult {
-			T::UpdateOrigin::ensure_origin(origin)?;
+			ensure_root(origin)?;
 
 			let pallet_name_string =
 				sp_std::str::from_utf8(&pallet_name).map_err(|_| Error::<T>::InvalidCharacter)?;
@@ -130,7 +136,7 @@ pub mod pallet {
 			pallet_name: Vec<u8>,
 			function_name: Vec<u8>,
 		) -> DispatchResult {
-			T::UpdateOrigin::ensure_origin(origin)?;
+			ensure_root(origin)?;
 
 			let pallet_name_string =
 				sp_std::str::from_utf8(&pallet_name).map_err(|_| Error::<T>::InvalidCharacter)?;

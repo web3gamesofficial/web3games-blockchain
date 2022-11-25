@@ -713,7 +713,6 @@ impl pallet_utility::Config for Runtime {
 
 impl pallet_call_switchgear::Config for Runtime {
 	type Event = Event;
-	type UpdateOrigin = EnsureRoot<AccountId>;
 	type WeightInfo = ();
 }
 
@@ -919,6 +918,7 @@ mod benches {
 		[pallet_exchange, Exchange]
 		[pallet_farming, Farming]
 		[pallet_launchpad, Launchpad]
+		[pallet_call_switchgear, CallSwitchgear]
 	);
 }
 
@@ -1322,6 +1322,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_exchange, Exchange);
 			list_benchmark!(list, extra, pallet_farming, Farming);
 			list_benchmark!(list, extra, pallet_launchpad, Launchpad);
+			list_benchmark!(list, extra, pallet_call_switchgear, CallSwitchgear);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1362,6 +1363,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_exchange, Exchange);
 			add_benchmark!(params, batches, pallet_farming, Farming);
 			add_benchmark!(params, batches, pallet_launchpad, Launchpad);
+			add_benchmark!(params, batches, pallet_call_switchgear, CallSwitchgear);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
