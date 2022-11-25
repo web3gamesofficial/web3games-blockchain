@@ -27,11 +27,13 @@ use frame_support::{
 	pallet_prelude::*,
 	traits::{Contains, PalletInfoAccess},
 };
-use frame_system::{pallet_prelude::*, WeightInfo};
+use frame_system::pallet_prelude::*;
 use sp_runtime::DispatchResult;
 use sp_std::prelude::*;
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -96,7 +98,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(2000)]
+		#[pallet::weight(T::WeightInfo::switchoff_transaction())]
 		pub fn switchoff_transaction(
 			origin: OriginFor<T>,
 			pallet_name: Vec<u8>,
@@ -130,7 +132,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(2000)]
+		#[pallet::weight(T::WeightInfo::switchon_transaction())]
 		pub fn switchon_transaction(
 			origin: OriginFor<T>,
 			pallet_name: Vec<u8>,

@@ -713,7 +713,7 @@ impl pallet_utility::Config for Runtime {
 
 impl pallet_call_switchgear::Config for Runtime {
 	type Event = Event;
-	type WeightInfo = ();
+	type WeightInfo = pallet_call_switchgear::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_transaction_storage::Config for Runtime {
