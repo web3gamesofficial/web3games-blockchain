@@ -30,6 +30,9 @@ use sp_std::prelude::*;
 pub use pallet::*;
 use primitives::Balance;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
@@ -54,6 +57,9 @@ pub mod pallet {
 
 		// #[pallet::constant]
 		type PalletId: Get<PalletId>;
+
+		/// Weight information for the extrinsics in this module.
+		type WeightInfo: WeightInfo;
 
 		#[pallet::constant]
 		type CreateTokenDeposit: Get<BalanceOf<Self>>;
@@ -95,14 +101,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::deposit())]
 		pub fn deposit(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_deposit(who.clone(), amount)?;
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::withdraw())]
 		pub fn withdraw(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_withdraw(who.clone(), amount)?;

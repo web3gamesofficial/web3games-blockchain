@@ -26,13 +26,13 @@ benchmarks! {
 	deposit {
 		let alice: T::AccountId = account("alice", 0, 0);
 		let bob: T::AccountId = account("bob", 0, 0);
-		assert_ok!(TokenFungible::<T>::create_token(
-				RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
-				<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
-				b"W3G".to_vec(),
-				b"W3G".to_vec(),
-				18
-		));
+		// assert_ok!(TokenFungible::<T>::create_token(
+		// 		RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
+		// 		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+		// 		b"W3G".to_vec(),
+		// 		b"W3G".to_vec(),
+		// 		18
+		// ));
 		assert_ok!(Balances::<T>::set_balance(
 				RawOrigin::Root.into(),
 		lookup_of_account::<T>(alice.clone()),
@@ -45,13 +45,13 @@ benchmarks! {
 	withdraw {
 		let alice: T::AccountId = account("alice", 0, 0);
 		let bob: T::AccountId = account("bob", 0, 0);
-		assert_ok!(TokenFungible::<T>::create_token(
-				RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
-				<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
-				b"W3G".to_vec(),
-				b"W3G".to_vec(),
-				18
-		));
+		// assert_ok!(TokenFungible::<T>::create_token(
+		// 		RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
+		// 		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+		// 		b"W3G".to_vec(),
+		// 		b"W3G".to_vec(),
+		// 		18
+		// ));
 		assert_ok!(Balances::<T>::set_balance(
 				RawOrigin::Root.into(),
 		lookup_of_account::<T>(alice.clone()),

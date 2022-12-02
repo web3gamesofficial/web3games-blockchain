@@ -677,6 +677,7 @@ impl pallet_exchange::Config for Runtime {
 impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
+	type WeightInfo = pallet_wrap_currency::weights::W3GWeight<Runtime>;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }
