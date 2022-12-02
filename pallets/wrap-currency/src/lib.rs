@@ -30,6 +30,9 @@ use sp_std::prelude::*;
 pub use pallet::*;
 use primitives::Balance;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 #[cfg(test)]
 mod mock;
 

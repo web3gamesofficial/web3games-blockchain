@@ -164,4 +164,5 @@ runtime-benchmarks = [
 	"pallet-farming/runtime-benchmarks",
 	"pallet-launchpad/runtime-benchmarks",
 	"pallet-call-switchgear/runtime-benchmarks",
+	"pallet-wrap-currency/runtime-benchmarks",
 ]

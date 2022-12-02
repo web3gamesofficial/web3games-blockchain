@@ -11,6 +11,7 @@ serde = { version = "1.0.137", optional = true }
 log = { version = "0.4.17", default-features = false }
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false, optional = true }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
@@ -18,8 +19,6 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-
 
 primitives = { path = "../../primitives", default-features = false }
 pallet-token-fungible = { path = "../token-fungible", default-features = false }
-
-[dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 
 [features]
@@ -36,4 +35,12 @@ std = [
 	"sp-core/std",
 	"primitives/std",
 	"pallet-token-fungible/std",
+"pallet-balances/std",
+]
+try-runtime = ["frame-support/try-runtime"]
+
+runtime-benchmarks = [
+"frame-benchmarking",
+"frame-support/runtime-benchmarks",
+"frame-system/runtime-benchmarks",
 ]

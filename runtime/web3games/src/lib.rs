@@ -919,6 +919,7 @@ mod benches {
 		[pallet_farming, Farming]
 		[pallet_launchpad, Launchpad]
 		[pallet_call_switchgear, CallSwitchgear]
+		[pallet_wrap_currency, WrapCurrency]
 	);
 }
 
@@ -1323,6 +1324,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_farming, Farming);
 			list_benchmark!(list, extra, pallet_launchpad, Launchpad);
 			list_benchmark!(list, extra, pallet_call_switchgear, CallSwitchgear);
+			list_benchmark!(list, extra, pallet_wrap_currency, WrapCurrency);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1364,6 +1366,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_farming, Farming);
 			add_benchmark!(params, batches, pallet_launchpad, Launchpad);
 			add_benchmark!(params, batches, pallet_call_switchgear, CallSwitchgear);
+			add_benchmark!(params, batches, pallet_wrap_currency, WrapCurrency);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
