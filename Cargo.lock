@@ -5040,6 +5040,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
+ "pallet-balances",
  "pallet-token-fungible",
  "parity-scale-codec",
  "primitives",
