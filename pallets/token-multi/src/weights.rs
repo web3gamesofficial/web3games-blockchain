@@ -61,21 +61,21 @@ pub struct W3GWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	fn create_token() -> Weight {
-		(14_000_000 as Weight)
+		(15_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	// Storage: TokenMulti Balances (r:1 w:1)
 	fn mint() -> Weight {
-		(19_000_000 as Weight)
+		(20_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(2 as Weight))
 			.saturating_add(T::DbWeight::get().writes(2 as Weight))
 	}
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	// Storage: TokenMulti Balances (r:5 w:5)
 	fn mint_batch() -> Weight {
-		(36_000_000 as Weight)
+		(38_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(6 as Weight))
 	}
@@ -117,17 +117,17 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_token() -> Weight {
-		(14_000_000 as Weight)
+		(15_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn mint() -> Weight {
-		(19_000_000 as Weight)
+		(20_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
 	}
 	fn mint_batch() -> Weight {
-		(36_000_000 as Weight)
+		(38_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(6 as Weight))
 	}

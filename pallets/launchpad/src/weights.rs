@@ -59,7 +59,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenFungible Balances (r:2 w:2)
 	// Storage: Launchpad Pools (r:0 w:1)
 	fn create_pool() -> Weight {
-		(27_000_000 as Weight)
+		(26_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(3 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -68,7 +68,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenFungible Tokens (r:1 w:0)
 	// Storage: Launchpad AccountPoolIdLocked (r:1 w:1)
 	fn buy_token() -> Weight {
-		(36_000_000 as Weight)
+		(37_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(5 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -76,14 +76,14 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Launchpad AccountPoolIdLocked (r:1 w:1)
 	// Storage: TokenFungible Balances (r:2 w:2)
 	fn claim() -> Weight {
-		(33_000_000 as Weight)
+		(34_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(3 as Weight))
 	}
 	// Storage: Launchpad Pools (r:1 w:0)
 	// Storage: TokenFungible Balances (r:4 w:4)
 	fn owner_claim() -> Weight {
-		(41_000_000 as Weight)
+		(40_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(5 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -92,22 +92,22 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_pool() -> Weight {
-		(27_000_000 as Weight)
+		(26_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(3 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}
 	fn buy_token() -> Weight {
-		(36_000_000 as Weight)
+		(37_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(5 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}
 	fn claim() -> Weight {
-		(33_000_000 as Weight)
+		(34_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(3 as Weight))
 	}
 	fn owner_claim() -> Weight {
-		(41_000_000 as Weight)
+		(40_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(5 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}

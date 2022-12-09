@@ -57,7 +57,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: PlayerId Addresses (r:1 w:1)
 	// Storage: PlayerId PlayerIdOf (r:0 w:1)
 	fn register() -> Weight {
-		(17_000_000 as Weight)
+		(18_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(2 as Weight))
 	}
@@ -80,7 +80,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn register() -> Weight {
-		(17_000_000 as Weight)
+		(18_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
 	}

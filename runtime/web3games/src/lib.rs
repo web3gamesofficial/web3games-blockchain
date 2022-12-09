@@ -694,6 +694,7 @@ impl pallet_marketplace::Config for Runtime {
 	type Event = Event;
 	type PalletId = MarketplacePalletId;
 	type Currency = Balances;
+	type WeightInfo = pallet_marketplace::weights::W3GWeight<Runtime>;
 }
 
 parameter_types! {

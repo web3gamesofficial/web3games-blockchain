@@ -63,7 +63,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: RandomnessCollectiveFlip RandomMaterial (r:1 w:0)
 	// Storage: Exchange LpTokenToToken (r:0 w:1)
 	fn create_pool() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(5 as Weight))
 	}
@@ -74,7 +74,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Exchange FeeTo (r:1 w:0)
 	// Storage: TokenFungible Tokens (r:1 w:1)
 	fn add_liquidity() -> Weight {
-		(79_000_000 as Weight)
+		(80_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(11 as Weight))
 			.saturating_add(T::DbWeight::get().writes(8 as Weight))
 	}
@@ -85,7 +85,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Exchange FeeTo (r:1 w:0)
 	// Storage: TokenFungible Tokens (r:1 w:1)
 	fn remove_liquidity() -> Weight {
-		(85_000_000 as Weight)
+		(86_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(11 as Weight))
 			.saturating_add(T::DbWeight::get().writes(8 as Weight))
 	}
@@ -93,7 +93,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Exchange Reserves (r:1 w:1)
 	// Storage: TokenFungible Balances (r:4 w:4)
 	fn swap_exact_tokens_for_tokens() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(5 as Weight))
 	}
@@ -101,7 +101,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Exchange Reserves (r:1 w:1)
 	// Storage: TokenFungible Balances (r:4 w:4)
 	fn swap_tokens_for_exact_tokens() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(5 as Weight))
 	}
@@ -110,27 +110,27 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_pool() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(5 as Weight))
 	}
 	fn add_liquidity() -> Weight {
-		(79_000_000 as Weight)
+		(80_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(11 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(8 as Weight))
 	}
 	fn remove_liquidity() -> Weight {
-		(85_000_000 as Weight)
+		(86_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(11 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(8 as Weight))
 	}
 	fn swap_exact_tokens_for_tokens() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(5 as Weight))
 	}
 	fn swap_tokens_for_exact_tokens() -> Weight {
-		(54_000_000 as Weight)
+		(55_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(5 as Weight))
 	}

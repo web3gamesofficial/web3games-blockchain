@@ -32,6 +32,8 @@ use sp_runtime::{
 };
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -87,6 +89,8 @@ pub mod pallet {
 		type Currency: Currency<Self::AccountId>;
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
+		/// Weight information for the extrinsics in this module.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -165,7 +169,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_admin())]
 		pub fn set_admin(origin: OriginFor<T>, new_admin: T::AccountId) -> DispatchResult {
 			ensure_root(origin)?;
 			Admin::<T>::mutate(|admin| *admin = Some(new_admin));
@@ -173,7 +177,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::set_service_fee_point())]
 		pub fn set_service_fee_point(origin: OriginFor<T>, new_point: u8) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(Self::is_admin(who), Error::<T>::NotAdmin);
@@ -183,7 +187,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::create_order())]
 		pub fn create_order(
 			origin: OriginFor<T>,
 			asset: Asset,
@@ -206,7 +210,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::cancel_order())]
 		pub fn cancel_order(origin: OriginFor<T>, asset: Asset) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -226,7 +230,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::execute_order())]
 		pub fn execute_order(origin: OriginFor<T>, asset: Asset) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -269,7 +273,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::place_bid())]
 		pub fn place_bid(
 			origin: OriginFor<T>,
 			asset: Asset,
@@ -307,7 +311,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::cancel_bid())]
 		pub fn cancel_bid(origin: OriginFor<T>, asset: Asset) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
@@ -318,7 +322,7 @@ pub mod pallet {
 			Self::do_cancel_bid(asset, bid)
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::accept_bid())]
 		pub fn accept_bid(origin: OriginFor<T>, asset: Asset) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 

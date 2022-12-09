@@ -58,7 +58,7 @@ pub struct W3GWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Farming Admin (r:1 w:1)
 	fn set_admin() -> Weight {
-		(4_000_000 as Weight)
+		(5_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
@@ -67,7 +67,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenFungible Balances (r:2 w:2)
 	// Storage: Farming Pools (r:0 w:1)
 	fn create_pool() -> Weight {
-		(28_000_000 as Weight)
+		(29_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -75,7 +75,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenFungible Balances (r:2 w:2)
 	// Storage: Farming AccountPoolIdLocked (r:1 w:1)
 	fn staking() -> Weight {
-		(31_000_000 as Weight)
+		(32_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -83,7 +83,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Farming AccountPoolIdLocked (r:1 w:1)
 	// Storage: TokenFungible Balances (r:4 w:4)
 	fn claim() -> Weight {
-		(44_000_000 as Weight)
+		(46_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(5 as Weight))
 	}
@@ -92,7 +92,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Farming AccountPoolIdLocked (r:1 w:1)
 	// Storage: TokenFungible Balances (r:2 w:2)
 	fn force_claim() -> Weight {
-		(32_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(5 as Weight))
 			.saturating_add(T::DbWeight::get().writes(4 as Weight))
 	}
@@ -101,27 +101,27 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn set_admin() -> Weight {
-		(4_000_000 as Weight)
+		(5_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn create_pool() -> Weight {
-		(28_000_000 as Weight)
+		(29_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}
 	fn staking() -> Weight {
-		(31_000_000 as Weight)
+		(32_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}
 	fn claim() -> Weight {
-		(44_000_000 as Weight)
+		(46_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(5 as Weight))
 	}
 	fn force_claim() -> Weight {
-		(32_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(5 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}

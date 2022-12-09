@@ -80,7 +80,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenFungible Tokens (r:1 w:1)
 	// Storage: TokenFungible Balances (r:1 w:1)
 	fn burn() -> Weight {
-		(19_000_000 as Weight)
+		(18_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(2 as Weight))
 			.saturating_add(T::DbWeight::get().writes(2 as Weight))
 	}
@@ -117,7 +117,7 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn burn() -> Weight {
-		(19_000_000 as Weight)
+		(18_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
 	}

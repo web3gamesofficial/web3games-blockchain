@@ -72,7 +72,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible AllTokens (r:0 w:1)
 	// Storage: TokenNonFungible OwnedTokensIndex (r:0 w:1)
 	fn mint() -> Weight {
-		(32_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(7 as Weight))
 	}
@@ -85,7 +85,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible TokenApprovals (r:0 w:1)
 	// Storage: TokenNonFungible OwnedTokens (r:0 w:1)
 	fn burn() -> Weight {
-		(45_000_000 as Weight)
+		(44_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(8 as Weight))
 	}
@@ -121,12 +121,12 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn mint() -> Weight {
-		(32_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(7 as Weight))
 	}
 	fn burn() -> Weight {
-		(45_000_000 as Weight)
+		(44_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(8 as Weight))
 	}
