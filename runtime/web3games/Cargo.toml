@@ -166,4 +166,5 @@ runtime-benchmarks = [
 	"pallet-call-switchgear/runtime-benchmarks",
 	"pallet-wrap-currency/runtime-benchmarks",
 	"pallet-player-id/runtime-benchmarks",
+	"pallet-marketplace/runtime-benchmarks",
 ]

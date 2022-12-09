@@ -39,11 +39,30 @@ fn create_order_should_work() {
 		assert_eq!(
 			Marketplace::orders(Asset::NonFungibleToken(1, 2)),
 			Some(Order {
-				seller: ALICE,
+				creater: ALICE,
 				price: 100 * W3G,
 				start: 1 * BLOCK,
 				duration: 100 * BLOCK
 			})
-		)
+		);
+
+		assert_ok!(
+			Marketplace::cancel_order(Origin::signed(ALICE), Asset::NonFungibleToken(1, 2),)
+		);
+	})
+}
+
+#[test]
+fn execute_order_should_work() {
+	new_test_ext().execute_with(|| {
+		create_non_fungible_token();
+		assert_ok!(Marketplace::create_order(
+			Origin::signed(ALICE),
+			Asset::NonFungibleToken(1, 2),
+			100 * W3G,
+			100 * BLOCK
+		));
+
+		assert_ok!(Marketplace::execute_order(Origin::signed(BOB), Asset::NonFungibleToken(1, 2),));
 	})
 }
