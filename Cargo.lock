@@ -4736,8 +4736,10 @@ dependencies = [
 name = "pallet-player-id"
 version = "0.1.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "hex-literal",
  "log",
  "pallet-balances",
  "parity-scale-codec",
