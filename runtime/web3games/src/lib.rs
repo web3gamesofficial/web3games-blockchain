@@ -703,6 +703,7 @@ parameter_types! {
 impl pallet_player_id::Config for Runtime {
 	type Event = Event;
 	type MaxAddressesPerChain = MaxAddressesPerChain;
+	type WeightInfo = pallet_player_id::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_utility::Config for Runtime {
@@ -779,7 +780,7 @@ construct_runtime!(
 		WrapCurrency: pallet_wrap_currency,
 		ProxyPay: pallet_proxy_pay,
 		Martketplace: pallet_marketplace,
-		PalyerId: pallet_player_id,
+		PlayerId: pallet_player_id,
 		CallSwitchgear: pallet_call_switchgear,
 		TransactionStorage: pallet_transaction_storage,
 		Farming: pallet_farming,
@@ -921,6 +922,7 @@ mod benches {
 		[pallet_launchpad, Launchpad]
 		[pallet_call_switchgear, CallSwitchgear]
 		[pallet_wrap_currency, WrapCurrency]
+		[pallet_player_id, PlayerId]
 	);
 }
 
@@ -1326,6 +1328,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, pallet_launchpad, Launchpad);
 			list_benchmark!(list, extra, pallet_call_switchgear, CallSwitchgear);
 			list_benchmark!(list, extra, pallet_wrap_currency, WrapCurrency);
+			list_benchmark!(list, extra, pallet_player_id, PlayerId);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1368,6 +1371,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_launchpad, Launchpad);
 			add_benchmark!(params, batches, pallet_call_switchgear, CallSwitchgear);
 			add_benchmark!(params, batches, pallet_wrap_currency, WrapCurrency);
+			add_benchmark!(params, batches, pallet_player_id, PlayerId);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)
