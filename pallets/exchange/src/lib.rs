@@ -88,7 +88,7 @@ pub mod pallet {
 
 		/// The minimum balance to create pool
 		#[pallet::constant]
-		type WW3G: Get<FungibleTokenIdOf<Self>>;
+		type W3GFungibleTokenId: Get<FungibleTokenIdOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
@@ -282,12 +282,13 @@ pub mod pallet {
 
 			pallet_wrap_currency::Pallet::<T>::do_deposit(who.clone(), amount_w3g_desired)?;
 
-			let (token_0, token_1) = Self::sort_tokens(T::WW3G::get(), token);
+			let (token_0, token_1) =
+				Self::sort_tokens(<T as pallet::Config>::W3GFungibleTokenId::get(), token);
 
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			let (amount_a, amount_b) = Self::do_add_liquidity(
-				T::WW3G::get(),
+				<T as pallet::Config>::W3GFungibleTokenId::get(),
 				token,
 				amount_w3g_desired,
 				amount_desired,
@@ -373,7 +374,8 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
-			let (token_0, token_1) = Self::sort_tokens(T::WW3G::get(), token);
+			let (token_0, token_1) =
+				Self::sort_tokens(<T as pallet::Config>::W3GFungibleTokenId::get(), token);
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			// return Lp to Pallet
@@ -445,7 +447,10 @@ pub mod pallet {
 			#[pallet::compact] deadline: T::BlockNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(path[0] == T::WW3G::get(), Error::<T>::InvalidPath);
+			ensure!(
+				path[0] == <T as pallet::Config>::W3GFungibleTokenId::get(),
+				Error::<T>::InvalidPath
+			);
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
 			let (token_0, token_1) = Self::sort_tokens(path[0], path[1]);
@@ -512,7 +517,10 @@ pub mod pallet {
 			#[pallet::compact] deadline: T::BlockNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(path[path.len() - 1] == T::WW3G::get(), Error::<T>::InvalidPath);
+			ensure!(
+				path[path.len() - 1] == <T as pallet::Config>::W3GFungibleTokenId::get(),
+				Error::<T>::InvalidPath
+			);
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
 			let (token_0, token_1) = Self::sort_tokens(path[0], path[1]);

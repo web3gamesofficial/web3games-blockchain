@@ -119,7 +119,6 @@ parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 	pub const TreasuryAccount: u64 = 10;
-	pub const WW3G: u128 = 0;
 	pub const W3GFungibleTokenId: u128 = 0;
 }
 
@@ -130,7 +129,7 @@ impl pallet_exchange::Config for Test {
 	type CreatePoolDeposit = CreatePoolDeposit;
 	type Currency = Balances;
 	type Randomness = Randomness;
-	type WW3G = WW3G;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 	type WeightInfo = ();
 }
 
