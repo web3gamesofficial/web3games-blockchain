@@ -30,7 +30,8 @@ use std::str::FromStr;
 use web3games_runtime::{
 	AccountId, AuraConfig, Balance, BalancesConfig, BaseFeeConfig, EVMConfig,
 	EthereumChainIdConfig, EthereumConfig, GenesisConfig, GrandpaConfig, MartketplaceConfig,
-	Permill, Precompiles, Signature, SudoConfig, SystemConfig, DOLLARS, GIGAWEI, WASM_BINARY,
+	Permill, Precompiles, Signature, SudoConfig, SystemConfig, TokenFungibleConfig, DOLLARS,
+	GIGAWEI, WASM_BINARY,
 };
 
 // The URL for the telemetry server.
@@ -254,5 +255,23 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		transaction_storage: Default::default(),
 		martketplace: MartketplaceConfig { admin_key: marketplace_admin },
+		token_fungible: TokenFungibleConfig {
+			genesis_tokens: vec![
+				(
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					0,
+					b"Wrapped W3G".to_vec(),
+					b"W3G".to_vec(),
+					18,
+				),
+				(
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					1,
+					b"Tether USD".to_vec(),
+					b"USDT".to_vec(),
+					6,
+				),
+			],
+		},
 	}
 }

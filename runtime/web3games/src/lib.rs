@@ -99,6 +99,7 @@ pub use precompiles::Web3GamesPrecompiles;
 pub type Precompiles = Web3GamesPrecompiles<Runtime>;
 
 use pallet_call_switchgear::{OverallToggleFilter, SwitchOffTransactionFilter};
+pub use pallet_token_fungible::Token;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats

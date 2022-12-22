@@ -120,6 +120,7 @@ parameter_types! {
 	pub const CreatePoolDeposit: Balance = 500 * MILLICENTS;
 	pub const TreasuryAccount: u64 = 10;
 	pub const WW3G: u128 = 0;
+	pub const W3GFungibleTokenId: u128 = 0;
 }
 
 impl pallet_exchange::Config for Test {
@@ -137,9 +138,8 @@ impl pallet_wrap_currency::Config for Test {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
-	type CreateTokenDeposit = CreateTokenDeposit;
 	type WeightInfo = ();
-	// type Randomness = RandomnessCollectiveFlip;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 }
 
 // Build genesis storage according to the mock runtime.
