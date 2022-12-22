@@ -661,6 +661,7 @@ impl pallet_token_multi::Config for Runtime {
 
 parameter_types! {
 	pub const WW3G: u128 = 0;
+	pub const W3GFungibleTokenId: u128 = 0;
 }
 
 impl pallet_exchange::Config for Runtime {
@@ -678,8 +679,8 @@ impl pallet_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
 	type WeightInfo = pallet_wrap_currency::weights::W3GWeight<Runtime>;
-	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 }
 
 impl pallet_proxy_pay::Config for Runtime {

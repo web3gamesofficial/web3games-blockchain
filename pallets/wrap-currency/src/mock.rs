@@ -111,14 +111,15 @@ impl pallet_token_fungible::Config for Test {
 
 parameter_types! {
 	pub const WrapCurrencyPalletId: PalletId = PalletId(*b"w3g/wrap");
+	pub const W3GFungibleTokenId: u128 = 0;
 }
 
 impl pallet_wrap_currency::Config for Test {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
 	type WeightInfo = ();
-	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 }
 
 // Build genesis storage according to the mock runtime.
