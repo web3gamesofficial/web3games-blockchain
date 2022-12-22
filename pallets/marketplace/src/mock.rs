@@ -146,6 +146,7 @@ impl pallet_marketplace::Config for Test {
 	type Event = Event;
 	type PalletId = MarketplacePalletId;
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.

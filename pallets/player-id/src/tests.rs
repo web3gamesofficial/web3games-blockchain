@@ -41,14 +41,14 @@ fn test_register_works() {
 			Origin::signed(ALICE),
 			player_id.clone(),
 			Chains::ETH,
-			eth_address.clone()
+			eth_address.clone().to_vec()
 		));
 
 		assert_ok!(PlayerIdModule::remove_address(
 			Origin::signed(ALICE),
 			player_id,
 			Chains::ETH,
-			Address::try_from(eth_address).unwrap()
+			Address::try_from(eth_address.to_vec()).unwrap()
 		));
 	});
 }

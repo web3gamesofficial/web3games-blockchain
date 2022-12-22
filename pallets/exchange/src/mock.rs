@@ -140,6 +140,7 @@ impl pallet_wrap_currency::Config for Test {
 	type PalletId = WrapCurrencyPalletId;
 	type Currency = Balances;
 	type CreateTokenDeposit = CreateTokenDeposit;
+	type WeightInfo = ();
 	// type Randomness = RandomnessCollectiveFlip;
 }
 

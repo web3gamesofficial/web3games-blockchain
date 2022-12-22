@@ -116,6 +116,7 @@ parameter_types! {
 impl pallet_wrap_currency::Config for Test {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
+	type WeightInfo = ();
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
 }

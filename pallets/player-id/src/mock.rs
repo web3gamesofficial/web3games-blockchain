@@ -103,6 +103,7 @@ parameter_types! {
 impl pallet_palyer_id::Config for Test {
 	type Event = Event;
 	type MaxAddressesPerChain = MaxAddressesPerChain;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
