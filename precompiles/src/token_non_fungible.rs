@@ -20,19 +20,19 @@ use crate::{NFT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_NON_FUNGIBLE_CREATE_SELECTOR};
 use fp_evm::PrecompileOutput;
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileHandle, PrecompileSet};
-use pallet_support::{
-	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
-};
 use precompile_utils::prelude::*;
 use primitives::{TokenId, TokenIndex};
 use sp_core::{H160, U256};
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
+use web3games_support::{
+	AccountMapping, NonFungibleEnumerable, NonFungibleMetadata, TokenIdConversion,
+};
 
 /// Solidity selector of the Transfer log, which is the Keccak of the Log signature.
 // pub const SELECTOR_LOG_TRANSFER: [u8; 32] = keccak256!("Transfer(address,address,uint256)");
 
 pub type NonFungibleTokenIdOf<Runtime> =
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId;
+	<Runtime as web3games_token_non_fungible::Config>::NonFungibleTokenId;
 
 #[generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -56,8 +56,8 @@ pub struct NonFungibleTokenExtension<Runtime>(PhantomData<Runtime>);
 impl<Runtime> TokenIdConversion<NonFungibleTokenIdOf<Runtime>>
 	for NonFungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	Runtime: web3games_token_non_fungible::Config + pallet_evm::Config,
+	<Runtime as web3games_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
 {
 	fn try_from_address(address: H160) -> Option<NonFungibleTokenIdOf<Runtime>> {
 		let mut data = [0u8; 4];
@@ -84,19 +84,19 @@ where
 
 impl<Runtime> PrecompileSet for NonFungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
+	Runtime: web3games_token_non_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_non_fungible::Call<Runtime>>,
+	<Runtime as web3games_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
-			if pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
+			if web3games_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id) {
 				let result = {
 					let selector = match handle.read_selector() {
 						Ok(selector) => selector,
@@ -146,7 +146,7 @@ where
 	}
 	fn is_precompile(&self, address: H160) -> bool {
 		if let Some(non_fungible_token_id) = Self::try_from_address(address) {
-			pallet_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id)
+			web3games_token_non_fungible::Pallet::<Runtime>::exists(non_fungible_token_id)
 		} else {
 			false
 		}
@@ -161,12 +161,12 @@ impl<Runtime> NonFungibleTokenExtension<Runtime> {
 
 impl<Runtime> NonFungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_non_fungible::Config + pallet_evm::Config,
+	Runtime: web3games_token_non_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_non_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_non_fungible::Call<Runtime>>,
+	<Runtime as web3games_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
 	Runtime: AccountMapping<Runtime::AccountId>,
 {
 	fn create(
@@ -187,7 +187,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_non_fungible::Call::<Runtime>::create_token {
+				web3games_token_non_fungible::Call::<Runtime>::create_token {
 					id,
 					name,
 					symbol,
@@ -209,7 +209,7 @@ where
 		let owner: Runtime::AccountId = Runtime::AddressMapping::into_account_id(address);
 
 		let balance: U256 =
-			pallet_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into();
+			web3games_token_non_fungible::Pallet::<Runtime>::balance_of(id, owner).into();
 
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
 	}
@@ -224,7 +224,7 @@ where
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 
 		let owner_account_id: Runtime::AccountId =
-			pallet_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
+			web3games_token_non_fungible::Pallet::<Runtime>::owner_of(id, token_id).unwrap();
 		let owner = Runtime::into_evm_address(owner_account_id);
 
 		Ok(succeed(EvmDataWriter::new().write::<Address>(owner.into()).build()))
@@ -249,7 +249,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::approve { id, to, token_id },
+				web3games_token_non_fungible::Call::<Runtime>::approve { id, to, token_id },
 			)?;
 		}
 
@@ -278,7 +278,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::transfer_from {
+				web3games_token_non_fungible::Call::<Runtime>::transfer_from {
 					id,
 					from,
 					to,
@@ -311,7 +311,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::mint { id, to, token_id },
+				web3games_token_non_fungible::Call::<Runtime>::mint { id, to, token_id },
 			)?;
 		}
 		// Return call information
@@ -335,7 +335,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_non_fungible::Call::<Runtime>::burn { id, token_id },
+				web3games_token_non_fungible::Call::<Runtime>::burn { id, token_id },
 			)?;
 		}
 		// Return call information
@@ -346,7 +346,7 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		let name = pallet_token_non_fungible::Pallet::<Runtime>::token_name(id);
+		let name = web3games_token_non_fungible::Pallet::<Runtime>::token_name(id);
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(name.as_slice().into()).build()))
@@ -356,7 +356,7 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		let symbol = pallet_token_non_fungible::Pallet::<Runtime>::token_symbol(id);
+		let symbol = web3games_token_non_fungible::Pallet::<Runtime>::token_symbol(id);
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(symbol.as_slice().into()).build()))
 	}
@@ -371,7 +371,7 @@ where
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 
 		let token_uri: Vec<u8> =
-			pallet_token_non_fungible::Pallet::<Runtime>::token_uri(id, token_id);
+			web3games_token_non_fungible::Pallet::<Runtime>::token_uri(id, token_id);
 
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(token_uri.as_slice().into()).build()))
 	}
@@ -380,7 +380,7 @@ where
 		id: NonFungibleTokenIdOf<Runtime>,
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		let balance: u32 = pallet_token_non_fungible::Pallet::<Runtime>::total_supply(id);
+		let balance: u32 = web3games_token_non_fungible::Pallet::<Runtime>::total_supply(id);
 
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
 	}
@@ -395,7 +395,7 @@ where
 		let token_index = input.read::<TokenIndex>()?.into();
 
 		let token_id: TokenId =
-			pallet_token_non_fungible::Pallet::<Runtime>::token_by_index(id, token_index).into();
+			web3games_token_non_fungible::Pallet::<Runtime>::token_by_index(id, token_index).into();
 
 		Ok(succeed(EvmDataWriter::new().write(token_id).build()))
 	}
@@ -413,7 +413,7 @@ where
 		let token_index = input.read::<TokenIndex>()?.into();
 
 		let token_id: TokenId =
-			pallet_token_non_fungible::Pallet::<Runtime>::token_of_owner_by_index(
+			web3games_token_non_fungible::Pallet::<Runtime>::token_of_owner_by_index(
 				id,
 				owner,
 				token_index,

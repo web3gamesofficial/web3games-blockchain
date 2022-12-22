@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate as pallet_launchpad;
+use crate as web3games_launchpad;
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
@@ -45,8 +45,8 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
-		Launchpad: pallet_launchpad::{Pallet, Call, Storage, Event<T>},
+		TokenFungible: web3games_token_fungible::{Pallet, Call, Storage, Event<T>},
+		Launchpad: web3games_launchpad::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -99,7 +99,7 @@ parameter_types! {
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token_fungible::Config for Test {
+impl web3games_token_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
 	type FungibleTokenId = u128;
@@ -113,7 +113,7 @@ parameter_types! {
 	pub const LaunchpadPalletId: PalletId = PalletId(*b"w3g/lpad");
 }
 
-impl pallet_launchpad::Config for Test {
+impl web3games_launchpad::Config for Test {
 	type Event = Event;
 	type PalletId = LaunchpadPalletId;
 	type WeightInfo = ();

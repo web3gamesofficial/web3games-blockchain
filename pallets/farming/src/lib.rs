@@ -39,7 +39,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
+type FungibleTokenIdOf<T> = <T as web3games_token_fungible::Config>::FungibleTokenId;
 type FungibleTokenId = u128;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
@@ -73,7 +73,7 @@ pub mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_token_fungible::Config {
+	pub trait Config: frame_system::Config + web3games_token_fungible::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// Weight information for the extrinsics in this module.
@@ -162,7 +162,7 @@ pub mod pallet {
 
 			let escrow_account = Self::escrow_account_id(pool_id);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(award_token_id),
 				&sender,
 				&escrow_account,
@@ -200,7 +200,7 @@ pub mod pallet {
 				Status::Claim => ensure!(false, Error::<T>::CurrentClaimTime),
 			};
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.locked_token_id),
 				&sender,
 				&pool.escrow_account,
@@ -249,7 +249,7 @@ pub mod pallet {
 
 			ensure!(pool_id_locked.is_claimed == false, Error::<T>::AlreadyClaim);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.locked_token_id),
 				&pool.escrow_account,
 				&sender,
@@ -264,7 +264,7 @@ pub mod pallet {
 
 			let award = pool_id_locked.staking_balance * pool.total_award / pool.total_locked;
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.award_token_id),
 				&pool.escrow_account,
 				&sender,
@@ -297,7 +297,7 @@ pub mod pallet {
 
 			ensure!(pool_id_locked.is_claimed == false, Error::<T>::AlreadyClaim);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.locked_token_id),
 				&pool.escrow_account,
 				&traget,

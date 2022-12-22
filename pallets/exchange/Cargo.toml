@@ -1,5 +1,5 @@
 [package]
-name = "pallet-exchange"
+name = "web3games-exchange"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -21,8 +21,8 @@ sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true , branch = "polkadot-v0.9.26" }
 
 primitives = { path = "../../primitives", default-features = false }
-pallet-token-fungible = { path = "../token-fungible", default-features = false }
-pallet-wrap-currency = { path = "../wrap-currency", default-features = false }
+web3games-token-fungible = { path = "../token-fungible", default-features = false }
+web3games-wrap-currency = { path = "../wrap-currency", default-features = false }
 
 [dev-dependencies]
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
@@ -43,8 +43,8 @@ std = [
 	"pallet-balances/std",
 	"sp-core/std",
 	"primitives/std",
-	"pallet-token-fungible/std",
-	"pallet-wrap-currency/std",
+	"web3games-token-fungible/std",
+	"web3games-wrap-currency/std",
 ]
 runtime-benchmarks = ["frame-benchmarking"]
 

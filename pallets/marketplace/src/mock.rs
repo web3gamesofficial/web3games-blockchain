@@ -17,7 +17,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 #![cfg(test)]
 
-use crate as pallet_marketplace;
+use crate as web3games_marketplace;
 use frame_support::{
 	construct_runtime,
 	pallet_prelude::GenesisBuild,
@@ -51,9 +51,9 @@ construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
-		TokenNonFungible: pallet_token_non_fungible::{Pallet, Call, Storage, Event<T>},
-		TokenMulti: pallet_token_multi::{Pallet, Call, Storage, Event<T>},
-		Marketplace: pallet_marketplace::{Pallet, Call, Storage,Config<T>, Event<T>},
+		TokenNonFungible: web3games_token_non_fungible::{Pallet, Call, Storage, Event<T>},
+		TokenMulti: web3games_token_multi::{Pallet, Call, Storage, Event<T>},
+		Marketplace: web3games_marketplace::{Pallet, Call, Storage,Config<T>, Event<T>},
 	}
 );
 
@@ -115,7 +115,7 @@ parameter_types! {
 	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token_non_fungible::Config for Test {
+impl web3games_token_non_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = u32;
@@ -126,7 +126,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type WeightInfo = ();
 }
 
-impl pallet_token_multi::Config for Test {
+impl web3games_token_multi::Config for Test {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = u32;
@@ -143,7 +143,7 @@ parameter_types! {
 	pub const TreasuryAccount: AccountId = 10;
 }
 
-impl pallet_marketplace::Config for Test {
+impl web3games_marketplace::Config for Test {
 	type Event = Event;
 	type PalletId = MarketplacePalletId;
 	type Currency = Balances;
@@ -164,7 +164,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	.assimilate_storage(&mut t)
 	.unwrap();
 
-	pallet_marketplace::GenesisConfig::<Test> { admin_key: Some(0) }
+	web3games_marketplace::GenesisConfig::<Test> { admin_key: Some(0) }
 		.assimilate_storage(&mut t)
 		.unwrap();
 

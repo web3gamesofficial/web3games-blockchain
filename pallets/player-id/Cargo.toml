@@ -1,5 +1,5 @@
 [package]
-name = "pallet-player-id"
+name = "web3games-player-id"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"

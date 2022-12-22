@@ -1,4 +1,4 @@
-# pallet-token-fungible
+# web3games-token-fungible
 
 ## call
 

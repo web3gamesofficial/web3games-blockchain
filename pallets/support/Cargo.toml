@@ -1,5 +1,5 @@
 [package]
-name = "pallet-support"
+name = "web3games-support"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"

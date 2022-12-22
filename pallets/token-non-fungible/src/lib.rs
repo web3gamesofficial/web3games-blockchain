@@ -25,7 +25,6 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
-use pallet_support::{NonFungibleEnumerable, NonFungibleMetadata};
 use primitives::TokenIndex;
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -33,6 +32,7 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
+use web3games_support::{NonFungibleEnumerable, NonFungibleMetadata};
 
 pub use pallet::*;
 

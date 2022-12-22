@@ -24,7 +24,8 @@ use primitives::{Balance, BlockNumber};
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
 
-pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;
+pub type FungibleTokenIdOf<Runtime> =
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId;
 
 #[generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -46,12 +47,12 @@ pub struct ExchangeExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> PrecompileSet for ExchangeExtension<Runtime>
 where
-	Runtime: pallet_evm::Config + pallet_exchange::Config,
+	Runtime: pallet_evm::Config + web3games_exchange::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_exchange::Call<Runtime>>,
-	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_exchange::Call<Runtime>>,
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_exchange::Config>::PoolId: From<u128> + Into<u128>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let result = {
@@ -99,12 +100,12 @@ impl<Runtime> ExchangeExtension<Runtime> {
 
 impl<Runtime> ExchangeExtension<Runtime>
 where
-	Runtime: pallet_evm::Config + pallet_exchange::Config,
+	Runtime: pallet_evm::Config + web3games_exchange::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_exchange::Call<Runtime>>,
-	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_exchange::Call<Runtime>>,
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_exchange::Config>::PoolId: From<u128> + Into<u128>,
 {
 	fn create_pool(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = EvmDataReader::new_skip_selector(handle.input())?;
@@ -118,7 +119,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::create_pool { token_a, token_b },
+				web3games_exchange::Call::<Runtime>::create_pool { token_a, token_b },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -142,7 +143,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::add_liquidity {
+				web3games_exchange::Call::<Runtime>::add_liquidity {
 					token_a,
 					token_b,
 					amount_a_desired,
@@ -175,7 +176,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::add_liquidity_w3g {
+				web3games_exchange::Call::<Runtime>::add_liquidity_w3g {
 					token,
 					amount_w3g_desired,
 					amount_desired,
@@ -207,7 +208,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::remove_liquidity {
+				web3games_exchange::Call::<Runtime>::remove_liquidity {
 					token_a,
 					token_b,
 					liquidity,
@@ -238,7 +239,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::remove_liquidity_w3g {
+				web3games_exchange::Call::<Runtime>::remove_liquidity_w3g {
 					token,
 					liquidity,
 					amount_w3g_min,
@@ -273,7 +274,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_exact_tokens_for_tokens {
+				web3games_exchange::Call::<Runtime>::swap_exact_tokens_for_tokens {
 					amount_in,
 					amount_out_min,
 					path,
@@ -307,7 +308,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_exact_w3g_for_tokens {
+				web3games_exchange::Call::<Runtime>::swap_exact_w3g_for_tokens {
 					amount_in_w3g,
 					amount_out_min,
 					path,
@@ -341,7 +342,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_tokens_for_exact_tokens {
+				web3games_exchange::Call::<Runtime>::swap_tokens_for_exact_tokens {
 					amount_out,
 					amount_in_max,
 					path,
@@ -375,7 +376,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_exchange::Call::<Runtime>::swap_tokens_for_exact_w3g {
+				web3games_exchange::Call::<Runtime>::swap_tokens_for_exact_w3g {
 					amount_out_w3g,
 					amount_in_max,
 					path,

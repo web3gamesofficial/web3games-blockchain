@@ -44,7 +44,7 @@ mod tests;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
+type FungibleTokenIdOf<T> = <T as web3games_token_fungible::Config>::FungibleTokenId;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -53,7 +53,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_token_fungible::Config {
+	pub trait Config: frame_system::Config + web3games_token_fungible::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		// #[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -111,7 +111,7 @@ impl<T: Config> Pallet<T> {
 			KeepAlive,
 		)?;
 
-		pallet_token_fungible::Pallet::<T>::do_mint(
+		web3games_token_fungible::Pallet::<T>::do_mint(
 			T::W3GFungibleTokenId::get(),
 			&vault_account,
 			who.clone(),
@@ -129,7 +129,7 @@ impl<T: Config> Pallet<T> {
 			KeepAlive,
 		)?;
 
-		pallet_token_fungible::Pallet::<T>::do_burn(T::W3GFungibleTokenId::get(), &who, amount)?;
+		web3games_token_fungible::Pallet::<T>::do_burn(T::W3GFungibleTokenId::get(), &who, amount)?;
 		Self::deposit_event(Event::Withdrawn(who, amount));
 		Ok(())
 	}

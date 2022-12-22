@@ -20,13 +20,14 @@ use crate::{FT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_FUNGIBLE_CREATE_SELECTOR};
 use fp_evm::{PrecompileHandle, PrecompileOutput};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::{AddressMapping, PrecompileSet};
-use pallet_support::{FungibleMetadata, TokenIdConversion};
 use precompile_utils::prelude::*;
 use primitives::Balance;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
+use web3games_support::{FungibleMetadata, TokenIdConversion};
 
-pub type FungibleTokenIdOf<Runtime> = <Runtime as pallet_token_fungible::Config>::FungibleTokenId;
+pub type FungibleTokenIdOf<Runtime> =
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId;
 
 #[generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -48,8 +49,8 @@ pub struct FungibleTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<FungibleTokenIdOf<Runtime>> for FungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_fungible::Config + pallet_evm::Config,
-	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	Runtime: web3games_token_fungible::Config + pallet_evm::Config,
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 {
 	fn try_from_address(address: H160) -> Option<FungibleTokenIdOf<Runtime>> {
 		let mut data = [0u8; 4];
@@ -75,17 +76,17 @@ where
 
 impl<Runtime> PrecompileSet for FungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_fungible::Config + pallet_evm::Config,
+	Runtime: web3games_token_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_fungible::Call<Runtime>>,
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(fungible_token_id) = Self::try_from_address(address) {
-			if pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
+			if web3games_token_fungible::Pallet::<Runtime>::exists(fungible_token_id) {
 				let result = {
 					let selector = match handle.read_selector() {
 						Ok(selector) => selector,
@@ -135,7 +136,7 @@ where
 	}
 	fn is_precompile(&self, address: H160) -> bool {
 		if let Some(fungible_token_id) = Self::try_from_address(address) {
-			pallet_token_fungible::Pallet::<Runtime>::exists(fungible_token_id)
+			web3games_token_fungible::Pallet::<Runtime>::exists(fungible_token_id)
 		} else {
 			false
 		}
@@ -150,11 +151,11 @@ impl<Runtime> FungibleTokenExtension<Runtime> {
 
 impl<Runtime> FungibleTokenExtension<Runtime>
 where
-	Runtime: pallet_token_fungible::Config + pallet_evm::Config,
+	Runtime: web3games_token_fungible::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_fungible::Call<Runtime>>,
-	<Runtime as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_fungible::Call<Runtime>>,
+	<Runtime as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
 {
 	fn create(
 		id: FungibleTokenIdOf<Runtime>,
@@ -172,7 +173,12 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_fungible::Call::<Runtime>::create_token { id, name, symbol, decimals },
+				web3games_token_fungible::Call::<Runtime>::create_token {
+					id,
+					name,
+					symbol,
+					decimals,
+				},
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -183,7 +189,7 @@ where
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
 		// Fetch info.
-		let amount: Balance = pallet_token_fungible::Pallet::<Runtime>::total_supply(id);
+		let amount: Balance = web3games_token_fungible::Pallet::<Runtime>::total_supply(id);
 
 		Ok(succeed(EvmDataWriter::new().write(amount).build()))
 	}
@@ -199,7 +205,7 @@ where
 
 		let account: Runtime::AccountId = Runtime::AddressMapping::into_account_id(address);
 
-		let balance: Balance = pallet_token_fungible::Pallet::<Runtime>::balance_of(id, account);
+		let balance: Balance = web3games_token_fungible::Pallet::<Runtime>::balance_of(id, account);
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
@@ -219,7 +225,7 @@ where
 		let spender: Runtime::AccountId = Runtime::AddressMapping::into_account_id(spender);
 
 		let balance: Balance =
-			pallet_token_fungible::Pallet::<Runtime>::allowances(id, (owner, spender));
+			web3games_token_fungible::Pallet::<Runtime>::allowances(id, (owner, spender));
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
@@ -244,7 +250,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::approve { id, spender, amount },
+				web3games_token_fungible::Call::<Runtime>::approve { id, spender, amount },
 			)?;
 		}
 
@@ -271,7 +277,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::transfer { id, recipient: to, amount },
+				web3games_token_fungible::Call::<Runtime>::transfer { id, recipient: to, amount },
 			)?;
 		}
 
@@ -300,7 +306,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::transfer_from {
+				web3games_token_fungible::Call::<Runtime>::transfer_from {
 					id,
 					sender: from,
 					recipient: to,
@@ -332,7 +338,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::mint { id, account: to, amount },
+				web3games_token_fungible::Call::<Runtime>::mint { id, account: to, amount },
 			)?;
 		}
 
@@ -357,7 +363,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_token_fungible::Call::<Runtime>::burn { id, amount },
+				web3games_token_fungible::Call::<Runtime>::burn { id, amount },
 			)?;
 		}
 
@@ -371,7 +377,7 @@ where
 	) -> EvmResult<PrecompileOutput> {
 		// handle.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
-		let name = pallet_token_fungible::Pallet::<Runtime>::token_name(id);
+		let name = web3games_token_fungible::Pallet::<Runtime>::token_name(id);
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(name.as_slice().into()).build()))
 	}
@@ -380,7 +386,7 @@ where
 		id: FungibleTokenIdOf<Runtime>,
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		let symbol = pallet_token_fungible::Pallet::<Runtime>::token_symbol(id);
+		let symbol = web3games_token_fungible::Pallet::<Runtime>::token_symbol(id);
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(symbol.as_slice().into()).build()))
@@ -390,7 +396,7 @@ where
 		id: FungibleTokenIdOf<Runtime>,
 		_handle: &mut impl PrecompileHandle,
 	) -> EvmResult<PrecompileOutput> {
-		let decimals: u8 = pallet_token_fungible::Pallet::<Runtime>::token_decimals(id);
+		let decimals: u8 = web3games_token_fungible::Pallet::<Runtime>::token_decimals(id);
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(decimals).build()))
 	}

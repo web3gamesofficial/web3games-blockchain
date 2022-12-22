@@ -25,11 +25,11 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
-use pallet_support::MultiMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{traits::AtLeast32BitUnsigned, RuntimeDebug};
 use sp_std::prelude::*;
+use web3games_support::MultiMetadata;
 
 pub use pallet::*;
 

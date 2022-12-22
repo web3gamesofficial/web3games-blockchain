@@ -27,8 +27,8 @@ pub struct NonFungibleTokenExtension;
 
 impl<C> ChainExtension<C> for NonFungibleTokenExtension
 where
-	C: pallet_contracts::Config + pallet_token_non_fungible::Config,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
+	C: pallet_contracts::Config + web3games_token_non_fungible::Config,
+	<C as pallet_contracts::Config>::Call: From<web3games_token_non_fungible::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
@@ -42,14 +42,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (non_fungible_token_id, name, symbol, base_uri): (
-					<C as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<C as web3games_token_non_fungible::Config>::NonFungibleTokenId,
 					Vec<u8>,
 					Vec<u8>,
 					Vec<u8>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_create_token(
+				let id = web3games_token_non_fungible::Pallet::<E::T>::do_create_token(
 					&caller,
 					non_fungible_token_id,
 					name,
@@ -70,13 +70,13 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_id): (
-					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as pallet_token_non_fungible::Config>::TokenId,
+					<E::T as web3games_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_approve(
+				let id = web3games_token_non_fungible::Pallet::<E::T>::do_approve(
 					&caller, id, &to, token_id,
 				)?;
 
@@ -92,13 +92,13 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, operator, approved): (
-					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					bool,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_set_approve_for_all(
+				let id = web3games_token_non_fungible::Pallet::<E::T>::do_set_approve_for_all(
 					&caller, id, &operator, approved,
 				)?;
 
@@ -115,14 +115,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, from, to, token_id): (
-					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as pallet_token_non_fungible::Config>::TokenId,
+					<E::T as web3games_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_transfer_from(
+				let id = web3games_token_non_fungible::Pallet::<E::T>::do_transfer_from(
 					&caller, id, &from, &to, token_id,
 				)?;
 
@@ -139,14 +139,15 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_id): (
-					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as pallet_token_non_fungible::Config>::TokenId,
+					<E::T as web3games_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id =
-					pallet_token_non_fungible::Pallet::<E::T>::do_mint(&caller, id, &to, token_id)?;
+				let id = web3games_token_non_fungible::Pallet::<E::T>::do_mint(
+					&caller, id, &to, token_id,
+				)?;
 
 				let id_slice = id.encode();
 
@@ -160,12 +161,13 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, token_id): (
-					<E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId,
-					<E::T as pallet_token_non_fungible::Config>::TokenId,
+					<E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId,
+					<E::T as web3games_token_non_fungible::Config>::TokenId,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_non_fungible::Pallet::<E::T>::do_burn(&caller, id, token_id)?;
+				let id =
+					web3games_token_non_fungible::Pallet::<E::T>::do_burn(&caller, id, token_id)?;
 
 				let id_slice = id.encode();
 
@@ -176,10 +178,10 @@ where
 			65607 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
+				let id: <E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId =
 					env.read_as()?;
 
-				let exists: bool = pallet_token_non_fungible::Pallet::<E::T>::exists(id);
+				let exists: bool = web3games_token_non_fungible::Pallet::<E::T>::exists(id);
 
 				let exists_slice = exists.encode();
 
@@ -197,13 +199,13 @@ where
 			65608 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_non_fungible::Config>::NonFungibleTokenId =
+				let id: <E::T as web3games_token_non_fungible::Config>::NonFungibleTokenId =
 					env.read_as()?;
-				let token_id: <E::T as pallet_token_non_fungible::Config>::TokenId =
+				let token_id: <E::T as web3games_token_non_fungible::Config>::TokenId =
 					env.read_as()?;
 
 				let token_exists: bool =
-					pallet_token_non_fungible::Pallet::<E::T>::token_exists(id, token_id);
+					web3games_token_non_fungible::Pallet::<E::T>::token_exists(id, token_id);
 
 				let token_exists_slice = token_exists.encode();
 

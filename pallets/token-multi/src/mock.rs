@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate as pallet_token_multi;
+use crate as web3games_token_multi;
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
@@ -45,7 +45,7 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TokenMulti: pallet_token_multi::{Pallet, Call, Storage, Event<T>},
+		TokenMulti: web3games_token_multi::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -98,7 +98,7 @@ parameter_types! {
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token_multi::Config for Test {
+impl web3games_token_multi::Config for Test {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = u32;

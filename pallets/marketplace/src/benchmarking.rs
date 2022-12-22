@@ -8,14 +8,14 @@ use frame_benchmarking::{account, benchmarks};
 use frame_support::assert_ok;
 use frame_system::RawOrigin;
 use pallet_balances::Pallet as Balances;
-use pallet_token_non_fungible::Pallet as TokenNonFungible;
 use sp_runtime::traits::{StaticLookup, UniqueSaturatedFrom};
+use web3games_token_non_fungible::Pallet as TokenNonFungible;
 
 const W3G: u128 = 1_000_000_000_000_000_000;
 const BLOCK: u32 = 1;
 
-type NonFungibleTokenIdOf<T> = <T as pallet_token_non_fungible::Config>::NonFungibleTokenId;
-type TokenIdOf<T> = <T as pallet_token_non_fungible::Config>::TokenId;
+type NonFungibleTokenIdOf<T> = <T as web3games_token_non_fungible::Config>::NonFungibleTokenId;
+type TokenIdOf<T> = <T as web3games_token_non_fungible::Config>::TokenId;
 
 pub fn lookup_of_account<T: Config>(
 	who: T::AccountId,

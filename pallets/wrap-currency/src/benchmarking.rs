@@ -6,8 +6,8 @@ use frame_benchmarking::{account, benchmarks};
 use frame_support::assert_ok;
 use frame_system::RawOrigin;
 use pallet_balances::Pallet as Balances;
-use pallet_token_fungible::Pallet as TokenFungible;
 use sp_runtime::traits::StaticLookup;
+use web3games_token_fungible::Pallet as TokenFungible;
 
 const W3G: u128 = 0;
 const W3G_DECIMALS: u128 = 1_000_000_000_000_000_000;
@@ -28,7 +28,7 @@ benchmarks! {
 		let bob: T::AccountId = account("bob", 0, 0);
 		assert_ok!(TokenFungible::<T>::create_token(
 				RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
-				<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+				<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
 				b"W3G".to_vec(),
 				b"W3G".to_vec(),
 				18
@@ -47,7 +47,7 @@ benchmarks! {
 		let bob: T::AccountId = account("bob", 0, 0);
 		assert_ok!(TokenFungible::<T>::create_token(
 				RawOrigin::Signed(WrapCurrency::<T>::account_id()).into(),
-				<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+				<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
 				b"W3G".to_vec(),
 				b"W3G".to_vec(),
 				18

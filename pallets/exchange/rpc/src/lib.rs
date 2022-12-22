@@ -22,13 +22,13 @@ use jsonrpsee::{
 	proc_macros::rpc,
 	types::error::{CallError, ErrorObject},
 };
-pub use pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi;
 pub use pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi as TransactionPaymentRuntimeApi;
 use primitives::Balance;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 use std::{marker::PhantomData, sync::Arc};
+pub use web3games_exchange_rpc_runtime_api::ExchangeRuntimeApi;
 
 pub struct ExchangeRpc<Client, Block> {
 	client: Arc<Client>,

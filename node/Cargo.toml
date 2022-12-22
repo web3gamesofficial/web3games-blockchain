@@ -81,7 +81,7 @@ pallet-ethereum = { git = "https://github.com/web3gamesofficial/frontier", branc
 
 # web3games
 web3games-runtime = { path = "../runtime/web3games", default-features = false, features = ["std"] }
-pallet-exchange-rpc = { path = "../pallets/exchange/rpc" }
+web3games-exchange-rpc = { path = "../pallets/exchange/rpc" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }

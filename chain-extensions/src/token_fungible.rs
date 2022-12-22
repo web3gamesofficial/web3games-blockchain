@@ -28,8 +28,8 @@ pub struct FungibleTokenExtension;
 
 impl<C> ChainExtension<C> for FungibleTokenExtension
 where
-	C: pallet_contracts::Config + pallet_token_fungible::Config,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
+	C: pallet_contracts::Config + web3games_token_fungible::Config,
+	<C as pallet_contracts::Config>::Call: From<web3games_token_fungible::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
@@ -43,14 +43,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (fungible_token_id, name, symbol, decimals): (
-					<C as pallet_token_fungible::Config>::FungibleTokenId,
+					<C as web3games_token_fungible::Config>::FungibleTokenId,
 					Vec<u8>,
 					Vec<u8>,
 					u8,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_create_token(
+				let id = web3games_token_fungible::Pallet::<E::T>::do_create_token(
 					&caller,
 					fungible_token_id,
 					name,
@@ -70,13 +70,13 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, spender, amount): (
-					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as web3games_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_approve(
+				let id = web3games_token_fungible::Pallet::<E::T>::do_approve(
 					id, &caller, &spender, amount,
 				)?;
 
@@ -91,13 +91,13 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, recipient, amount): (
-					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as web3games_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
+				let id = web3games_token_fungible::Pallet::<E::T>::do_transfer(
 					id, &caller, &recipient, amount,
 				)?;
 
@@ -112,14 +112,14 @@ where
 				let mut env = env.buf_in_buf_out();
 
 				let (id, sender, recipient, amount): (
-					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as web3games_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_transfer(
+				let id = web3games_token_fungible::Pallet::<E::T>::do_transfer(
 					id, &sender, &recipient, amount,
 				)?;
 
@@ -134,14 +134,15 @@ where
 				let mut env = env.buf_in_buf_out();
 				let caller = env.ext().caller().clone();
 				let (id, account, amount): (
-					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as web3games_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id =
-					pallet_token_fungible::Pallet::<E::T>::do_mint(id, &caller, account, amount)?;
+				let id = web3games_token_fungible::Pallet::<E::T>::do_mint(
+					id, &caller, account, amount,
+				)?;
 
 				let id_slice = id.encode();
 
@@ -154,13 +155,13 @@ where
 				let mut env = env.buf_in_buf_out();
 
 				let (id, account, amount): (
-					<E::T as pallet_token_fungible::Config>::FungibleTokenId,
+					<E::T as web3games_token_fungible::Config>::FungibleTokenId,
 					<E::T as SysConfig>::AccountId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_fungible::Pallet::<E::T>::do_burn(id, &account, amount)?;
+				let id = web3games_token_fungible::Pallet::<E::T>::do_burn(id, &account, amount)?;
 
 				let id_slice = id.encode();
 
@@ -172,9 +173,10 @@ where
 			65543 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let id: <E::T as web3games_token_fungible::Config>::FungibleTokenId =
+					env.read_as()?;
 
-				let exists: bool = pallet_token_fungible::Pallet::<E::T>::exists(id);
+				let exists: bool = web3games_token_fungible::Pallet::<E::T>::exists(id);
 
 				let exists_slice = exists.encode();
 
@@ -193,9 +195,10 @@ where
 			65544 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_fungible::Config>::FungibleTokenId = env.read_as()?;
+				let id: <E::T as web3games_token_fungible::Config>::FungibleTokenId =
+					env.read_as()?;
 
-				let exists: Balance = pallet_token_fungible::Pallet::<E::T>::total_supply(id);
+				let exists: Balance = web3games_token_fungible::Pallet::<E::T>::total_supply(id);
 
 				let exists_slice = exists.encode();
 

@@ -80,7 +80,7 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_token_non_fungible::Config + pallet_token_multi::Config
+		frame_system::Config + web3games_token_non_fungible::Config + web3games_token_multi::Config
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Currency: Currency<Self::AccountId>;
@@ -371,23 +371,23 @@ impl<T: Config> Pallet<T> {
 	fn transfer_asset_to(from: T::AccountId, asset: Asset, to: T::AccountId) -> DispatchResult {
 		match asset {
 			Asset::NonFungibleToken(group_id, token_id) => {
-				pallet_token_non_fungible::Pallet::<T>::do_transfer_from(
+				web3games_token_non_fungible::Pallet::<T>::do_transfer_from(
 					&from,
-					<T as pallet_token_non_fungible::Config>::NonFungibleTokenId::unique_saturated_from(group_id),
+					<T as web3games_token_non_fungible::Config>::NonFungibleTokenId::unique_saturated_from(group_id),
 					&from,
 					&to,
-					<T as pallet_token_non_fungible::Config>::TokenId::unique_saturated_from(token_id),
+					<T as web3games_token_non_fungible::Config>::TokenId::unique_saturated_from(token_id),
 				)?;
 			},
 			Asset::MultiToken(group_id, token_id) => {
-				pallet_token_multi::Pallet::<T>::do_transfer_from(
+				web3games_token_multi::Pallet::<T>::do_transfer_from(
 					&from,
-					<T as pallet_token_multi::Config>::MultiTokenId::unique_saturated_from(
+					<T as web3games_token_multi::Config>::MultiTokenId::unique_saturated_from(
 						group_id,
 					),
 					&from,
 					&to,
-					<T as pallet_token_multi::Config>::TokenId::unique_saturated_from(token_id),
+					<T as web3games_token_multi::Config>::TokenId::unique_saturated_from(token_id),
 					One::one(),
 				)?;
 			},

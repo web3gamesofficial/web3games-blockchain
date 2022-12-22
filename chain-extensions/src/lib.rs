@@ -38,12 +38,12 @@ pub struct Web3GamesChainExtensions<C>(PhantomData<C>);
 
 impl<C> ChainExtension<C> for Web3GamesChainExtensions<C>
 where
-	C: pallet_contracts::Config + pallet_token_fungible::Config,
-	// + pallet_token_non_fungible::Config
-	// + pallet_token_multi::Config,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_fungible::Call<C>>,
-	// <C as pallet_contracts::Config>::Call: From<pallet_token_non_fungible::Call<C>>,
-	// <C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
+	C: pallet_contracts::Config + web3games_token_fungible::Config,
+	// + web3games_token_non_fungible::Config
+	// + web3games_token_multi::Config,
+	<C as pallet_contracts::Config>::Call: From<web3games_token_fungible::Call<C>>,
+	// <C as pallet_contracts::Config>::Call: From<web3games_token_non_fungible::Call<C>>,
+	// <C as pallet_contracts::Config>::Call: From<web3games_token_multi::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where

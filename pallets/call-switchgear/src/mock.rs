@@ -27,7 +27,7 @@ type AccountId = u128;
 
 use super::*;
 
-use crate as pallet_call_switchgear;
+use crate as web3games_call_switchgear;
 
 pub const MILLICENTS: Balance = 10_000_000_000_000;
 pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
@@ -81,7 +81,7 @@ impl pallet_balances::Config for Test {
 	type WeightInfo = ();
 }
 
-impl pallet_call_switchgear::Config for Test {
+impl web3games_call_switchgear::Config for Test {
 	type Event = Event;
 	type WeightInfo = ();
 }
@@ -96,7 +96,7 @@ construct_runtime!(
 	UncheckedExtrinsic = UncheckedExtrinsic
 {
 	System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-	CallSwitchgear: pallet_call_switchgear::{Pallet, Storage, Call, Event<T>},
+	CallSwitchgear: web3games_call_switchgear::{Pallet, Storage, Call, Event<T>},
 	Balances: pallet_balances::{Pallet, Storage, Call, Event<T>},
 }
 );

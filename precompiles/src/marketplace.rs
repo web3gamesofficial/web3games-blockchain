@@ -22,11 +22,11 @@ use frame_support::{
 	sp_runtime::traits::UniqueSaturatedFrom,
 };
 use pallet_evm::{AddressMapping, PrecompileSet};
-use pallet_marketplace::{Asset, BalanceOf};
 use precompile_utils::prelude::*;
 use primitives::BlockNumber;
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
+use web3games_marketplace::{Asset, BalanceOf};
 
 #[generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -43,10 +43,10 @@ pub struct MarketplaceExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> PrecompileSet for MarketplaceExtension<Runtime>
 where
-	Runtime: pallet_marketplace::Config + pallet_evm::Config,
+	Runtime: web3games_marketplace::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_marketplace::Call<Runtime>>,
+	Runtime::Call: From<web3games_marketplace::Call<Runtime>>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let result = {
@@ -88,10 +88,10 @@ impl<Runtime> MarketplaceExtension<Runtime> {
 
 impl<Runtime> MarketplaceExtension<Runtime>
 where
-	Runtime: pallet_marketplace::Config + pallet_evm::Config,
+	Runtime: web3games_marketplace::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_marketplace::Call<Runtime>>,
+	Runtime::Call: From<web3games_marketplace::Call<Runtime>>,
 {
 	fn create_order(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
@@ -116,7 +116,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::create_order {
+				web3games_marketplace::Call::<Runtime>::create_order {
 					asset,
 					price: BalanceOf::<Runtime>::unique_saturated_from(price),
 					duration:<Runtime as frame_system::pallet::Config>::BlockNumber::unique_saturated_from(duration)
@@ -150,7 +150,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::cancel_order { asset },
+				web3games_marketplace::Call::<Runtime>::cancel_order { asset },
 			)?;
 		}
 
@@ -180,7 +180,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::execute_order { asset },
+				web3games_marketplace::Call::<Runtime>::execute_order { asset },
 			)?;
 		}
 
@@ -211,7 +211,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::place_bid {
+				web3games_marketplace::Call::<Runtime>::place_bid {
 					asset,
 					price: BalanceOf::<Runtime>::unique_saturated_from(price),
 					duration:<Runtime as frame_system::pallet::Config>::BlockNumber::unique_saturated_from(duration)
@@ -245,7 +245,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::cancel_bid { asset },
+				web3games_marketplace::Call::<Runtime>::cancel_bid { asset },
 			)?;
 		}
 
@@ -275,7 +275,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_marketplace::Call::<Runtime>::accept_bid { asset },
+				web3games_marketplace::Call::<Runtime>::accept_bid { asset },
 			)?;
 		}
 

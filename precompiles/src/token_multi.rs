@@ -20,13 +20,13 @@ use crate::{MT_PRECOMPILE_ADDRESS_PREFIX, TOKEN_MULTI_CREATE_SELECTOR};
 use fp_evm::{PrecompileHandle, PrecompileOutput, PrecompileSet};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
-use pallet_support::{MultiMetadata, TokenIdConversion};
 use precompile_utils::prelude::*;
 use primitives::{Balance, TokenId};
 use sp_core::H160;
 use sp_std::{fmt::Debug, marker::PhantomData, prelude::*};
+use web3games_support::{MultiMetadata, TokenIdConversion};
 
-pub type MultiTokenIdOf<Runtime> = <Runtime as pallet_token_multi::Config>::MultiTokenId;
+pub type MultiTokenIdOf<Runtime> = <Runtime as web3games_token_multi::Config>::MultiTokenId;
 
 #[generate_function_selector]
 #[derive(Debug, PartialEq)]
@@ -47,8 +47,8 @@ pub struct MultiTokenExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> TokenIdConversion<MultiTokenIdOf<Runtime>> for MultiTokenExtension<Runtime>
 where
-	Runtime: pallet_token_multi::Config + pallet_evm::Config,
-	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	Runtime: web3games_token_multi::Config + pallet_evm::Config,
+	<Runtime as web3games_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
 {
 	fn try_from_address(address: H160) -> Option<MultiTokenIdOf<Runtime>> {
 		let mut data = [0u8; 4];
@@ -74,18 +74,18 @@ where
 
 impl<Runtime> PrecompileSet for MultiTokenExtension<Runtime>
 where
-	Runtime: pallet_token_multi::Config + pallet_evm::Config,
+	Runtime: web3games_token_multi::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
-	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_multi::Call<Runtime>>,
+	<Runtime as web3games_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let address = handle.code_address();
 		let input = handle.input();
 		if let Some(multi_token_id) = Self::try_from_address(address) {
-			if pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id) {
+			if web3games_token_multi::Pallet::<Runtime>::exists(multi_token_id) {
 				let result = {
 					let selector = match handle.read_selector() {
 						Ok(selector) => selector,
@@ -137,7 +137,7 @@ where
 	}
 	fn is_precompile(&self, address: H160) -> bool {
 		if let Some(multi_token_id) = Self::try_from_address(address) {
-			pallet_token_multi::Pallet::<Runtime>::exists(multi_token_id)
+			web3games_token_multi::Pallet::<Runtime>::exists(multi_token_id)
 		} else {
 			false
 		}
@@ -152,12 +152,12 @@ impl<Runtime> MultiTokenExtension<Runtime> {
 
 impl<Runtime> MultiTokenExtension<Runtime>
 where
-	Runtime: pallet_token_multi::Config + pallet_evm::Config,
+	Runtime: web3games_token_multi::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_token_multi::Call<Runtime>>,
-	<Runtime as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
-	<Runtime as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
+	Runtime::Call: From<web3games_token_multi::Call<Runtime>>,
+	<Runtime as web3games_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<Runtime as web3games_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 {
 	fn create(
 		id: MultiTokenIdOf<Runtime>,
@@ -175,7 +175,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::create_token { id, uri },
+				web3games_token_multi::Call::<Runtime>::create_token { id, uri },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -193,7 +193,7 @@ where
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 
 		let balance: Balance =
-			pallet_token_multi::Pallet::<Runtime>::balance_of(id, (token_id, &account));
+			web3games_token_multi::Pallet::<Runtime>::balance_of(id, (token_id, &account));
 
 		Ok(succeed(EvmDataWriter::new().write(balance).build()))
 	}
@@ -217,7 +217,7 @@ where
 			.collect();
 
 		let balances: Vec<Balance> =
-			pallet_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids)
+			web3games_token_multi::Pallet::<Runtime>::balance_of_batch(id, &accounts, token_ids)
 				.unwrap();
 
 		Ok(succeed(EvmDataWriter::new().write::<Vec<Balance>>(balances.as_slice().into()).build()))
@@ -245,7 +245,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::transfer_from {
+				web3games_token_multi::Call::<Runtime>::transfer_from {
 					id,
 					from,
 					to,
@@ -283,7 +283,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::batch_transfer_from {
+				web3games_token_multi::Call::<Runtime>::batch_transfer_from {
 					id,
 					from,
 					to,
@@ -317,7 +317,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::mint { id, to, token_id, amount },
+				web3games_token_multi::Call::<Runtime>::mint { id, to, token_id, amount },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -347,7 +347,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts },
+				web3games_token_multi::Call::<Runtime>::mint_batch { id, to, token_ids, amounts },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -370,7 +370,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::burn { id, token_id, amount },
+				web3games_token_multi::Call::<Runtime>::burn { id, token_id, amount },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -397,7 +397,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts },
+				web3games_token_multi::Call::<Runtime>::burn_batch { id, token_ids, amounts },
 			)?;
 		}
 		Ok(succeed(EvmDataWriter::new().write(true).build()))
@@ -412,7 +412,7 @@ where
 
 		let token_id: Runtime::TokenId = input.read::<TokenId>()?.into();
 
-		let uri = pallet_token_multi::Pallet::<Runtime>::uri(id, token_id);
+		let uri = web3games_token_multi::Pallet::<Runtime>::uri(id, token_id);
 
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write::<Bytes>(uri.as_slice().into()).build()))
@@ -431,7 +431,7 @@ where
 		let operator: Runtime::AccountId = Runtime::AddressMapping::into_account_id(operator);
 
 		let is_approved =
-			pallet_token_multi::Pallet::<Runtime>::is_approved_for_all(id, (owner, operator));
+			web3games_token_multi::Pallet::<Runtime>::is_approved_for_all(id, (owner, operator));
 		// Build output.
 		Ok(succeed(EvmDataWriter::new().write(is_approved).build()))
 	}
@@ -453,7 +453,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(origin).into(),
-				pallet_token_multi::Call::<Runtime>::set_approval_for_all {
+				web3games_token_multi::Call::<Runtime>::set_approval_for_all {
 					id,
 					operator,
 					approved,

@@ -1,5 +1,5 @@
 [package]
-name = "pallet-call-switchgear"
+name = "web3games-call-switchgear"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"

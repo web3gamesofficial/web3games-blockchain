@@ -20,13 +20,13 @@
 
 use frame_support::{pallet_prelude::*, PalletId};
 use frame_system::pallet_prelude::*;
-use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use sp_runtime::{
 	traits::{AccountIdConversion, UniqueSaturatedFrom},
 	DispatchResult,
 };
 use sp_std::prelude::*;
+use web3games_support::FungibleMetadata;
 
 pub use pallet::*;
 pub mod weights;
@@ -40,7 +40,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
+type FungibleTokenIdOf<T> = <T as web3games_token_fungible::Config>::FungibleTokenId;
 type FungibleTokenId = u128;
 
 #[derive(Encode, Decode, Clone, Eq, PartialEq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
@@ -67,7 +67,7 @@ pub mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_token_fungible::Config {
+	pub trait Config: frame_system::Config + web3games_token_fungible::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		/// Weight information for the extrinsics in this module.
@@ -141,7 +141,7 @@ pub mod pallet {
 
 			let escrow_account = Self::escrow_account_id(pool_id);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(sale_token_id),
 				&sender,
 				&escrow_account,
@@ -181,14 +181,14 @@ pub mod pallet {
 			let pay_amount = amount.saturating_mul(pool.token_price);
 
 			//check balance
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.buy_token_id),
 				&sender,
 				&pool.escrow_account,
 				pay_amount,
 			)?;
 
-			let decimals = pallet_token_fungible::Pallet::<T>::token_decimals(
+			let decimals = web3games_token_fungible::Pallet::<T>::token_decimals(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id),
 			);
 
@@ -230,7 +230,7 @@ pub mod pallet {
 
 			ensure!(claim_info.is_claimed == false, Error::<T>::AlreadyClaim);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id),
 				&pool.escrow_account,
 				&sender,
@@ -256,18 +256,18 @@ pub mod pallet {
 			ensure!(Self::now() > pool.sale_end, Error::<T>::ClaimNotStart);
 			ensure!(pool.owner == sender, Error::<T>::NotOwner);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.sale_token_id),
 				&pool.escrow_account,
 				&sender,
 				pool.raise_amount,
 			)?;
 
-			let buy_token_amount = pallet_token_fungible::Pallet::<T>::balance_of(
+			let buy_token_amount = web3games_token_fungible::Pallet::<T>::balance_of(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.buy_token_id),
 				&pool.escrow_account,
 			);
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				FungibleTokenIdOf::<T>::unique_saturated_from(pool.buy_token_id),
 				&pool.escrow_account,
 				&sender,
