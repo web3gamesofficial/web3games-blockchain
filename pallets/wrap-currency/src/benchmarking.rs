@@ -6,10 +6,8 @@ use frame_benchmarking::{account, benchmarks};
 use frame_support::assert_ok;
 use frame_system::RawOrigin;
 use pallet_balances::Pallet as Balances;
-use pallet_token_fungible::Pallet as TokenFungible;
-use sp_runtime::traits::{StaticLookup, UniqueSaturatedFrom};
+use sp_runtime::traits::StaticLookup;
 
-const W3G: u128 = 0;
 const W3G_DECIMALS: u128 = 1_000_000_000_000_000_000;
 
 pub fn lookup_of_account<T: Config>(
