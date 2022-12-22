@@ -68,7 +68,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Martketplace Admin (r:1 w:0)
 	// Storage: Martketplace Point (r:1 w:1)
 	fn set_service_fee_point() -> Weight {
-		(7_000_000 as Weight)
+		(8_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(2 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
@@ -106,7 +106,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible TokenApprovals (r:0 w:1)
 	// Storage: TokenNonFungible OwnedTokens (r:0 w:2)
 	fn execute_order() -> Weight {
-		(74_000_000 as Weight)
+		(72_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(10 as Weight))
 			.saturating_add(T::DbWeight::get().writes(11 as Weight))
 	}
@@ -123,7 +123,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Martketplace Admin (r:1 w:0)
 	// Storage: System Account (r:2 w:2)
 	fn cancel_bid() -> Weight {
-		(34_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(3 as Weight))
 	}
@@ -138,7 +138,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible TokenApprovals (r:0 w:1)
 	// Storage: TokenNonFungible OwnedTokens (r:0 w:2)
 	fn accept_bid() -> Weight {
-		(76_000_000 as Weight)
+		(74_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(10 as Weight))
 			.saturating_add(T::DbWeight::get().writes(12 as Weight))
 	}
@@ -152,7 +152,7 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn set_service_fee_point() -> Weight {
-		(7_000_000 as Weight)
+		(8_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
@@ -167,7 +167,7 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(9 as Weight))
 	}
 	fn execute_order() -> Weight {
-		(74_000_000 as Weight)
+		(72_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(10 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(11 as Weight))
 	}
@@ -177,12 +177,12 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(3 as Weight))
 	}
 	fn cancel_bid() -> Weight {
-		(34_000_000 as Weight)
+		(33_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(3 as Weight))
 	}
 	fn accept_bid() -> Weight {
-		(76_000_000 as Weight)
+		(74_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(10 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(12 as Weight))
 	}

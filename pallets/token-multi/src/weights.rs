@@ -61,54 +61,54 @@ pub struct W3GWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	fn create_token() -> Weight {
-		(14_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(1 as Weight))
-			.saturating_add(T::DbWeight::get().writes(1 as Weight))
-	}
-	// Storage: TokenMulti Tokens (r:1 w:1)
-	// Storage: TokenMulti Balances (r:1 w:1)
-	fn mint() -> Weight {
-		(19_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(2 as Weight))
-			.saturating_add(T::DbWeight::get().writes(2 as Weight))
-	}
-	// Storage: TokenMulti Tokens (r:1 w:1)
-	// Storage: TokenMulti Balances (r:5 w:5)
-	fn mint_batch() -> Weight {
-		(37_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().reads(6 as Weight))
-			.saturating_add(T::DbWeight::get().writes(6 as Weight))
-	}
-	// Storage: TokenMulti Tokens (r:1 w:0)
-	// Storage: TokenMulti OperatorApprovals (r:0 w:1)
-	fn set_approval_for_all() -> Weight {
 		(15_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	// Storage: TokenMulti Balances (r:1 w:1)
+	fn mint() -> Weight {
+		(20_000_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(2 as Weight))
+			.saturating_add(T::DbWeight::get().writes(2 as Weight))
+	}
+	// Storage: TokenMulti Tokens (r:1 w:1)
+	// Storage: TokenMulti Balances (r:5 w:5)
+	fn mint_batch() -> Weight {
+		(38_000_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(6 as Weight))
+			.saturating_add(T::DbWeight::get().writes(6 as Weight))
+	}
+	// Storage: TokenMulti Tokens (r:1 w:0)
+	// Storage: TokenMulti OperatorApprovals (r:0 w:1)
+	fn set_approval_for_all() -> Weight {
+		(16_000_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(1 as Weight))
+			.saturating_add(T::DbWeight::get().writes(1 as Weight))
+	}
+	// Storage: TokenMulti Tokens (r:1 w:1)
+	// Storage: TokenMulti Balances (r:1 w:1)
 	fn burn() -> Weight {
-		(18_000_000 as Weight)
+		(19_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(2 as Weight))
 			.saturating_add(T::DbWeight::get().writes(2 as Weight))
 	}
 	// Storage: TokenMulti Tokens (r:1 w:1)
 	// Storage: TokenMulti Balances (r:5 w:5)
 	fn burn_batch() -> Weight {
-		(40_000_000 as Weight)
+		(41_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(6 as Weight))
 	}
 	// Storage: TokenMulti Balances (r:2 w:2)
 	fn transfer_from() -> Weight {
-		(20_000_000 as Weight)
+		(21_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(2 as Weight))
 			.saturating_add(T::DbWeight::get().writes(2 as Weight))
 	}
 	// Storage: TokenMulti Balances (r:10 w:10)
 	fn batch_transfer_from() -> Weight {
-		(54_000_000 as Weight)
+		(56_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(10 as Weight))
 			.saturating_add(T::DbWeight::get().writes(10 as Weight))
 	}
@@ -117,42 +117,42 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_token() -> Weight {
-		(14_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
-			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
-	}
-	fn mint() -> Weight {
-		(19_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
-			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
-	}
-	fn mint_batch() -> Weight {
-		(37_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
-			.saturating_add(RocksDbWeight::get().writes(6 as Weight))
-	}
-	fn set_approval_for_all() -> Weight {
 		(15_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
-	fn burn() -> Weight {
-		(18_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
-			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
-	}
-	fn burn_batch() -> Weight {
-		(40_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
-			.saturating_add(RocksDbWeight::get().writes(6 as Weight))
-	}
-	fn transfer_from() -> Weight {
+	fn mint() -> Weight {
 		(20_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
 	}
+	fn mint_batch() -> Weight {
+		(38_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(6 as Weight))
+	}
+	fn set_approval_for_all() -> Weight {
+		(16_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+	}
+	fn burn() -> Weight {
+		(19_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
+	}
+	fn burn_batch() -> Weight {
+		(41_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(6 as Weight))
+	}
+	fn transfer_from() -> Weight {
+		(21_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(2 as Weight))
+			.saturating_add(RocksDbWeight::get().writes(2 as Weight))
+	}
 	fn batch_transfer_from() -> Weight {
-		(54_000_000 as Weight)
+		(56_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(10 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(10 as Weight))
 	}

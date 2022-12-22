@@ -58,7 +58,7 @@ pub struct W3GWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Farming Admin (r:1 w:1)
 	fn set_admin() -> Weight {
-		(4_000_000 as Weight)
+		(5_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
@@ -83,7 +83,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: Farming AccountPoolIdLocked (r:1 w:1)
 	// Storage: TokenFungible Balances (r:4 w:4)
 	fn claim() -> Weight {
-		(47_000_000 as Weight)
+		(46_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(6 as Weight))
 			.saturating_add(T::DbWeight::get().writes(5 as Weight))
 	}
@@ -101,7 +101,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn set_admin() -> Weight {
-		(4_000_000 as Weight)
+		(5_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
@@ -116,7 +116,7 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(4 as Weight))
 	}
 	fn claim() -> Weight {
-		(47_000_000 as Weight)
+		(46_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(6 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(5 as Weight))
 	}

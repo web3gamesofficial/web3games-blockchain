@@ -59,7 +59,7 @@ pub struct W3GWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible Tokens (r:1 w:1)
 	fn create_token() -> Weight {
-		(16_000_000 as Weight)
+		(15_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
@@ -98,7 +98,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	}
 	// Storage: TokenNonFungible OperatorApprovals (r:0 w:1)
 	fn set_approve_for_all() -> Weight {
-		(13_000_000 as Weight)
+		(14_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 	// Storage: TokenNonFungible Owners (r:1 w:1)
@@ -107,7 +107,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 	// Storage: TokenNonFungible TokenApprovals (r:0 w:1)
 	// Storage: TokenNonFungible OwnedTokens (r:0 w:2)
 	fn transfer_from() -> Weight {
-		(41_000_000 as Weight)
+		(42_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(4 as Weight))
 			.saturating_add(T::DbWeight::get().writes(8 as Weight))
 	}
@@ -116,7 +116,7 @@ impl<T: frame_system::Config> WeightInfo for W3GWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_token() -> Weight {
-		(16_000_000 as Weight)
+		(15_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
@@ -136,11 +136,11 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn set_approve_for_all() -> Weight {
-		(13_000_000 as Weight)
+		(14_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	fn transfer_from() -> Weight {
-		(41_000_000 as Weight)
+		(42_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(4 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(8 as Weight))
 	}
