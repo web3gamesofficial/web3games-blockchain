@@ -76,7 +76,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		"web3games_dev",
 		ChainType::Development,
 		move || {
-			testnet_genesis(
+			genesis(
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
 				// Sudo account
@@ -95,6 +95,13 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				105,
 				Some(get_account_id_from_seed::<sr25519::Public>("Alice")),
+				vec![(
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					0,
+					b"Wrapped W3G".to_vec(),
+					b"W3G".to_vec(),
+					18,
+				)],
 			)
 		},
 		// Bootnodes
@@ -127,7 +134,7 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 		"web3games_testnet",
 		ChainType::Live,
 		move || {
-			testnet_genesis(
+			genesis(
 				// Initial PoA authorities
 				vec![
 					(
@@ -170,6 +177,22 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 						"88f40a19d057c7900ae444075b862e6e8892f3fbd7d3b03658d45b651a9b6b09"
 					]),
 				),
+				vec![
+					(
+						get_account_id_from_seed::<sr25519::Public>("Alice"),
+						0,
+						b"Wrapped W3G".to_vec(),
+						b"W3G".to_vec(),
+						18,
+					),
+					(
+						get_account_id_from_seed::<sr25519::Public>("Alice"),
+						1,
+						b"Tether USD".to_vec(),
+						b"USDT".to_vec(),
+						6,
+					),
+				],
 			)
 		},
 		// Bootnodes
@@ -195,12 +218,13 @@ pub fn staging_testnet_config() -> Result<ChainSpec, String> {
 }
 
 /// Configure initial storage state for FRAME modules.
-fn testnet_genesis(
+fn genesis(
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
 	chain_id: u64,
 	marketplace_admin: Option<AccountId>,
+	genesis_tokens: Vec<(AccountId, u8, Vec<u8>, Vec<u8>, u8)>,
 ) -> GenesisConfig {
 	// This is the simplest bytecode to revert without returning any data.
 	// We will pre-deploy it under all of our precompiles to ensure they can be called from
@@ -255,23 +279,6 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		transaction_storage: Default::default(),
 		martketplace: MartketplaceConfig { admin_key: marketplace_admin },
-		token_fungible: TokenFungibleConfig {
-			genesis_tokens: vec![
-				// (
-				// 	get_account_id_from_seed::<sr25519::Public>("Alice"),
-				// 	0,
-				// 	b"Wrapped W3G".to_vec(),
-				// 	b"W3G".to_vec(),
-				// 	18,
-				// ),
-				// (
-				// 	get_account_id_from_seed::<sr25519::Public>("Alice"),
-				// 	1,
-				// 	b"Tether USD".to_vec(),
-				// 	b"USDT".to_vec(),
-				// 	6,
-				// ),
-			],
-		},
+		token_fungible: TokenFungibleConfig { genesis_tokens },
 	}
 }
