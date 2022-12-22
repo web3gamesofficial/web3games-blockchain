@@ -257,20 +257,20 @@ fn testnet_genesis(
 		martketplace: MartketplaceConfig { admin_key: marketplace_admin },
 		token_fungible: TokenFungibleConfig {
 			genesis_tokens: vec![
-				(
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					0,
-					b"Wrapped W3G".to_vec(),
-					b"W3G".to_vec(),
-					18,
-				),
-				(
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					1,
-					b"Tether USD".to_vec(),
-					b"USDT".to_vec(),
-					6,
-				),
+				// (
+				// 	get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// 	0,
+				// 	b"Wrapped W3G".to_vec(),
+				// 	b"W3G".to_vec(),
+				// 	18,
+				// ),
+				// (
+				// 	get_account_id_from_seed::<sr25519::Public>("Alice"),
+				// 	1,
+				// 	b"Tether USD".to_vec(),
+				// 	b"USDT".to_vec(),
+				// 	6,
+				// ),
 			],
 		},
 	}

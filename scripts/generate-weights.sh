@@ -6,10 +6,11 @@ target/release/web3games-node benchmark pallet --chain=$1 --list | sed -n '2,$p'
   while IFS= read -r line
   do
       pallet=$line
-      temp=${pallet/pallet_/}
+      temp=${pallet/web3games_/}
       pallet_dir=${temp//_/-}
       if [ "$pallet" != "frame_system" -a "$pallet" != "pallet_balances" -a "$pallet" != "pallet_timestamp" ]; then
           echo "benchmark ${pallet}"
+          echo "benchmark ${pallet_dir}"
           target/release/web3games-node benchmark pallet --chain=$1 \
           --steps=50 \
           --repeat=20 \
