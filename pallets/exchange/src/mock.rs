@@ -19,17 +19,15 @@
 use crate as pallet_exchange;
 use frame_benchmarking::whitelisted_caller;
 use frame_support::{
-	construct_runtime,
-	pallet_prelude::GenesisBuild,
-	parameter_types,
+	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
-use primitives::{AccountId, Balance};
+use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{AccountIdConversion, BlakeTwo256, IdentityLookup},
+	traits::{BlakeTwo256, IdentityLookup},
 };
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;

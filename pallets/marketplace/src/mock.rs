@@ -15,13 +15,14 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+#![cfg(test)]
 
 use crate as pallet_marketplace;
 use frame_support::{
 	construct_runtime,
 	pallet_prelude::GenesisBuild,
 	parameter_types,
-	traits::{ConstU16, ConstU64, OnFinalize, OnInitialize},
+	traits::{ConstU16, ConstU64},
 	PalletId,
 };
 use primitives::Balance;
@@ -170,15 +171,4 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
 	ext
-}
-
-/// Run until a particular block.
-pub fn run_to_block(n: u64) {
-	while System::block_number() < n {
-		Balances::on_finalize(System::block_number());
-		System::on_finalize(System::block_number());
-		System::set_block_number(System::block_number() + 1);
-		System::on_initialize(System::block_number());
-		Balances::on_initialize(System::block_number());
-	}
 }

@@ -38,10 +38,7 @@ pub use weights::WeightInfo;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-#[cfg(test)]
 mod mock;
-
-#[cfg(test)]
 mod tests;
 
 pub const MIN_DURATION: u32 = 100;
