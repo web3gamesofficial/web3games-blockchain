@@ -25,7 +25,6 @@ use frame_support::{
 	traits::{Currency, Get, ReservableCurrency},
 	BoundedVec, PalletId,
 };
-use pallet_support::FungibleMetadata;
 use primitives::Balance;
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -33,6 +32,7 @@ use sp_runtime::{
 	RuntimeDebug,
 };
 use sp_std::prelude::*;
+use web3games_support::FungibleMetadata;
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -130,6 +130,34 @@ pub mod pallet {
 		Balance,
 		ValueQuery,
 	>;
+
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub genesis_tokens: Vec<(T::AccountId, u8, Vec<u8>, Vec<u8>, u8)>,
+	}
+
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { genesis_tokens: Vec::new() }
+		}
+	}
+
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+			for genesis_token in &self.genesis_tokens {
+				Pallet::<T>::do_create_token(
+					&genesis_token.0,
+					T::FungibleTokenId::from(genesis_token.1),
+					genesis_token.2.clone(),
+					genesis_token.3.clone(),
+					genesis_token.4,
+				)
+				.expect("Genesis tokens failed");
+			}
+		}
+	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]

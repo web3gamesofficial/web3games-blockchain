@@ -714,14 +714,14 @@ dependencies = [
  "log",
  "pallet-contracts",
  "pallet-randomness-collective-flip",
- "pallet-token-fungible",
- "pallet-token-multi",
- "pallet-token-non-fungible",
  "parity-scale-codec",
  "primitives",
  "serde",
  "sp-runtime",
  "sp-std",
+ "web3games-token-fungible",
+ "web3games-token-multi",
+ "web3games-token-non-fungible",
 ]
 
 [[package]]
@@ -4388,24 +4388,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-call-switchgear"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "smallvec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-contracts"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#1cca061ede75a4c693a3b71bd1b61d7275fe29e4"
@@ -4515,17 +4497,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-ethereum-chain-id"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "serde",
-]
-
-[[package]]
 name = "pallet-evm"
 version = "6.0.0-dev"
 source = "git+https://github.com/web3gamesofficial/frontier?branch=polkadot-v0.9.26#cc9e77406b4c910c857f2303451d2e7ed933b901"
@@ -4598,77 +4569,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-exchange"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "integer-sqrt",
- "log",
- "pallet-balances",
- "pallet-randomness-collective-flip",
- "pallet-timestamp",
- "pallet-token-fungible",
- "pallet-wrap-currency",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-exchange-rpc"
-version = "0.1.0"
-dependencies = [
- "jsonrpsee",
- "pallet-exchange-rpc-runtime-api",
- "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec",
- "primitives",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
-]
-
-[[package]]
-name = "pallet-exchange-rpc-runtime-api"
-version = "0.1.0"
-dependencies = [
- "pallet-exchange",
- "pallet-token-fungible",
- "parity-scale-codec",
- "primitives",
- "sp-api",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-farming"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-token-fungible",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
- "smallvec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#1cca061ede75a4c693a3b71bd1b61d7275fe29e4"
@@ -4692,62 +4592,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-launchpad"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-support",
- "pallet-token-fungible",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
- "smallvec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-marketplace"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-timestamp",
- "pallet-token-multi",
- "pallet-token-non-fungible",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-player-id"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "pallet-balances",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-preimage"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#1cca061ede75a4c693a3b71bd1b61d7275fe29e4"
@@ -4757,25 +4601,6 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-proxy-pay"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-transaction-payment",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "smallvec",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -4848,22 +4673,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-support"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.26#1cca061ede75a4c693a3b71bd1b61d7275fe29e4"
@@ -4879,65 +4688,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-timestamp",
-]
-
-[[package]]
-name = "pallet-token-fungible"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "pallet-balances",
- "pallet-support",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-token-multi"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "pallet-balances",
- "pallet-support",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-token-non-fungible"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "pallet-balances",
- "pallet-support",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]
@@ -5026,24 +4776,6 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-wrap-currency"
-version = "0.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "pallet-token-fungible",
- "parity-scale-codec",
- "primitives",
- "scale-info",
- "serde",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -5428,20 +5160,20 @@ dependencies = [
  "pallet-evm-precompile-modexp",
  "pallet-evm-precompile-sha3fips",
  "pallet-evm-precompile-simple",
- "pallet-exchange",
- "pallet-farming",
- "pallet-launchpad",
- "pallet-marketplace",
- "pallet-support",
- "pallet-token-fungible",
- "pallet-token-multi",
- "pallet-token-non-fungible",
  "parity-scale-codec",
  "precompile-utils",
  "primitives",
  "rustc-hex",
  "sp-core",
  "sp-std",
+ "web3games-exchange",
+ "web3games-farming",
+ "web3games-launchpad",
+ "web3games-marketplace",
+ "web3games-support",
+ "web3games-token-fungible",
+ "web3games-token-multi",
+ "web3games-token-non-fungible",
 ]
 
 [[package]]
@@ -9398,6 +9130,148 @@ dependencies = [
 ]
 
 [[package]]
+name = "web3games-call-switchgear"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "web3games-ethereum-chain-id"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+]
+
+[[package]]
+name = "web3games-exchange"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "integer-sqrt",
+ "log",
+ "pallet-balances",
+ "pallet-randomness-collective-flip",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-token-fungible",
+ "web3games-wrap-currency",
+]
+
+[[package]]
+name = "web3games-exchange-rpc"
+version = "0.1.0"
+dependencies = [
+ "jsonrpsee",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "parity-scale-codec",
+ "primitives",
+ "sp-api",
+ "sp-blockchain",
+ "sp-core",
+ "sp-rpc",
+ "sp-runtime",
+ "web3games-exchange-rpc-runtime-api",
+]
+
+[[package]]
+name = "web3games-exchange-rpc-runtime-api"
+version = "0.1.0"
+dependencies = [
+ "parity-scale-codec",
+ "primitives",
+ "sp-api",
+ "sp-std",
+ "web3games-exchange",
+ "web3games-token-fungible",
+]
+
+[[package]]
+name = "web3games-farming"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-token-fungible",
+]
+
+[[package]]
+name = "web3games-launchpad"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-support",
+ "web3games-token-fungible",
+]
+
+[[package]]
+name = "web3games-marketplace"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-token-multi",
+ "web3games-token-non-fungible",
+]
+
+[[package]]
 name = "web3games-node"
 version = "0.0.1"
 dependencies = [
@@ -9424,7 +9298,6 @@ dependencies = [
  "pallet-contracts-rpc",
  "pallet-ethereum",
  "pallet-evm",
- "pallet-exchange-rpc",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -9460,7 +9333,45 @@ dependencies = [
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
  "tracing-core",
+ "web3games-exchange-rpc",
  "web3games-runtime",
+]
+
+[[package]]
+name = "web3games-player-id"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "web3games-proxy-pay"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-transaction-payment",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -9480,36 +9391,22 @@ dependencies = [
  "pallet-aura",
  "pallet-balances",
  "pallet-base-fee",
- "pallet-call-switchgear",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
  "pallet-ethereum",
- "pallet-ethereum-chain-id",
  "pallet-evm",
- "pallet-exchange",
- "pallet-exchange-rpc-runtime-api",
- "pallet-farming",
  "pallet-grandpa",
- "pallet-launchpad",
- "pallet-marketplace",
- "pallet-player-id",
  "pallet-preimage",
- "pallet-proxy-pay",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
- "pallet-support",
  "pallet-timestamp",
- "pallet-token-fungible",
- "pallet-token-multi",
- "pallet-token-non-fungible",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-storage",
  "pallet-treasury",
  "pallet-utility",
- "pallet-wrap-currency",
  "parity-scale-codec",
  "precompiles",
  "primitives",
@@ -9528,6 +9425,115 @@ dependencies = [
  "sp-version",
  "static_assertions",
  "substrate-wasm-builder",
+ "web3games-call-switchgear",
+ "web3games-ethereum-chain-id",
+ "web3games-exchange",
+ "web3games-exchange-rpc-runtime-api",
+ "web3games-farming",
+ "web3games-launchpad",
+ "web3games-marketplace",
+ "web3games-player-id",
+ "web3games-proxy-pay",
+ "web3games-support",
+ "web3games-token-fungible",
+ "web3games-token-multi",
+ "web3games-token-non-fungible",
+ "web3games-wrap-currency",
+]
+
+[[package]]
+name = "web3games-support"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "web3games-token-fungible"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-support",
+]
+
+[[package]]
+name = "web3games-token-multi"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-support",
+]
+
+[[package]]
+name = "web3games-token-non-fungible"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-support",
+]
+
+[[package]]
+name = "web3games-wrap-currency"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "web3games-token-fungible",
 ]
 
 [[package]]

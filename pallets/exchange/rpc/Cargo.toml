@@ -1,5 +1,5 @@
 [package]
-name = "pallet-exchange-rpc"
+name = "web3games-exchange-rpc"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -13,7 +13,7 @@ sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "pol
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 sp-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" }
-pallet-exchange-rpc-runtime-api = { path = "./runtime-api", default-features = false }
+web3games-exchange-rpc-runtime-api = { path = "./runtime-api", default-features = false }
 primitives = { path = "../../../primitives", default-features = false }
 
 [features]
@@ -24,6 +24,6 @@ std = [
     "sp-runtime/std",
     "sp-core/std",
     "pallet-transaction-payment-rpc-runtime-api/std",
-    "pallet-exchange-rpc-runtime-api/std",
+    "web3games-exchange-rpc-runtime-api/std",
     "primitives/std",
 ]

@@ -8,8 +8,8 @@ use frame_benchmarking::{benchmarks, whitelisted_caller};
 use frame_support::assert_ok;
 use frame_system::RawOrigin;
 use pallet_balances;
-use pallet_token_fungible as TokenFungible;
 use sp_runtime::traits::{StaticLookup, UniqueSaturatedFrom};
+use web3games_token_fungible as TokenFungible;
 
 fn lookup_of_account<T: Config>(
 	who: T::AccountId,

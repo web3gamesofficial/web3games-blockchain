@@ -74,17 +74,17 @@ pub use frame_support::{
 pub use frame_system::Call as SystemCall;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
-	EnsureRoot,
+	EnsureRoot, EnsureSigned,
 };
 pub use pallet_balances::Call as BalancesCall;
 use pallet_contracts::weights::WeightInfo;
 use pallet_ethereum::{Call::transact, Transaction as EthereumTransaction};
 use pallet_evm::{Account as EVMAccount, EnsureAddressTruncated, HashedAddressMapping, Runner};
-use pallet_support::AccountMapping;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_transaction_payment::{CurrencyAdapter, Multiplier, TargetedFeeAdjustment};
 use pallet_transaction_payment::{FeeDetails, RuntimeDispatchInfo};
 pub use sp_runtime::{FixedPointNumber, Perbill, Permill, Perquintill};
+use web3games_support::AccountMapping;
 
 /// Constant values used within the runtime.
 mod constants;
@@ -98,7 +98,8 @@ pub use chain_extensions::Web3GamesChainExtensions;
 pub use precompiles::Web3GamesPrecompiles;
 pub type Precompiles = Web3GamesPrecompiles<Runtime>;
 
-use pallet_call_switchgear::{OverallToggleFilter, SwitchOffTransactionFilter};
+use web3games_call_switchgear::{OverallToggleFilter, SwitchOffTransactionFilter};
+pub use web3games_token_fungible::Token;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -513,7 +514,7 @@ impl pallet_base_fee::Config for Runtime {
 	type DefaultBaseFeePerGas = DefaultBaseFeePerGas;
 }
 
-impl pallet_ethereum_chain_id::Config for Runtime {}
+impl web3games_ethereum_chain_id::Config for Runtime {}
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
@@ -528,7 +529,7 @@ impl pallet_scheduler::Config for Runtime {
 	type PalletsOrigin = OriginCaller;
 	type Call = Call;
 	type MaximumWeight = MaximumSchedulerWeight;
-	type ScheduleOrigin = EnsureRoot<AccountId>;
+	type ScheduleOrigin = EnsureSigned<AccountId>;
 	type MaxScheduledPerBlock = ConstU32<50>;
 	type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
@@ -627,17 +628,17 @@ impl pallet_treasury::Config for Runtime {
 
 // web3games pallets
 
-impl pallet_token_fungible::Config for Runtime {
+impl web3games_token_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
 	type FungibleTokenId = TokenAssetId;
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
-	type WeightInfo = pallet_token_fungible::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_token_fungible::weights::W3GWeight<Runtime>;
 }
 
-impl pallet_token_non_fungible::Config for Runtime {
+impl web3games_token_non_fungible::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = TokenAssetId;
@@ -645,10 +646,10 @@ impl pallet_token_non_fungible::Config for Runtime {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
-	type WeightInfo = pallet_token_non_fungible::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_token_non_fungible::weights::W3GWeight<Runtime>;
 }
 
-impl pallet_token_multi::Config for Runtime {
+impl web3games_token_multi::Config for Runtime {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = TokenAssetId;
@@ -656,32 +657,33 @@ impl pallet_token_multi::Config for Runtime {
 	type StringLimit = StringLimit;
 	type CreateTokenDeposit = CreateTokenDeposit;
 	type Currency = Balances;
-	type WeightInfo = pallet_token_multi::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_token_multi::weights::W3GWeight<Runtime>;
 }
 
 parameter_types! {
-	pub const WW3G: u128 = 0;
+	pub const W3GFungibleTokenId: u128 = 0;
 }
 
-impl pallet_exchange::Config for Runtime {
+impl web3games_exchange::Config for Runtime {
 	type Event = Event;
 	type PalletId = ExchangePalletId;
 	type PoolId = u128;
 	type CreatePoolDeposit = CreatePoolDeposit;
-	type WW3G = WW3G;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 	type Currency = Balances;
 	type Randomness = RandomnessCollectiveFlip;
-	type WeightInfo = pallet_exchange::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_exchange::weights::W3GWeight<Runtime>;
 }
 
-impl pallet_wrap_currency::Config for Runtime {
+impl web3games_wrap_currency::Config for Runtime {
 	type Event = Event;
 	type PalletId = WrapCurrencyPalletId;
-	type CreateTokenDeposit = CreateTokenDeposit;
+	type WeightInfo = web3games_wrap_currency::weights::W3GWeight<Runtime>;
 	type Currency = Balances;
+	type W3GFungibleTokenId = W3GFungibleTokenId;
 }
 
-impl pallet_proxy_pay::Config for Runtime {
+impl web3games_proxy_pay::Config for Runtime {
 	type Event = Event;
 	type WeightInfo = ();
 	type Currency = Balances;
@@ -689,19 +691,21 @@ impl pallet_proxy_pay::Config for Runtime {
 	type PalletId = ProxyPayPalletId;
 }
 
-impl pallet_marketplace::Config for Runtime {
+impl web3games_marketplace::Config for Runtime {
 	type Event = Event;
 	type PalletId = MarketplacePalletId;
 	type Currency = Balances;
+	type WeightInfo = web3games_marketplace::weights::W3GWeight<Runtime>;
 }
 
 parameter_types! {
 	pub const MaxAddressesPerChain: u32 = 10;
 }
 
-impl pallet_player_id::Config for Runtime {
+impl web3games_player_id::Config for Runtime {
 	type Event = Event;
 	type MaxAddressesPerChain = MaxAddressesPerChain;
+	type WeightInfo = web3games_player_id::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_utility::Config for Runtime {
@@ -711,10 +715,9 @@ impl pallet_utility::Config for Runtime {
 	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
 }
 
-impl pallet_call_switchgear::Config for Runtime {
+impl web3games_call_switchgear::Config for Runtime {
 	type Event = Event;
-	type UpdateOrigin = EnsureRoot<AccountId>;
-	type WeightInfo = ();
+	type WeightInfo = web3games_call_switchgear::weights::W3GWeight<Runtime>;
 }
 
 impl pallet_transaction_storage::Config for Runtime {
@@ -729,16 +732,16 @@ impl pallet_transaction_storage::Config for Runtime {
 		ConstU32<{ pallet_transaction_storage::DEFAULT_MAX_TRANSACTION_SIZE }>;
 }
 
-impl pallet_farming::Config for Runtime {
+impl web3games_farming::Config for Runtime {
 	type Event = Event;
 	type PalletId = FarmingPalletId;
-	type WeightInfo = pallet_farming::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_farming::weights::W3GWeight<Runtime>;
 }
 
-impl pallet_launchpad::Config for Runtime {
+impl web3games_launchpad::Config for Runtime {
 	type Event = Event;
 	type PalletId = FarmingPalletId;
-	type WeightInfo = pallet_launchpad::weights::W3GWeight<Runtime>;
+	type WeightInfo = web3games_launchpad::weights::W3GWeight<Runtime>;
 }
 
 construct_runtime!(
@@ -757,7 +760,7 @@ construct_runtime!(
 		Utility: pallet_utility,
 
 		// Ethereum
-		EthereumChainId: pallet_ethereum_chain_id,
+		EthereumChainId: web3games_ethereum_chain_id,
 		Ethereum: pallet_ethereum,
 		EVM: pallet_evm,
 		BaseFee: pallet_base_fee,
@@ -772,18 +775,18 @@ construct_runtime!(
 		Preimage: pallet_preimage,
 
 		// web3games pallets
-		TokenFungible: pallet_token_fungible,
-		TokenNonFungible: pallet_token_non_fungible,
-		TokenMulti: pallet_token_multi,
-		Exchange: pallet_exchange,
-		WrapCurrency: pallet_wrap_currency,
-		ProxyPay: pallet_proxy_pay,
-		Martketplace: pallet_marketplace,
-		PalyerId: pallet_player_id,
-		CallSwitchgear: pallet_call_switchgear,
+		TokenFungible: web3games_token_fungible,
+		TokenNonFungible: web3games_token_non_fungible,
+		TokenMulti: web3games_token_multi,
+		Exchange: web3games_exchange,
+		WrapCurrency: web3games_wrap_currency,
+		ProxyPay: web3games_proxy_pay,
+		Martketplace: web3games_marketplace,
+		PlayerId: web3games_player_id,
+		CallSwitchgear: web3games_call_switchgear,
 		TransactionStorage: pallet_transaction_storage,
-		Farming: pallet_farming,
-		Launchpad: pallet_launchpad
+		Farming: web3games_farming,
+		Launchpad: web3games_launchpad
 	}
 );
 
@@ -913,12 +916,16 @@ mod benches {
 		[frame_system, SystemBench::<Runtime>]
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
-		[pallet_token_fungible, TokenFungible]
-		[pallet_token_multi, TokenMulti]
-		[pallet_token_non_fungible, TokenNonFungible]
-		[pallet_exchange, Exchange]
-		[pallet_farming, Farming]
-		[pallet_launchpad, Launchpad]
+		[web3games_token_fungible, TokenFungible]
+		[web3games_token_multi, TokenMulti]
+		[web3games_token_non_fungible, TokenNonFungible]
+		[web3games_exchange, Exchange]
+		[web3games_farming, Farming]
+		[web3games_launchpad, Launchpad]
+		[web3games_call_switchgear, CallSwitchgear]
+		[web3games_wrap_currency, WrapCurrency]
+		[web3games_player_id, PlayerId]
+		[web3games_marketplace, Martketplace]
 	);
 }
 
@@ -1246,7 +1253,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
+	impl web3games_exchange_rpc_runtime_api::ExchangeRuntimeApi<Block, AccountId> for Runtime {
 		fn get_amount_in_price(supply: Balance, path: Vec<u128>) -> Option<Vec<Balance>> {
 			if let Ok(amounts) = Exchange::get_amounts_in(supply,path) {
 				Some(amounts)
@@ -1316,12 +1323,16 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 			list_benchmark!(list, extra, pallet_balances, Balances);
 			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
-			list_benchmark!(list, extra, pallet_token_fungible, TokenFungible);
-			list_benchmark!(list, extra, pallet_token_multi, TokenMulti);
-			list_benchmark!(list, extra, pallet_token_non_fungible, TokenNonFungible);
-			list_benchmark!(list, extra, pallet_exchange, Exchange);
-			list_benchmark!(list, extra, pallet_farming, Farming);
-			list_benchmark!(list, extra, pallet_launchpad, Launchpad);
+			list_benchmark!(list, extra, web3games_token_fungible, TokenFungible);
+			list_benchmark!(list, extra, web3games_token_multi, TokenMulti);
+			list_benchmark!(list, extra, web3games_token_non_fungible, TokenNonFungible);
+			list_benchmark!(list, extra, web3games_exchange, Exchange);
+			list_benchmark!(list, extra, web3games_farming, Farming);
+			list_benchmark!(list, extra, web3games_launchpad, Launchpad);
+			list_benchmark!(list, extra, web3games_call_switchgear, CallSwitchgear);
+			list_benchmark!(list, extra, web3games_wrap_currency, WrapCurrency);
+			list_benchmark!(list, extra, web3games_player_id, PlayerId);
+			list_benchmark!(list, extra, web3games_marketplace, Martketplace);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 			return (list, storage_info)
@@ -1356,12 +1367,16 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_balances, Balances);
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
-			add_benchmark!(params, batches, pallet_token_fungible, TokenFungible);
-			add_benchmark!(params, batches, pallet_token_multi, TokenMulti);
-			add_benchmark!(params, batches, pallet_token_non_fungible, TokenNonFungible);
-			add_benchmark!(params, batches, pallet_exchange, Exchange);
-			add_benchmark!(params, batches, pallet_farming, Farming);
-			add_benchmark!(params, batches, pallet_launchpad, Launchpad);
+			add_benchmark!(params, batches, web3games_token_fungible, TokenFungible);
+			add_benchmark!(params, batches, web3games_token_multi, TokenMulti);
+			add_benchmark!(params, batches, web3games_token_non_fungible, TokenNonFungible);
+			add_benchmark!(params, batches, web3games_exchange, Exchange);
+			add_benchmark!(params, batches, web3games_farming, Farming);
+			add_benchmark!(params, batches, web3games_launchpad, Launchpad);
+			add_benchmark!(params, batches, web3games_call_switchgear, CallSwitchgear);
+			add_benchmark!(params, batches, web3games_wrap_currency, WrapCurrency);
+			add_benchmark!(params, batches, web3games_player_id, PlayerId);
+			add_benchmark!(params, batches, web3games_marketplace, Martketplace);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

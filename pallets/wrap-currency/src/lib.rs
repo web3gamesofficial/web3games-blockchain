@@ -20,7 +20,7 @@
 
 use frame_support::{
 	dispatch::DispatchResult,
-	traits::{Currency, ExistenceRequirement::KeepAlive, Get, ReservableCurrency},
+	traits::{Currency, ExistenceRequirement::KeepAlive, Get},
 	PalletId,
 };
 use sp_runtime::traits::{AccountIdConversion, UniqueSaturatedFrom};
@@ -30,6 +30,12 @@ use sp_std::prelude::*;
 pub use pallet::*;
 use primitives::Balance;
 
+pub mod weights;
+pub use weights::WeightInfo;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 #[cfg(test)]
 mod mock;
 
@@ -38,6 +44,7 @@ mod tests;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+type FungibleTokenIdOf<T> = <T as web3games_token_fungible::Config>::FungibleTokenId;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -46,39 +53,20 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_token_fungible::Config {
+	pub trait Config: frame_system::Config + web3games_token_fungible::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-
 		// #[pallet::constant]
 		type PalletId: Get<PalletId>;
-
+		/// Weight information for the extrinsics in this module.
+		type WeightInfo: WeightInfo;
+		type Currency: Currency<Self::AccountId>;
 		#[pallet::constant]
-		type CreateTokenDeposit: Get<BalanceOf<Self>>;
-
-		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+		type W3GFungibleTokenId: Get<FungibleTokenIdOf<Self>>;
 	}
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
-
-	#[pallet::storage]
-	pub(super) type WrapToken<T: Config> = StorageValue<_, T::FungibleTokenId, ValueQuery>;
-
-	#[pallet::genesis_config]
-	#[derive(Default)]
-	pub struct GenesisConfig {}
-
-	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig
-	where
-		<T as pallet_token_fungible::Config>::FungibleTokenId: From<u128>,
-	{
-		fn build(&self) {
-			let result = Pallet::<T>::create_wrap_token();
-			assert!(result.is_ok());
-		}
-	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -92,14 +80,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::deposit())]
 		pub fn deposit(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_deposit(who.clone(), amount)?;
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::withdraw())]
 		pub fn withdraw(origin: OriginFor<T>, amount: Balance) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Self::do_withdraw(who.clone(), amount)?;
@@ -123,8 +111,12 @@ impl<T: Config> Pallet<T> {
 			KeepAlive,
 		)?;
 
-		let token_id = WrapToken::<T>::get();
-		pallet_token_fungible::Pallet::<T>::do_mint(token_id, &vault_account, who.clone(), amount)?;
+		web3games_token_fungible::Pallet::<T>::do_mint(
+			T::W3GFungibleTokenId::get(),
+			&vault_account,
+			who.clone(),
+			amount,
+		)?;
 		Self::deposit_event(Event::Deposited(who, amount));
 		Ok(())
 	}
@@ -137,27 +129,8 @@ impl<T: Config> Pallet<T> {
 			KeepAlive,
 		)?;
 
-		let token_id = WrapToken::<T>::get();
-		pallet_token_fungible::Pallet::<T>::do_burn(token_id, &who, amount)?;
+		web3games_token_fungible::Pallet::<T>::do_burn(T::W3GFungibleTokenId::get(), &who, amount)?;
 		Self::deposit_event(Event::Withdrawn(who, amount));
-		Ok(())
-	}
-
-	fn create_wrap_token() -> DispatchResult {
-		let vault_account = Self::account_id();
-
-		let deposit = <T as Config>::CreateTokenDeposit::get();
-		<T as Config>::Currency::deposit_creating(&vault_account, deposit);
-
-		let id: T::FungibleTokenId =
-			<T as pallet_token_fungible::Config>::FungibleTokenId::default();
-		let name: Vec<u8> = "Wrapped Currency".as_bytes().to_vec();
-		let symbol: Vec<u8> = "WW3G".as_bytes().to_vec();
-
-		pallet_token_fungible::Pallet::<T>::do_create_token(&vault_account, id, name, symbol, 18)?;
-
-		WrapToken::<T>::put(id);
-
 		Ok(())
 	}
 }

@@ -34,10 +34,10 @@ pub struct FarmingExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> PrecompileSet for FarmingExtension<Runtime>
 where
-	Runtime: pallet_farming::Config + pallet_evm::Config,
+	Runtime: web3games_farming::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_farming::Call<Runtime>>,
+	Runtime::Call: From<web3games_farming::Call<Runtime>>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let result = {
@@ -70,10 +70,10 @@ impl<Runtime> FarmingExtension<Runtime> {
 
 impl<Runtime> FarmingExtension<Runtime>
 where
-	Runtime: pallet_farming::Config + pallet_evm::Config,
+	Runtime: web3games_farming::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_farming::Call<Runtime>>,
+	Runtime::Call: From<web3games_farming::Call<Runtime>>,
 {
 	fn staking(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
@@ -90,7 +90,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_farming::Call::<Runtime>::staking { pool_id, amount },
+				web3games_farming::Call::<Runtime>::staking { pool_id, amount },
 			)?;
 		}
 
@@ -112,7 +112,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_farming::Call::<Runtime>::claim { pool_id },
+				web3games_farming::Call::<Runtime>::claim { pool_id },
 			)?;
 		}
 

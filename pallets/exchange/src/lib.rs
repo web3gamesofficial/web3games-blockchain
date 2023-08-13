@@ -50,7 +50,7 @@ mod tests;
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-type FungibleTokenIdOf<T> = <T as pallet_token_fungible::Config>::FungibleTokenId;
+type FungibleTokenIdOf<T> = <T as web3games_token_fungible::Config>::FungibleTokenId;
 
 pub const MINIMUM_LIQUIDITY: u128 = 1000; // 10**3;
 
@@ -74,7 +74,7 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config:
-		frame_system::Config + pallet_token_fungible::Config + pallet_wrap_currency::Config
+		frame_system::Config + web3games_token_fungible::Config + web3games_wrap_currency::Config
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
@@ -88,7 +88,7 @@ pub mod pallet {
 
 		/// The minimum balance to create pool
 		#[pallet::constant]
-		type WW3G: Get<FungibleTokenIdOf<Self>>;
+		type W3GFungibleTokenId: Get<FungibleTokenIdOf<Self>>;
 
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
@@ -185,8 +185,8 @@ pub mod pallet {
 
 			ensure!(token_a != token_b, Error::<T>::TokenRepeat);
 			ensure!(
-				pallet_token_fungible::Pallet::<T>::exists(token_a) &&
-					pallet_token_fungible::Pallet::<T>::exists(token_b),
+				web3games_token_fungible::Pallet::<T>::exists(token_a) &&
+					web3games_token_fungible::Pallet::<T>::exists(token_b),
 				Error::<T>::TokenAccountNotFound,
 			);
 
@@ -241,13 +241,13 @@ pub mod pallet {
 				amount_1_min,
 			)?;
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_0,
 				&who,
 				&pool.lp_token_account_id,
 				amount_a,
 			)?;
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_1,
 				&who,
 				&pool.lp_token_account_id,
@@ -280,14 +280,15 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
-			pallet_wrap_currency::Pallet::<T>::do_deposit(who.clone(), amount_w3g_desired)?;
+			web3games_wrap_currency::Pallet::<T>::do_deposit(who.clone(), amount_w3g_desired)?;
 
-			let (token_0, token_1) = Self::sort_tokens(T::WW3G::get(), token);
+			let (token_0, token_1) =
+				Self::sort_tokens(<T as pallet::Config>::W3GFungibleTokenId::get(), token);
 
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			let (amount_a, amount_b) = Self::do_add_liquidity(
-				T::WW3G::get(),
+				<T as pallet::Config>::W3GFungibleTokenId::get(),
 				token,
 				amount_w3g_desired,
 				amount_desired,
@@ -295,13 +296,13 @@ pub mod pallet {
 				amount_min,
 			)?;
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_0,
 				&who,
 				&pool.lp_token_account_id,
 				amount_a,
 			)?;
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_1,
 				&who,
 				&pool.lp_token_account_id,
@@ -338,7 +339,7 @@ pub mod pallet {
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			// return Lp to Pallet
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.lp_token,
 				&who,
 				&pool.lp_token_account_id,
@@ -373,11 +374,12 @@ pub mod pallet {
 			let who = ensure_signed(origin)?;
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
-			let (token_0, token_1) = Self::sort_tokens(T::WW3G::get(), token);
+			let (token_0, token_1) =
+				Self::sort_tokens(<T as pallet::Config>::W3GFungibleTokenId::get(), token);
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
 			// return Lp to Pallet
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.lp_token,
 				&who,
 				&pool.lp_token_account_id,
@@ -388,7 +390,7 @@ pub mod pallet {
 			ensure!(amount_0 >= amount_w3g_min, Error::<T>::InsufficientAAmount);
 			ensure!(amount_1 >= amount_min, Error::<T>::InsufficientBAmount);
 
-			pallet_wrap_currency::Pallet::<T>::do_withdraw(who.clone(), amount_0)?;
+			web3games_wrap_currency::Pallet::<T>::do_withdraw(who.clone(), amount_0)?;
 
 			Self::deposit_event(Event::LiquidityRemoved(
 				pool.lp_token,
@@ -423,7 +425,7 @@ pub mod pallet {
 				Error::<T>::InsufficientOutAmount
 			);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				path[0],
 				&who,
 				&pool.lp_token_account_id,
@@ -445,7 +447,10 @@ pub mod pallet {
 			#[pallet::compact] deadline: T::BlockNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(path[0] == T::WW3G::get(), Error::<T>::InvalidPath);
+			ensure!(
+				path[0] == <T as pallet::Config>::W3GFungibleTokenId::get(),
+				Error::<T>::InvalidPath
+			);
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
 			let (token_0, token_1) = Self::sort_tokens(path[0], path[1]);
@@ -458,9 +463,9 @@ pub mod pallet {
 				Error::<T>::InsufficientOutAmount
 			);
 
-			pallet_wrap_currency::Pallet::<T>::do_deposit(who.clone(), amounts[0])?;
+			web3games_wrap_currency::Pallet::<T>::do_deposit(who.clone(), amounts[0])?;
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				path[0],
 				&who,
 				&pool.lp_token_account_id,
@@ -490,7 +495,7 @@ pub mod pallet {
 			let amounts = Self::get_amounts_in(amount_out, path.clone())?;
 			ensure!(amounts[0] <= amount_in_max, Error::<T>::InsufficientInputAmount);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				path[0],
 				&who,
 				&pool.lp_token_account_id,
@@ -512,7 +517,10 @@ pub mod pallet {
 			#[pallet::compact] deadline: T::BlockNumber,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
-			ensure!(path[path.len() - 1] == T::WW3G::get(), Error::<T>::InvalidPath);
+			ensure!(
+				path[path.len() - 1] == <T as pallet::Config>::W3GFungibleTokenId::get(),
+				Error::<T>::InvalidPath
+			);
 			ensure!(deadline > Self::now(), Error::<T>::Deadline);
 
 			let (token_0, token_1) = Self::sort_tokens(path[0], path[1]);
@@ -521,7 +529,7 @@ pub mod pallet {
 			let amounts = Self::get_amounts_in(amount_out_w3g, path.clone())?;
 			ensure!(amounts[0] <= amount_in_max, Error::<T>::InsufficientInputAmount);
 
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				path[0],
 				&who,
 				&pool.lp_token_account_id,
@@ -529,7 +537,7 @@ pub mod pallet {
 			)?;
 			Self::do_swap(who, amounts.clone(), path, to.clone())?;
 
-			pallet_wrap_currency::Pallet::<T>::do_withdraw(to, amounts[amounts.len() - 1])?;
+			web3games_wrap_currency::Pallet::<T>::do_withdraw(to, amounts[amounts.len() - 1])?;
 
 			Ok(())
 		}
@@ -586,7 +594,7 @@ impl<T: Config> Pallet<T> {
 		let name: Vec<u8> = "LP Token".as_bytes().to_vec();
 		let symbol: Vec<u8> = "LPV1".as_bytes().to_vec();
 
-		pallet_token_fungible::Pallet::<T>::do_create_token(
+		web3games_token_fungible::Pallet::<T>::do_create_token(
 			&Self::account_id(),
 			lp_token,
 			name,
@@ -693,7 +701,7 @@ impl<T: Config> Pallet<T> {
 		);
 
 		if amount_0_out > Zero::zero() {
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_0,
 				&pool.lp_token_account_id,
 				&to,
@@ -701,7 +709,7 @@ impl<T: Config> Pallet<T> {
 			)?;
 		}
 		if amount_1_out > Zero::zero() {
-			pallet_token_fungible::Pallet::<T>::do_transfer(
+			web3games_token_fungible::Pallet::<T>::do_transfer(
 				pool.token_1,
 				&pool.lp_token_account_id,
 				&to,
@@ -709,10 +717,14 @@ impl<T: Config> Pallet<T> {
 			)?;
 		}
 
-		let balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
-		let balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+		let balance_0 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_0,
+			&pool.lp_token_account_id,
+		);
+		let balance_1 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_1,
+			&pool.lp_token_account_id,
+		);
 
 		let amount_0_in = Self::init_amount_in(balance_0, reserve_0, amount_0_out)?;
 		let amount_1_in = Self::init_amount_in(balance_1, reserve_1, amount_1_out)?;
@@ -752,7 +764,7 @@ impl<T: Config> Pallet<T> {
 		let k_last = KLast::<T>::get((token_0, token_1));
 		if let Some(fee_on) = FeeTo::<T>::get() {
 			let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
-			let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+			let total_supply = web3games_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 			if k_last != 0 {
 				let root_k =
 					(U256::from(reserve_0).saturating_mul(U256::from(reserve_1))).integer_sqrt();
@@ -770,7 +782,7 @@ impl<T: Config> Pallet<T> {
 						.and_then(|l| TryInto::<Balance>::try_into(l).ok())
 						.ok_or(Error::<T>::Overflow)?;
 					if liquidity > 0 {
-						pallet_token_fungible::Pallet::<T>::do_mint(
+						web3games_token_fungible::Pallet::<T>::do_mint(
 							pool.lp_token,
 							&Self::account_id(),
 							fee_on,
@@ -798,10 +810,14 @@ impl<T: Config> Pallet<T> {
 
 		let (reserve_0, reserve_1) = Reserves::<T>::get((token_0, token_1));
 
-		let balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
-		let balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+		let balance_0 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_0,
+			&pool.lp_token_account_id,
+		);
+		let balance_1 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_1,
+			&pool.lp_token_account_id,
+		);
 
 		let amount_0 = balance_0.checked_sub(reserve_0).ok_or(Error::<T>::Overflow)?;
 		let amount_1 = balance_1.checked_sub(reserve_1).ok_or(Error::<T>::Overflow)?;
@@ -810,14 +826,14 @@ impl<T: Config> Pallet<T> {
 
 		let liquidity: Balance;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+		let total_supply = web3games_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 		if total_supply == Zero::zero() {
 			liquidity = (amount_0 * amount_1)
 				.integer_sqrt()
 				.checked_sub(Balance::from(MINIMUM_LIQUIDITY))
 				.ok_or(Error::<T>::Overflow)?;
 			// permanently lock the first MINIMUM_LIQUIDITY tokens
-			pallet_token_fungible::Pallet::<T>::do_mint(
+			web3games_token_fungible::Pallet::<T>::do_mint(
 				pool.lp_token,
 				&Self::account_id(),
 				Self::account_id(),
@@ -838,7 +854,7 @@ impl<T: Config> Pallet<T> {
 			);
 		}
 		ensure!(liquidity >= Zero::zero(), Error::<T>::InsufficientLiquidityMinted);
-		pallet_token_fungible::Pallet::<T>::do_mint(
+		web3games_token_fungible::Pallet::<T>::do_mint(
 			pool.lp_token,
 			&Self::account_id(),
 			to.clone(),
@@ -874,7 +890,7 @@ impl<T: Config> Pallet<T> {
 		let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 		let (reserve_0, reserve_1) = Reserves::<T>::get((token_0, token_1));
 		let liquidity: Balance;
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+		let total_supply = web3games_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 		if total_supply == Zero::zero() {
 			liquidity = (amount_0 * amount_1)
 				.integer_sqrt()
@@ -908,19 +924,23 @@ impl<T: Config> Pallet<T> {
 		ensure!(token_0 != token_1, Error::<T>::PoolNotFound);
 		let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 
-		let balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
-		let balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+		let balance_0 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_0,
+			&pool.lp_token_account_id,
+		);
+		let balance_1 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_1,
+			&pool.lp_token_account_id,
+		);
 
-		let liquidity_balance = pallet_token_fungible::Pallet::<T>::balance_of(
+		let liquidity_balance = web3games_token_fungible::Pallet::<T>::balance_of(
 			pool.lp_token,
 			&pool.lp_token_account_id,
 		);
 
 		let liquidity = liquidity_balance + lp_balance;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+		let total_supply = web3games_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 
 		let amount_0 = U256::from(liquidity)
 			.checked_mul(U256::from(balance_0))
@@ -948,19 +968,23 @@ impl<T: Config> Pallet<T> {
 		let pool = Pools::<T>::get((token_0, token_1)).ok_or(Error::<T>::PoolNotFound)?;
 		let (reserve_0, reserve_1) = Reserves::<T>::get((token_0, token_1));
 
-		let mut balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
-		let mut balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+		let mut balance_0 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_0,
+			&pool.lp_token_account_id,
+		);
+		let mut balance_1 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_1,
+			&pool.lp_token_account_id,
+		);
 
-		let liquidity = pallet_token_fungible::Pallet::<T>::balance_of(
+		let liquidity = web3games_token_fungible::Pallet::<T>::balance_of(
 			pool.lp_token,
 			&pool.lp_token_account_id,
 		);
 
 		let fee_on = Self::mint_fee(token_0, token_1, reserve_0, reserve_1)?;
 
-		let total_supply = pallet_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
+		let total_supply = web3games_token_fungible::Pallet::<T>::total_supply(pool.lp_token);
 
 		let amount_0 = U256::from(liquidity)
 			.checked_mul(U256::from(balance_0))
@@ -977,28 +1001,32 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::InsufficientLiquidityBurned
 		);
 
-		pallet_token_fungible::Pallet::<T>::do_burn(
+		web3games_token_fungible::Pallet::<T>::do_burn(
 			pool.lp_token,
 			&pool.lp_token_account_id,
 			liquidity,
 		)?;
-		pallet_token_fungible::Pallet::<T>::do_transfer(
+		web3games_token_fungible::Pallet::<T>::do_transfer(
 			pool.token_0,
 			&pool.lp_token_account_id,
 			&to,
 			amount_0,
 		)?;
-		pallet_token_fungible::Pallet::<T>::do_transfer(
+		web3games_token_fungible::Pallet::<T>::do_transfer(
 			pool.token_1,
 			&pool.lp_token_account_id,
 			&to,
 			amount_1,
 		)?;
 
-		balance_0 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_0, &pool.lp_token_account_id);
-		balance_1 =
-			pallet_token_fungible::Pallet::<T>::balance_of(pool.token_1, &pool.lp_token_account_id);
+		balance_0 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_0,
+			&pool.lp_token_account_id,
+		);
+		balance_1 = web3games_token_fungible::Pallet::<T>::balance_of(
+			pool.token_1,
+			&pool.lp_token_account_id,
+		);
 
 		Self::do_update(token_0, token_1, balance_0, balance_1)?;
 

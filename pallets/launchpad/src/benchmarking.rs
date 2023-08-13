@@ -7,8 +7,8 @@ use crate::Pallet as Launchpad;
 use frame_benchmarking::{account, benchmarks};
 use frame_support::assert_ok;
 use frame_system::{Pallet as System, RawOrigin};
-use pallet_token_fungible::Pallet as TokenFungible;
 use sp_runtime::traits::UniqueSaturatedFrom;
+use web3games_token_fungible::Pallet as TokenFungible;
 
 const W3G: u128 = 1;
 const USDT: u128 = 2;
@@ -21,27 +21,27 @@ fn setup<T: Config>() -> DispatchResult {
 
 	assert_ok!(TokenFungible::<T>::create_token(
 		RawOrigin::Signed(alice.clone()).into(),
-		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+		<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
 		b"TestToken".to_vec(),
 		b"TK".to_vec(),
 		18
 	));
 	assert_ok!(TokenFungible::<T>::create_token(
 		RawOrigin::Signed(alice.clone()).into(),
-		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(USDT),
+		<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(USDT),
 		b"TestToken".to_vec(),
 		b"TK".to_vec(),
 		6
 	));
 	assert_ok!(TokenFungible::<T>::mint(
 		RawOrigin::Signed(alice.clone()).into(),
-		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(USDT),
+		<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(USDT),
 		bob.clone(),
 		100 * USDT_DECIMALS,
 	));
 	assert_ok!(TokenFungible::<T>::mint(
 		RawOrigin::Signed(alice.clone()).into(),
-		<T as pallet_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
+		<T as web3games_token_fungible::Config>::FungibleTokenId::unique_saturated_from(W3G),
 		alice,
 		100 * W3G_DECIMALS,
 	));

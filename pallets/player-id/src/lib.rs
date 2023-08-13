@@ -28,6 +28,11 @@ use sp_runtime::RuntimeDebug;
 use sp_std::prelude::*;
 
 pub use pallet::*;
+pub mod weights;
+pub use weights::WeightInfo;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 #[cfg(test)]
 mod mock;
@@ -62,6 +67,9 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxAddressesPerChain: Get<u32>;
+
+		/// Weight information for the extrinsics in this module.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -115,7 +123,7 @@ pub mod pallet {
 	where
 		T::AccountId: AsRef<[u8]>,
 	{
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::register())]
 		pub fn register(
 			origin: OriginFor<T>,
 			player_id: Vec<u8>,
@@ -144,7 +152,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::add_address())]
 		pub fn add_address(
 			origin: OriginFor<T>,
 			player_id: PlayerId,
@@ -184,7 +192,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(<T as pallet::Config>::WeightInfo::remove_address())]
 		pub fn remove_address(
 			origin: OriginFor<T>,
 			player_id: PlayerId,

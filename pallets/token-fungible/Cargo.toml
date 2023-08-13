@@ -1,5 +1,5 @@
 [package]
-name = "pallet-token-fungible"
+name = "web3games-token-fungible"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -20,7 +20,7 @@ frame-support = { git = "https://github.com/paritytech/substrate", branch = "pol
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 
 primitives = {path = "../../primitives", default-features = false }
-pallet-support = { path = "../support", default-features = false }
+web3games-support = { path = "../support", default-features = false }
 
 [dev-dependencies]
 pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
@@ -37,7 +37,7 @@ std = [
 	"sp-runtime/std",
 	"primitives/std",
 	"sp-core/std",
-	"pallet-support/std",
+	"web3games-support/std",
 	"frame-support/std",
 	"frame-system/std",
 	"frame-benchmarking/std",

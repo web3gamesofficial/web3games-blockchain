@@ -16,20 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use crate as pallet_token_fungible;
+use crate as web3games_token_fungible;
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstU16, ConstU64},
 	PalletId,
 };
 pub use pallet_balances::Error as BalancesError;
-pub use pallet_token_fungible::{Error, Event as TokenFungibleEvent, Token};
 use primitives::Balance;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
+pub use web3games_token_fungible::{Error, Event as TokenFungibleEvent, Token};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -46,7 +46,7 @@ construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TokenFungible: pallet_token_fungible::{Pallet, Call, Storage, Event<T>},
+		TokenFungible: web3games_token_fungible::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 
@@ -99,7 +99,7 @@ parameter_types! {
 	pub const CreateTokenDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token_fungible::Config for Test {
+impl web3games_token_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenFungiblePalletId;
 	type FungibleTokenId = u32;

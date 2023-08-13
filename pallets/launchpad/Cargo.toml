@@ -1,5 +1,5 @@
 [package]
-name = "pallet-launchpad"
+name = "web3games-launchpad"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -15,8 +15,8 @@ sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v
 sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 
-pallet-token-fungible = { path = "../token-fungible", default-features = false }
-pallet-support = { path = "../support", default-features = false }
+web3games-token-fungible = { path = "../token-fungible", default-features = false }
+web3games-support = { path = "../support", default-features = false }
 primitives = { path = "../../primitives", default-features = false }
 
 [dev-dependencies]
@@ -36,8 +36,8 @@ std = [
 	"sp-io/std",
 	"sp-std/std",
 	"scale-info/std",
-	"pallet-token-fungible/std",
-	"pallet-support/std",
+	"web3games-token-fungible/std",
+	"web3games-support/std",
 	"primitives/std",
 ]
 try-runtime = ["frame-support/try-runtime"]

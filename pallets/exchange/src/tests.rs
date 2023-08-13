@@ -21,8 +21,6 @@ pub use crate::mock::*;
 use frame_support::{assert_noop, assert_ok};
 
 const ALICE: u64 = 1;
-const BOB: u64 = 2;
-const CHARLIE: u64 = 3;
 
 const TOKENA: u128 = 1;
 const TOKENB: u128 = 2;
@@ -32,7 +30,6 @@ const INITIAL_BALANCE: u128 = 1_000_000_000_000_000_000;
 const TOKENA_LIQUIDITY: u128 = 1000_000_000_000_000;
 const TOKENB_LIQUIDITY: u128 = 2000_000_000_000_000;
 const SWAP_VALUE: u128 = 1_000_000_000_000;
-const MINIMUM_LIQUIDITY: u128 = 1000; // 10**3;
 
 fn create_tokens() {
 	assert_ok!(TokenFungible::create_token(
@@ -156,13 +153,6 @@ fn remove_liquidity_should_work() {
 
 		let lp_token: u128 = Exchange::generate_lp_token_id(TOKENA, TOKENB);
 		let lp_token_account: u64 = Exchange::token_id_to_account_id(lp_token);
-
-		let balance_0 = TokenFungible::balance_of(TOKENA, lp_token_account);
-		let balance_1 = TokenFungible::balance_of(TOKENB, lp_token_account);
-		let total_supply = TokenFungible::total_supply(lp_token);
-
-		let amount_0 = (liquidity / 2) * balance_0 / total_supply;
-		let amount_1 = (liquidity / 2) * balance_1 / total_supply;
 
 		let remove_liquidity = liquidity / 2;
 

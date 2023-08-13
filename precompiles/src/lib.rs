@@ -26,9 +26,9 @@ use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
-use pallet_support::AccountMapping;
 use sp_core::H160;
 use sp_std::{marker::PhantomData, prelude::*};
+use web3games_support::AccountMapping;
 
 mod exchange;
 mod farming;
@@ -87,26 +87,26 @@ where
 	R::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo + Decode,
 	<R::Call as Dispatchable>::Origin: From<Option<R::AccountId>>,
 	R: pallet_evm::Config
-		+ pallet_token_fungible::Config
-		+ pallet_token_non_fungible::Config
-		+ pallet_token_multi::Config
-		+ pallet_exchange::Config
-		+ pallet_marketplace::Config
-		+ pallet_farming::Config
-		+ pallet_launchpad::Config,
-	R::Call: From<pallet_token_fungible::Call<R>>,
-	R::Call: From<pallet_token_non_fungible::Call<R>>,
-	R::Call: From<pallet_token_multi::Call<R>>,
-	R::Call: From<pallet_exchange::Call<R>>,
-	R::Call: From<pallet_marketplace::Call<R>>,
-	R::Call: From<pallet_farming::Call<R>>,
-	R::Call: From<pallet_launchpad::Call<R>>,
-	<R as pallet_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
-	<R as pallet_exchange::Config>::PoolId: From<u128> + Into<u128>,
-	<R as pallet_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
-	<R as pallet_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
-	<R as pallet_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
-	<R as pallet_token_multi::Config>::TokenId: From<u128> + Into<u128>,
+		+ web3games_token_fungible::Config
+		+ web3games_token_non_fungible::Config
+		+ web3games_token_multi::Config
+		+ web3games_exchange::Config
+		+ web3games_marketplace::Config
+		+ web3games_farming::Config
+		+ web3games_launchpad::Config,
+	R::Call: From<web3games_token_fungible::Call<R>>,
+	R::Call: From<web3games_token_non_fungible::Call<R>>,
+	R::Call: From<web3games_token_multi::Call<R>>,
+	R::Call: From<web3games_exchange::Call<R>>,
+	R::Call: From<web3games_marketplace::Call<R>>,
+	R::Call: From<web3games_farming::Call<R>>,
+	R::Call: From<web3games_launchpad::Call<R>>,
+	<R as web3games_token_fungible::Config>::FungibleTokenId: From<u128> + Into<u128>,
+	<R as web3games_exchange::Config>::PoolId: From<u128> + Into<u128>,
+	<R as web3games_token_non_fungible::Config>::NonFungibleTokenId: From<u128> + Into<u128>,
+	<R as web3games_token_non_fungible::Config>::TokenId: From<u128> + Into<u128>,
+	<R as web3games_token_multi::Config>::MultiTokenId: From<u128> + Into<u128>,
+	<R as web3games_token_multi::Config>::TokenId: From<u128> + Into<u128>,
 	R: AccountMapping<R::AccountId>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<PrecompileResult> {

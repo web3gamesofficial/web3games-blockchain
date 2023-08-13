@@ -18,9 +18,9 @@ pallet-contracts = { git = "https://github.com/paritytech/substrate", branch = "
 
 primitives = {path = "../primitives", default-features = false }
 
-pallet-token-fungible = { path = "../pallets/token-fungible", default-features = false }
-pallet-token-non-fungible = { path = "../pallets/token-non-fungible", default-features = false }
-pallet-token-multi = { path = "../pallets/token-multi" ,default-features = false}
+web3games-token-fungible = { path = "../pallets/token-fungible", default-features = false }
+web3games-token-non-fungible = { path = "../pallets/token-non-fungible", default-features = false }
+web3games-token-multi = { path = "../pallets/token-multi" ,default-features = false}
 
 [features]
 default = ["std"]
@@ -34,7 +34,7 @@ std = [
 	"randomness/std",
 	"pallet-contracts/std",
 	"primitives/std",
-	"pallet-token-fungible/std",
-	"pallet-token-non-fungible/std",
-	"pallet-token-multi/std"
+	"web3games-token-fungible/std",
+	"web3games-token-non-fungible/std",
+	"web3games-token-multi/std"
 ]

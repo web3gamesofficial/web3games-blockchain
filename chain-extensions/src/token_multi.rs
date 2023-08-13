@@ -28,8 +28,8 @@ pub struct MultiTokenExtension;
 
 impl<C> ChainExtension<C> for MultiTokenExtension
 where
-	C: pallet_contracts::Config + pallet_token_multi::Config,
-	<C as pallet_contracts::Config>::Call: From<pallet_token_multi::Call<C>>,
+	C: pallet_contracts::Config + web3games_token_multi::Config,
+	<C as pallet_contracts::Config>::Call: From<web3games_token_multi::Call<C>>,
 {
 	fn call<E>(func_id: u32, env: Environment<E, InitState>) -> Result<RetVal>
 	where
@@ -43,12 +43,12 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (multi_token_id, uri): (
-					<C as pallet_token_multi::Config>::MultiTokenId,
+					<C as web3games_token_multi::Config>::MultiTokenId,
 					Vec<u8>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_create_token(
+				let id = web3games_token_multi::Pallet::<E::T>::do_create_token(
 					&caller,
 					multi_token_id,
 					uri,
@@ -67,13 +67,13 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, operator, approved): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					bool,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_set_approval_for_all(
+				let id = web3games_token_multi::Pallet::<E::T>::do_set_approval_for_all(
 					&caller, id, &operator, approved,
 				)?;
 
@@ -91,15 +91,15 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, from, to, token_id, amount): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as pallet_token_multi::Config>::TokenId,
+					<E::T as web3games_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_transfer_from(
+				let id = web3games_token_multi::Pallet::<E::T>::do_transfer_from(
 					&caller, id, &from, &to, token_id, amount,
 				)?;
 
@@ -117,15 +117,15 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, from, to, token_ids, amounts): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
 					<E::T as SysConfig>::AccountId,
-					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
+					Vec<<E::T as web3games_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_batch_transfer_from(
+				let id = web3games_token_multi::Pallet::<E::T>::do_batch_transfer_from(
 					&caller, id, &from, &to, token_ids, amounts,
 				)?;
 
@@ -143,14 +143,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_id, amount): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
-					<E::T as pallet_token_multi::Config>::TokenId,
+					<E::T as web3games_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_mint(
+				let id = web3games_token_multi::Pallet::<E::T>::do_mint(
 					&caller, id, &to, token_id, amount,
 				)?;
 
@@ -167,14 +167,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, to, token_ids, amounts): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
 					<E::T as SysConfig>::AccountId,
-					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
+					Vec<<E::T as web3games_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_batch_mint(
+				let id = web3games_token_multi::Pallet::<E::T>::do_batch_mint(
 					&caller, id, &to, token_ids, amounts,
 				)?;
 
@@ -192,14 +192,14 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, token_id, amount): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
-					<E::T as pallet_token_multi::Config>::TokenId,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
+					<E::T as web3games_token_multi::Config>::TokenId,
 					Balance,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
 				let id =
-					pallet_token_multi::Pallet::<E::T>::do_burn(&caller, id, token_id, amount)?;
+					web3games_token_multi::Pallet::<E::T>::do_burn(&caller, id, token_id, amount)?;
 
 				let id_slice = id.encode();
 
@@ -214,13 +214,13 @@ where
 				let caller = env.ext().caller().clone();
 
 				let (id, token_ids, amounts): (
-					<E::T as pallet_token_multi::Config>::MultiTokenId,
-					Vec<<E::T as pallet_token_multi::Config>::TokenId>,
+					<E::T as web3games_token_multi::Config>::MultiTokenId,
+					Vec<<E::T as web3games_token_multi::Config>::TokenId>,
 					Vec<Balance>,
 				) = env.read_as_unbounded(env.in_len())?;
 				env.charge_weight(10000)?;
 
-				let id = pallet_token_multi::Pallet::<E::T>::do_batch_burn(
+				let id = web3games_token_multi::Pallet::<E::T>::do_batch_burn(
 					&caller, id, token_ids, amounts,
 				)?;
 
@@ -235,9 +235,9 @@ where
 			65673 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
+				let id: <E::T as web3games_token_multi::Config>::MultiTokenId = env.read_as()?;
 
-				let exists: bool = pallet_token_multi::Pallet::<E::T>::exists(id);
+				let exists: bool = web3games_token_multi::Pallet::<E::T>::exists(id);
 
 				let exists_slice = exists.encode();
 
@@ -256,11 +256,11 @@ where
 			65674 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
+				let id: <E::T as web3games_token_multi::Config>::MultiTokenId = env.read_as()?;
 
 				let in_len = env.in_len();
 
-				let token_ids: Vec<<E::T as pallet_token_multi::Config>::TokenId> =
+				let token_ids: Vec<<E::T as web3games_token_multi::Config>::TokenId> =
 					env.read_as_unbounded(in_len)?;
 
 				let in_len = env.in_len();
@@ -268,8 +268,9 @@ where
 				let accounts: Vec<<E::T as SysConfig>::AccountId> =
 					env.read_as_unbounded(in_len)?;
 
-				let balance_of_batch =
-					pallet_token_multi::Pallet::<E::T>::balance_of_batch(id, &accounts, token_ids);
+				let balance_of_batch = web3games_token_multi::Pallet::<E::T>::balance_of_batch(
+					id, &accounts, token_ids,
+				);
 
 				let balance_of_batch_slice = balance_of_batch.encode();
 
@@ -287,12 +288,12 @@ where
 			65675 => {
 				let mut env = env.buf_in_buf_out();
 
-				let id: <E::T as pallet_token_multi::Config>::MultiTokenId = env.read_as()?;
+				let id: <E::T as web3games_token_multi::Config>::MultiTokenId = env.read_as()?;
 				let account: <E::T as SysConfig>::AccountId = env.read_as()?;
-				let token_id: <E::T as pallet_token_multi::Config>::TokenId = env.read_as()?;
+				let token_id: <E::T as web3games_token_multi::Config>::TokenId = env.read_as()?;
 
 				let balance: Balance =
-					pallet_token_multi::Pallet::<E::T>::balance_of(id, (token_id, &account));
+					web3games_token_multi::Pallet::<E::T>::balance_of(id, (token_id, &account));
 
 				let balance_slice = balance.encode();
 

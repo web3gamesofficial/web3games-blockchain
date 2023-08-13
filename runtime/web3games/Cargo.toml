@@ -67,23 +67,23 @@ precompiles = { path = "../../precompiles", default-features = false }
 chain-extensions = { path = "../../chain-extensions", default-features = false }
 
 # local pallet
-pallet-token-fungible = { path = "../../pallets/token-fungible", default-features = false }
-pallet-token-non-fungible = { path = "../../pallets/token-non-fungible", default-features = false }
-pallet-token-multi = { path = "../../pallets/token-multi", default-features = false }
-pallet-support = { path = "../../pallets/support", default-features = false }
-pallet-exchange = { path = "../../pallets/exchange", default-features = false }
-pallet-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
-pallet-proxy-pay = { path = "../../pallets/proxy-pay", default-features = false }
-pallet-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-features = false }
-pallet-marketplace = { path = "../../pallets/marketplace", default-features = false }
-pallet-player-id = { path = "../../pallets/player-id", default-features = false }
-pallet-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
-pallet-farming = { path = "../../pallets/farming", default-features = false }
-pallet-launchpad = { path = "../../pallets/launchpad", default-features = false }
+web3games-token-fungible = { path = "../../pallets/token-fungible", default-features = false }
+web3games-token-non-fungible = { path = "../../pallets/token-non-fungible", default-features = false }
+web3games-token-multi = { path = "../../pallets/token-multi", default-features = false }
+web3games-support = { path = "../../pallets/support", default-features = false }
+web3games-exchange = { path = "../../pallets/exchange", default-features = false }
+web3games-wrap-currency = { path = "../../pallets/wrap-currency", default-features = false }
+web3games-proxy-pay = { path = "../../pallets/proxy-pay", default-features = false }
+web3games-ethereum-chain-id = { path = "../../pallets/ethereum-chain-id", default-features = false }
+web3games-marketplace = { path = "../../pallets/marketplace", default-features = false }
+web3games-player-id = { path = "../../pallets/player-id", default-features = false }
+web3games-call-switchgear = { path = "../../pallets/call-switchgear", default-features = false }
+web3games-farming = { path = "../../pallets/farming", default-features = false }
+web3games-launchpad = { path = "../../pallets/launchpad", default-features = false }
 
 
 # local pallet rpc
-pallet-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
+web3games-exchange-rpc-runtime-api = { path = "../../pallets/exchange/rpc/runtime-api", default-features = false }
 
 [build-dependencies]
 substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
@@ -129,23 +129,23 @@ std = [
 	"pallet-ethereum/std",
 	"pallet-evm/std",
 	"pallet-base-fee/std",
-	"pallet-ethereum-chain-id/std",
-    "pallet-marketplace/std",
-	"pallet-player-id/std",
+	"web3games-ethereum-chain-id/std",
+    "web3games-marketplace/std",
+	"web3games-player-id/std",
 	"fp-rpc/std",
 	"fp-self-contained/std",
 	"primitives/std",
 	"precompiles/std",
-	"pallet-token-fungible/std",
-	"pallet-token-non-fungible/std",
-	"pallet-token-multi/std",
-	"pallet-support/std",
-	"pallet-exchange/std",
-	"pallet-wrap-currency/std",
-	"pallet-exchange-rpc-runtime-api/std",
-	"pallet-proxy-pay/std",
-	"pallet-farming/std",
-	"pallet-launchpad/std",
+	"web3games-token-fungible/std",
+	"web3games-token-non-fungible/std",
+	"web3games-token-multi/std",
+	"web3games-support/std",
+	"web3games-exchange/std",
+	"web3games-wrap-currency/std",
+	"web3games-exchange-rpc-runtime-api/std",
+	"web3games-proxy-pay/std",
+	"web3games-farming/std",
+	"web3games-launchpad/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -157,10 +157,14 @@ runtime-benchmarks = [
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-contracts/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
-	"pallet-token-fungible/runtime-benchmarks",
-	"pallet-token-multi/runtime-benchmarks",
-	"pallet-token-non-fungible/runtime-benchmarks",
-	"pallet-exchange/runtime-benchmarks",
-	"pallet-farming/runtime-benchmarks",
-	"pallet-launchpad/runtime-benchmarks",
+	"web3games-token-fungible/runtime-benchmarks",
+	"web3games-token-multi/runtime-benchmarks",
+	"web3games-token-non-fungible/runtime-benchmarks",
+	"web3games-exchange/runtime-benchmarks",
+	"web3games-farming/runtime-benchmarks",
+	"web3games-launchpad/runtime-benchmarks",
+	"web3games-call-switchgear/runtime-benchmarks",
+	"web3games-wrap-currency/runtime-benchmarks",
+	"web3games-player-id/runtime-benchmarks",
+	"web3games-marketplace/runtime-benchmarks",
 ]

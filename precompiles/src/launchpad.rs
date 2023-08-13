@@ -37,10 +37,10 @@ pub struct LaunchpadExtension<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> PrecompileSet for LaunchpadExtension<Runtime>
 where
-	Runtime: pallet_launchpad::Config + pallet_evm::Config,
+	Runtime: web3games_launchpad::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_launchpad::Call<Runtime>>,
+	Runtime::Call: From<web3games_launchpad::Call<Runtime>>,
 {
 	fn execute(&self, handle: &mut impl PrecompileHandle) -> Option<EvmResult<PrecompileOutput>> {
 		let result = {
@@ -76,10 +76,10 @@ impl<Runtime> LaunchpadExtension<Runtime> {
 
 impl<Runtime> LaunchpadExtension<Runtime>
 where
-	Runtime: pallet_launchpad::Config + pallet_evm::Config,
+	Runtime: web3games_launchpad::Config + pallet_evm::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
-	Runtime::Call: From<pallet_launchpad::Call<Runtime>>,
+	Runtime::Call: From<web3games_launchpad::Call<Runtime>>,
 {
 	fn create_pool(handle: &mut impl PrecompileHandle) -> EvmResult<PrecompileOutput> {
 		let mut input = handle.read_input()?;
@@ -98,7 +98,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_launchpad::Call::<Runtime>::create_pool {
+				web3games_launchpad::Call::<Runtime>::create_pool {
 					sale_start,
 					sale_duration,
 					sale_token_id,
@@ -128,7 +128,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_launchpad::Call::<Runtime>::buy_token { pool_id, amount },
+				web3games_launchpad::Call::<Runtime>::buy_token { pool_id, amount },
 			)?;
 		}
 
@@ -150,7 +150,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_launchpad::Call::<Runtime>::owner_claim { pool_id },
+				web3games_launchpad::Call::<Runtime>::owner_claim { pool_id },
 			)?;
 		}
 
@@ -172,7 +172,7 @@ where
 			RuntimeHelper::<Runtime>::try_dispatch(
 				handle,
 				Some(caller).into(),
-				pallet_launchpad::Call::<Runtime>::claim { pool_id },
+				web3games_launchpad::Call::<Runtime>::claim { pool_id },
 			)?;
 		}
 

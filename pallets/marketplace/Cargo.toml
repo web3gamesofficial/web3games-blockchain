@@ -1,5 +1,5 @@
 [package]
-name = "pallet-marketplace"
+name = "web3games-marketplace"
 version = "0.1.0"
 authors = ["Web3Games Developers"]
 edition = "2021"
@@ -8,20 +8,20 @@ edition = "2021"
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 scale-info = { version = "2.1.2", default-features = false, features = ["derive"] }
 
+frame-benchmarking = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false, optional = true }
 frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 frame-system = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false}
 sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
 sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26" , default-features = false }
-
-pallet-token-non-fungible = { path = "../token-non-fungible", default-features = false }
-pallet-token-multi = { path = "../token-multi", default-features = false }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26", default-features = false  }
+web3games-token-non-fungible = { path = "../token-non-fungible", default-features = false }
+web3games-token-multi = { path = "../token-multi", default-features = false }
 
 primitives = { path = "../../primitives", default-features = false }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.26"  }
 
 [features]
@@ -36,6 +36,14 @@ std = [
 "sp-runtime/std",
 "sp-core/std",
 "primitives/std",
-"pallet-token-non-fungible/std",
-"pallet-token-multi/std"
+"web3games-token-non-fungible/std",
+"web3games-token-multi/std",
+	"pallet-balances/std"
+]
+try-runtime = ["frame-support/try-runtime"]
+
+runtime-benchmarks = [
+	"frame-benchmarking",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
 ]

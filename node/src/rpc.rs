@@ -129,7 +129,7 @@ where
 	C::Api: fp_rpc::ConvertTransactionRuntimeApi<Block>,
 	C::Api: fp_rpc::EthereumRuntimeRPCApi<Block>,
 	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
-	C::Api: pallet_exchange_rpc::ExchangeRuntimeApi<Block, AccountId>,
+	C::Api: web3games_exchange_rpc::ExchangeRuntimeApi<Block, AccountId>,
 	P: TransactionPool<Block = Block> + 'static,
 	A: ChainApi<Block = Block> + 'static,
 {
@@ -138,9 +138,9 @@ where
 		EthPubSubApiServer, EthSigner, Net, NetApiServer, Web3, Web3ApiServer,
 	};
 	use pallet_contracts_rpc::{Contracts, ContractsApiServer};
-	use pallet_exchange_rpc::{ExchangeRpc, ExchangeRpcApiServer};
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApiServer};
 	use substrate_frame_rpc_system::{System, SystemApiServer};
+	use web3games_exchange_rpc::{ExchangeRpc, ExchangeRpcApiServer};
 
 	let mut io = RpcModule::new(());
 	let FullDeps {

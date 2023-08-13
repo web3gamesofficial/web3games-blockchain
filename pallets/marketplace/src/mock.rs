@@ -15,13 +15,14 @@
 
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
+#![cfg(test)]
 
-use crate as pallet_marketplace;
+use crate as web3games_marketplace;
 use frame_support::{
 	construct_runtime,
 	pallet_prelude::GenesisBuild,
 	parameter_types,
-	traits::{ConstU16, ConstU64, OnFinalize, OnInitialize},
+	traits::{ConstU16, ConstU64},
 	PalletId,
 };
 use primitives::Balance;
@@ -50,9 +51,9 @@ construct_runtime!(
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
-		TokenNonFungible: pallet_token_non_fungible::{Pallet, Call, Storage, Event<T>},
-		TokenMulti: pallet_token_multi::{Pallet, Call, Storage, Event<T>},
-		Marketplace: pallet_marketplace::{Pallet, Call, Storage,Config<T>, Event<T>},
+		TokenNonFungible: web3games_token_non_fungible::{Pallet, Call, Storage, Event<T>},
+		TokenMulti: web3games_token_multi::{Pallet, Call, Storage, Event<T>},
+		Marketplace: web3games_marketplace::{Pallet, Call, Storage,Config<T>, Event<T>},
 	}
 );
 
@@ -114,7 +115,7 @@ parameter_types! {
 	pub const CreateCollectionDeposit: Balance = 500 * MILLICENTS;
 }
 
-impl pallet_token_non_fungible::Config for Test {
+impl web3games_token_non_fungible::Config for Test {
 	type Event = Event;
 	type PalletId = TokenNonFungiblePalletId;
 	type NonFungibleTokenId = u32;
@@ -125,7 +126,7 @@ impl pallet_token_non_fungible::Config for Test {
 	type WeightInfo = ();
 }
 
-impl pallet_token_multi::Config for Test {
+impl web3games_token_multi::Config for Test {
 	type Event = Event;
 	type PalletId = TokenMultiPalletId;
 	type MultiTokenId = u32;
@@ -142,10 +143,11 @@ parameter_types! {
 	pub const TreasuryAccount: AccountId = 10;
 }
 
-impl pallet_marketplace::Config for Test {
+impl web3games_marketplace::Config for Test {
 	type Event = Event;
 	type PalletId = MarketplacePalletId;
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
@@ -153,31 +155,20 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_balances::GenesisConfig::<Test> {
 		balances: vec![
-			(0, 100 * DOLLARS),
-			(1, 100 * DOLLARS),
-			(2, 100 * DOLLARS),
-			(3, 100 * DOLLARS),
+			(0, 1000 * DOLLARS),
+			(1, 1000 * DOLLARS),
+			(2, 1000 * DOLLARS),
+			(3, 1000 * DOLLARS),
 		],
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();
 
-	pallet_marketplace::GenesisConfig::<Test> { admin_key: Some(0) }
+	web3games_marketplace::GenesisConfig::<Test> { admin_key: Some(0) }
 		.assimilate_storage(&mut t)
 		.unwrap();
 
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
 	ext
-}
-
-/// Run until a particular block.
-pub fn run_to_block(n: u64) {
-	while System::block_number() < n {
-		Balances::on_finalize(System::block_number());
-		System::on_finalize(System::block_number());
-		System::set_block_number(System::block_number() + 1);
-		System::on_initialize(System::block_number());
-		Balances::on_initialize(System::block_number());
-	}
 }
