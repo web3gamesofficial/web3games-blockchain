@@ -17,6 +17,11 @@ const BLOCK: u32 = 1;
 type NonFungibleTokenIdOf<T> = <T as web3games_token_non_fungible::Config>::NonFungibleTokenId;
 type TokenIdOf<T> = <T as web3games_token_non_fungible::Config>::TokenId;
 
+// Helper to assert last event.
+fn assert_last_event<T: Config>(generic_event: <T as Config>::Event) {
+	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
+}
+
 pub fn lookup_of_account<T: Config>(
 	who: T::AccountId,
 ) -> <<T as frame_system::Config>::Lookup as StaticLookup>::Source {
@@ -49,23 +54,38 @@ benchmarks! {
 
 	set_admin {
 		let alice: T::AccountId = account("alice", 0, 0);
-	}: _(RawOrigin::Root,alice)
+	}: _(RawOrigin::Root,alice.clone())
+	verify {
+		assert_eq!(Admin::<T>::get(), Some(alice));
+	}
 
 	set_service_fee_point {
 		let alice: T::AccountId = account("alice", 0, 0);
 		assert_ok!(Marketplace::<T>::set_admin(RawOrigin::Root.into(),alice.clone()));
 	}: _(RawOrigin::Signed(alice),10u8)
+	verify {
+		assert_eq!(Point::<T>::get(), 10);
+	}
 
 	create_order {
 		let alice: T::AccountId = account("alice", 0, 0);
 		create_non_fungible_token::<T>();
-	}: _(RawOrigin::Signed(alice),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK))
+	}: _(RawOrigin::Signed(alice.clone()),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK))
+	verify {
+		assert!(Orders::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert_last_event::<T>(Event::<T>::OrderCreated(alice.clone(), Asset::NonFungibleToken(1, 2), Order { creater: alice, price: BalanceOf::<T>::unique_saturated_from(100 * W3G), start: T::BlockNumber::from(1_u32), duration: T::BlockNumber::from(100 * BLOCK) }).into());
+	}
 
 	cancel_order {
 		let alice: T::AccountId = account("alice", 0, 0);
 		create_non_fungible_token::<T>();
 		assert_ok!(Marketplace::<T>::create_order(RawOrigin::Signed(alice.clone()).into(),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK)));
-	}: _(RawOrigin::Signed(alice),Asset::NonFungibleToken(1, 2))
+	}: _(RawOrigin::Signed(alice.clone()),Asset::NonFungibleToken(1, 2))
+	verify {
+		assert!(!Orders::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert!(!Bids::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert_last_event::<T>(Event::<T>::OrderCancelled(alice, Asset::NonFungibleToken(1, 2)).into());
+	}
 
 	execute_order {
 		let alice: T::AccountId = account("alice", 0, 0);
@@ -78,7 +98,13 @@ benchmarks! {
 		1000 * W3G,
 		0,
 		));
-	}: _(RawOrigin::Signed(bob),Asset::NonFungibleToken(1, 2))
+	}: _(RawOrigin::Signed(bob.clone()),Asset::NonFungibleToken(1, 2))
+	verify {
+		assert!(!Bids::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert!(!Orders::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert_last_event::<T>(Event::<T>::OrderExecuted(bob, Asset::NonFungibleToken(1, 2), Order { creater: alice, price: BalanceOf::<T>::unique_saturated_from(100 * W3G), start: T::BlockNumber::from(0_u32), duration: T::BlockNumber::from(100 * BLOCK) }).into());
+	}
+
 
 	place_bid {
 		let alice: T::AccountId = account("alice", 0, 0);
@@ -91,7 +117,11 @@ benchmarks! {
 		1000 * W3G,
 		0,
 		));
-	}: _(RawOrigin::Signed(bob),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK))
+	}: _(RawOrigin::Signed(bob.clone()),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK))
+	verify {
+		assert_eq!(Bids::<T>::get(Asset::NonFungibleToken(1, 2)), Some(Order { creater: bob.clone(), price: BalanceOf::<T>::unique_saturated_from(100 * W3G), start: T::BlockNumber::from(1_u32), duration: T::BlockNumber::from(100 * BLOCK) }));
+		assert_last_event::<T>(Event::<T>::BidCreated(bob.clone(), Asset::NonFungibleToken(1, 2), Order { creater: bob, price: BalanceOf::<T>::unique_saturated_from(100 * W3G), start: T::BlockNumber::from(1_u32), duration: T::BlockNumber::from(100 * BLOCK) }).into());
+	}
 
 	cancel_bid {
 		let alice: T::AccountId = account("alice", 0, 0);
@@ -105,7 +135,11 @@ benchmarks! {
 		0,
 		));
 		assert_ok!(Marketplace::<T>::place_bid(RawOrigin::Signed(bob.clone()).into(),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK)));
-	}: _(RawOrigin::Signed(bob),Asset::NonFungibleToken(1, 2))
+	}: _(RawOrigin::Signed(bob.clone()),Asset::NonFungibleToken(1, 2))
+	verify {
+		assert!(!Bids::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert_last_event::<T>(Event::<T>::BidCancelled(bob, Asset::NonFungibleToken(1, 2)).into());
+	}
 
 	accept_bid {
 		let alice: T::AccountId = account("alice", 0, 0);
@@ -119,7 +153,12 @@ benchmarks! {
 		0,
 		));
 		assert_ok!(Marketplace::<T>::place_bid(RawOrigin::Signed(bob.clone()).into(),Asset::NonFungibleToken(1, 2),BalanceOf::<T>::unique_saturated_from(100 * W3G),T::BlockNumber::from(100 * BLOCK)));
-	}: _(RawOrigin::Signed(alice),Asset::NonFungibleToken(1, 2))
+	}: _(RawOrigin::Signed(alice.clone()),Asset::NonFungibleToken(1, 2))
+	verify {
+		assert!(!Bids::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert!(!Orders::<T>::contains_key(Asset::NonFungibleToken(1, 2)));
+		assert_last_event::<T>(Event::<T>::BidAccepted(alice, Asset::NonFungibleToken(1, 2), Order { creater: bob, price: BalanceOf::<T>::unique_saturated_from(100 * W3G), start: T::BlockNumber::from(0_u32), duration: T::BlockNumber::from(100 * BLOCK) }).into());
+	}
 
 	impl_benchmark_test_suite!(Marketplace, crate::mock::new_test_ext(), crate::mock::Test);
 }
